@@ -49,10 +49,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
             writer.Write((int)imuType); //IMU type
             writer.Write((int)mcuType); // MCU Type
 
-            // IMU Info
-            for (int i = 0; i < 3; i++) {
-                writer.Write((int)0);
-            }
+            writer.Write((int)0); // IMU Info
+            writer.Write((int)0); // IMU Info
+            writer.Write((int)0); // IMU Info
 
             writer.Write(_protocolVersion); // Protocol Version
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(_identifierString);
