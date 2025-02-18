@@ -3,10 +3,10 @@ using PS5_Dualsense_To_IMU_SlimeVR.Tracking;
 namespace PS5_Dualsense_To_IMU_SlimeVR
 {
     public partial class DebugDisplay : Form {
-        DualSenseTranslator dualSenseTranslator;
+        DualSenseTrackerManager dualSenseTranslator;
         public DebugDisplay() {
             InitializeComponent();
-            dualSenseTranslator = new DualSenseTranslator();
+            dualSenseTranslator = new DualSenseTrackerManager();
         }
 
         private void refreshTimer_Tick(object sender, EventArgs e) {

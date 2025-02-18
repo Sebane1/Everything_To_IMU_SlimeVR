@@ -9,10 +9,9 @@ using static PS5_Dualsense_To_IMU_SlimeVR.SlimeVR.FirmwareConstants;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using static PS5_Dualsense_To_IMU_SlimeVR.Utility.EndianExtensions;
 using PS5_Dualsense_To_IMU_SlimeVR.Utility;
-namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR
-{
-    public class PacketBuilder
-    {
+using Microsoft.VisualBasic.Logging;
+namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
+    public class PacketBuilder {
         private string _identifierString = "Dualsense-IMU-Tracker";
         private int _protocolVersion = 19;
         private long _packetId = 0;
@@ -22,141 +21,136 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR
 
         public byte[] HeartBeat { get => _heartBeat; set => _heartBeat = value; }
 
-        public PacketBuilder(string fwString, int trackerId)
-        {
+        public PacketBuilder(string fwString, int trackerId) {
             _identifierString = fwString;
             _trackerId = trackerId;
             _heartBeat = CreateHeartBeat();
         }
 
-        private byte[] CreateHeartBeat()
-        {
+        private byte[] CreateHeartBeat() {
             MemoryStream memoryStream = new MemoryStream(new byte[28]);
             BigEndianBinaryWriter writer = new BigEndianBinaryWriter(memoryStream);
             memoryStream.Position = 0;
-            writer.Write(UDPPackets.HEARTBEAT);
+            writer.Write(UDPPackets.HEARTBEAT); // header
+            writer.Write(_packetId++); // packet counter
+            writer.Write((byte)_trackerId); // Tracker Id
             memoryStream.Position = 0;
             var data = memoryStream.ToArray();
             return data;
         }
 
-        public byte[] BuildHandshakePacket(BoardType boardType, McuType mcuType, byte[] macAddress)
-        {
+        public byte[] BuildHandshakePacket(BoardType boardType, ImuType imuType, McuType mcuType, byte[] macAddress) {
             MemoryStream memoryStream = new MemoryStream(new byte[128]);
             BigEndianBinaryWriter writer = new BigEndianBinaryWriter(memoryStream);
             memoryStream.Position = 0;
-            writer.Write(UDPPackets.HANDSHAKE);
-            writer.Write((long)0);
-            writer.Write((int)boardType);
-            writer.Write((long)0);
-            writer.Write((int)mcuType);
-            for (int i = 0; i < 3; i++)
-            {
-                writer.Write(0);
+            writer.Write(UDPPackets.HANDSHAKE); // header
+            writer.Write((long)_packetId++); // packet counter
+            writer.Write((int)boardType); // Board type
+            writer.Write((int)imuType); //IMU type
+            writer.Write((int)mcuType); // MCU Type
+
+            // IMU Info
+            for (int i = 0; i < 3; i++) {
+                writer.Write((int)0);
             }
-            writer.Write(_protocolVersion);
+
+            writer.Write(_protocolVersion); // Protocol Version
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(_identifierString);
-            writer.Write((byte)utf8Bytes.Length);
-            writer.Write(utf8Bytes);
-            writer.Write(macAddress);
+            writer.Write((byte)utf8Bytes.Length); // identifier string
+            writer.Write(utf8Bytes); // identifier string
+            writer.Write(macAddress); // MAC Address
             memoryStream.Position = 0;
             var data = memoryStream.ToArray();
             return data;
         }
 
 
-        public byte[] BuildSensorInfoPacket(ImuType imuType, TrackerPosition trackerPosition, TrackerDataType trackerDataType)
-        {
+        public byte[] BuildSensorInfoPacket(ImuType imuType, TrackerPosition trackerPosition, TrackerDataType trackerDataType) {
             MemoryStream memoryStream = new MemoryStream(new byte[128]);
             BigEndianBinaryWriter writer = new BigEndianBinaryWriter(memoryStream);
             memoryStream.Position = 0;
-            writer.Write(UDPPackets.SENSOR_INFO);
-            writer.Write(_packetId++);
-            writer.Write((byte)_trackerId);
-            writer.Write((byte)0);
-            writer.Write((byte)imuType);
-            writer.Write((short)0);
-            writer.Write((byte)trackerPosition);
-            writer.Write((byte)trackerDataType);
+            writer.Write((int)UDPPackets.SENSOR_INFO); // Packet header
+            writer.Write((long)_packetId++); // Packet counter
+            writer.Write((byte)_trackerId); // Tracker Id
+            writer.Write((byte)0); // Sensor status
+            writer.Write((byte)imuType); // imu type
+            writer.Write((short)0); // Magnometer support
+            writer.Write((byte)trackerPosition); // Tracker Position
+            writer.Write((byte)trackerDataType); // Tracker Data Type
             memoryStream.Position = 0;
             var data = memoryStream.ToArray();
             return data;
         }
 
-        public byte[] BuildRotationPacket(Quaternion rotation)
-        {
+        public byte[] BuildRotationPacket(Quaternion rotation) {
             MemoryStream memoryStream = new MemoryStream(new byte[128]);
             BigEndianBinaryWriter writer = new BigEndianBinaryWriter(memoryStream);
             memoryStream.Position = 0;
-            writer.Write(UDPPackets.ROTATION_DATA);
-            writer.Write(_packetId++);
-            writer.Write((byte)_trackerId);
-            writer.Write((byte)1);
-            writer.Write(rotation.X);
-            writer.Write(rotation.Y);
-            writer.Write(rotation.Z);
-            writer.Write(rotation.W);
-            writer.Write((byte)0);
+            writer.Write(UDPPackets.ROTATION_DATA); // Header
+            writer.Write(_packetId++); // Packet counter
+            writer.Write((byte)_trackerId); // Tracker id
+            writer.Write((byte)1); // Data type
+            writer.Write(rotation.X); // Quaternion X
+            writer.Write(rotation.Y); // Quaternion Y
+            writer.Write(rotation.Z); // Quaternion Z
+            writer.Write(rotation.W); // Quaternion W
+            writer.Write((byte)0); // Calibration Info
             memoryStream.Position = 0;
             var data = memoryStream.ToArray();
             return data;
         }
-        public byte[] BuildAccellerationPacket(Vector3 acceleration)
-        {
+        public byte[] BuildAccelerationPacket(Vector3 acceleration) {
             MemoryStream memoryStream = new MemoryStream(new byte[128]);
             BigEndianBinaryWriter writer = new BigEndianBinaryWriter(memoryStream);
             memoryStream.Position = 0;
-            writer.Write(UDPPackets.ACCELERATION);
-            writer.Write(_packetId++);
-            writer.Write((byte)_trackerId);
-            writer.Write((byte)1);
-            writer.Write(acceleration.X);
-            writer.Write(acceleration.Y);
-            writer.Write(acceleration.Z);
-            writer.Write((byte)0);
+            writer.Write(UDPPackets.ACCELERATION); // Header
+            writer.Write(_packetId++); // Packet counter
+            writer.Write((byte)_trackerId); // Tracker id
+            writer.Write((byte)1); // Data type 
+            writer.Write(acceleration.X); // Euler X
+            writer.Write(acceleration.Y); // Euler Y
+            writer.Write(acceleration.Z); // Euler Z
+            writer.Write((byte)0); // Calibration Info
             memoryStream.Position = 0;
             var data = memoryStream.ToArray();
             return data;
         }
-        public byte[] BuildGyroPacket(Vector3 gyro)
-        {
+        public byte[] BuildGyroPacket(Vector3 gyro) {
             MemoryStream memoryStream = new MemoryStream(new byte[128]);
             BigEndianBinaryWriter writer = new BigEndianBinaryWriter(memoryStream);
             memoryStream.Position = 0;
-            writer.Write(UDPPackets.GYRO);
-            writer.Write(_packetId++);
-            writer.Write((byte)_trackerId);
-            writer.Write((byte)1);
-            writer.Write(gyro.X);
-            writer.Write(gyro.Y);
-            writer.Write(gyro.Z);
-            writer.Write((byte)0);
+            writer.Write(UDPPackets.GYRO); // Header
+            writer.Write(_packetId++); // Packet counter
+            writer.Write((byte)_trackerId); // Tracker id
+            writer.Write((byte)1); // Data type 
+            writer.Write(gyro.X); // Euler X
+            writer.Write(gyro.Y); // Euler Y
+            writer.Write(gyro.Z); // Euler Z
+            writer.Write((byte)0); // Calibration Info
             memoryStream.Position = 0;
             var data = memoryStream.ToArray();
             return data;
         }
-        public byte[] BuildFlexDataPacket(float flexData)
-        {
+        public byte[] BuildFlexDataPacket(float flexData) {
             MemoryStream memoryStream = new MemoryStream(new byte[128]);
             BigEndianBinaryWriter writer = new BigEndianBinaryWriter(memoryStream);
             memoryStream.Position = 0;
-            writer.Write(UDPPackets.FLEX_DATA_PACKET);
-            writer.Write(_packetId++);
-            writer.Write((byte)_trackerId);
-            writer.Write((byte)0);
+            writer.Write(UDPPackets.FLEX_DATA_PACKET); // Header
+            writer.Write(_packetId++); // Packet counter
+            writer.Write((byte)_trackerId); // Tracker id
+            writer.Write(flexData); // Flex data
             memoryStream.Position = 0;
             var data = memoryStream.ToArray();
             return data;
         }
-        public byte[] BuildBatteryLevelPacket(float battery)
-        {
+        public byte[] BuildBatteryLevelPacket(float battery) {
             MemoryStream memoryStream = new MemoryStream(new byte[128]);
             BigEndianBinaryWriter writer = new BigEndianBinaryWriter(memoryStream);
             memoryStream.Position = 0;
-            writer.Write(UDPPackets.BATTERY_LEVEL);
-            writer.Write(_packetId++);
-            writer.Write((byte)_trackerId);
-            writer.Write((float)battery);
+            writer.Write(UDPPackets.BATTERY_LEVEL); // Header
+            writer.Write(_packetId++); // Packet counter
+            writer.Write((byte)_trackerId); // Tracker id
+            writer.Write((float)battery); // Flex data
             memoryStream.Position = 0;
             var data = memoryStream.ToArray();
             return data;

@@ -2,27 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
-{
-    public static class CoordinateUtility
-    {
-        public static float ConvertRadiansToDegrees(this float radians)
-        {
+namespace PS5_Dualsense_To_IMU_SlimeVR.Utility {
+    public static class CoordinateUtility {
+        public static float ConvertRadiansToDegrees(this float radians) {
             double degrees = 180 / Math.PI * radians;
             return (float)degrees;
         }
-        public static float ConvertDegreesToRadians(this float degrees)
-        {
+        public static float ConvertDegreesToRadians(this float degrees) {
             double radians = degrees * (Math.PI / 180);
             return (float)radians;
         }
-        public static double ConvertRadiansToDegrees(this double radians)
-        {
+        public static double ConvertRadiansToDegrees(this double radians) {
             double degrees = 180 / Math.PI * radians;
             return degrees;
         }
-        public static double ConvertDegreesToRadians(this double degrees)
-        {
+        public static double ConvertDegreesToRadians(this double degrees) {
             double radians = degrees * (Math.PI / 180);
             return radians;
         }
@@ -31,8 +25,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
         {
             return ToQuaternion(vector3.X, vector3.Y, vector3.Z);
         }
-        public static Vector3 VectorDirection(this Quaternion rotation, Vector3 point)
-        {
+        public static Vector3 VectorDirection(this Quaternion rotation, Vector3 point) {
             float num1 = rotation.X * 2f;
             float num2 = rotation.Y * 2f;
             float num3 = rotation.Z * 2f;
@@ -52,8 +45,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
             return vector3;
         }
 
-        public static Quaternion CalculateRotationQuaternion(Vector3 from, Vector3 to)
-        {
+        public static Quaternion CalculateRotationQuaternion(Vector3 from, Vector3 to) {
             Vector3 currentNormalized = Vector3.Normalize(from);
             Vector3 targetNormalized = Vector3.Normalize(to);
 
@@ -69,14 +61,12 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
             return rotationQuaternion;
         }
 
-        public static Quaternion LookAt(Vector3 position, Vector3 target)
-        {
+        public static Quaternion LookAt(Vector3 position, Vector3 target) {
             var value = Vector3.Normalize(new Vector3(target.X, 0, target.Z) - new Vector3(position.X, 0, position.Z));
             Matrix4x4 viewMatrix = Matrix4x4.CreateLookTo(position, new Vector3(value.X, value.Y, value.Z * -1), Vector3.UnitY);
             return Quaternion.CreateFromRotationMatrix(viewMatrix);
         }
-        public static Vector3 QuaternionToEuler(this Quaternion q)
-        {
+        public static Vector3 QuaternionToEuler(this Quaternion q) {
             Vector3 angles = new Vector3();
 
             // roll (x-axis rotation)
@@ -86,12 +76,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
 
             // pitch (y-axis rotation)
             double sinp = 2 * (q.W * q.Y - q.Z * q.X);
-            if (Math.Abs(sinp) >= 1)
-            {
+            if (Math.Abs(sinp) >= 1) {
                 angles.Y = (float)Math.CopySign(Math.PI / 2, sinp);
-            }
-            else
-            {
+            } else {
                 angles.Y = (float)Math.Asin(sinp);
             }
 
@@ -100,8 +87,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
             double cosy_cosp = 1 - 2 * (q.Y * q.Y + q.Z * q.Z);
             angles.Z = (float)Math.Atan2(siny_cosp, cosy_cosp);
 
-            var degrees = new Vector3()
-            {
+            var degrees = new Vector3() {
                 X = (float)(180 / Math.PI) * angles.X,
                 Y = (float)(180 / Math.PI) * angles.Y,
                 Z = (float)(180 / Math.PI) * angles.Z
@@ -109,8 +95,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
 
             return degrees;
         }
-        public static Vector3 Transform(ref Vector3 v, ref Quaternion rotation)
-        {
+        public static Vector3 Transform(ref Vector3 v, ref Quaternion rotation) {
             // This operation is an optimized-down version of v' = q * v * q^-1.
             // The expanded form would be to treat v as an 'axis only' quaternion
             // and perform standard quaternion multiplication. Assuming q is normalized,
@@ -134,8 +119,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
 
             return new Vector3(transformedX, transformedY, transformedZ);
         }
-        public static Quaternion GyroAttitude(this Vector3 gyroData)
-        {
+        public static Quaternion GyroAttitude(this Vector3 gyroData) {
 
             var orientation = Quaternion.Identity;
             // Convert gyro data from the gyroscope's frame of reference to the world frame of reference.
@@ -160,19 +144,15 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
             return yCompNorm;
         }
 
-        public static Quaternion CreateRotationFromTo(Vector3 fromDirection, Vector3 toDirection)
-        {
+        public static Quaternion CreateRotationFromTo(Vector3 fromDirection, Vector3 toDirection) {
             fromDirection = Vector3.Normalize(fromDirection);
             toDirection = Vector3.Normalize(toDirection);
 
             float dot = Vector3.Dot(fromDirection, toDirection);
-            if (dot < -1 + float.Epsilon)
-            {
+            if (dot < -1 + float.Epsilon) {
                 // Vectors are opposite, cannot rotate smoothly.
                 return Quaternion.Identity;
-            }
-            else if (dot > 1 - float.Epsilon)
-            {
+            } else if (dot > 1 - float.Epsilon) {
                 // Vectors are identical, no rotation needed.
                 return Quaternion.Identity;
             }

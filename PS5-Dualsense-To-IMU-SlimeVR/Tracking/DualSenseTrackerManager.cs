@@ -1,12 +1,9 @@
 ﻿using Wujek_Dualsense_API;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
-{
-    public class DualSenseTranslator
-    {
+namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
+    public class DualSenseTrackerManager {
         private List<DualsenseTracker> _trackers;
-        public DualSenseTranslator()
-        {
+        public DualSenseTrackerManager() {
             int count = 0;
             Color[] colours = new Color[4] {
                 Color.Aqua,
@@ -17,23 +14,18 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
 
             _trackers = new List<DualsenseTracker>();
 
-            Task.Run(async () =>
-            {
+            Task.Run(async () => {
                 // Turn each connected Dualsense into a tracker
-                foreach (var dualsenseId in DualsenseUtils.GetControllerIDs())
-                {
+                foreach (var dualsenseId in DualsenseUtils.GetControllerIDs()) {
                     var newTracker = new DualsenseTracker(count, dualsenseId, colours[count++]);
-                    while (!newTracker.Ready)
-                    {
+                    while (!newTracker.Ready) {
                         Thread.Sleep(100);
                     }
                     _trackers.Add(newTracker);
                 }
 
-                while (true)
-                {
-                    foreach (var tracker in _trackers)
-                    {
+                while (true) {
+                    foreach (var tracker in _trackers) {
                         await tracker.Update();
                     }
                 }

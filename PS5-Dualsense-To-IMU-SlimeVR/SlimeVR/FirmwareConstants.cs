@@ -4,13 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR
-{
-    public static class FirmwareConstants
-    {
+namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
+    public static class FirmwareConstants {
 
-        public enum BoardType
-        {
+        public enum BoardType {
             UNKNOWN = 0,
             SLIMEVR_LEGACY = 1,
             SLIMEVR_DEV = 2,
@@ -33,8 +30,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR
             DEV_RESERVED = 250
         }
 
-        public enum ImuType
-        {
+        public enum ImuType {
             UNKNOWN = 0,
             MPU9250 = 1,
             MPU6500 = 2,
@@ -53,8 +49,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR
             LSM6DSR = 15,
             DEV_RESERVED = 250
         }
-        public enum McuType
-        {
+        public enum McuType {
             UNKNOWN = 0,
             ESP8266 = 1,
             ESP32 = 2,
@@ -67,15 +62,13 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR
             DEV_RESERVED = 250
         }
 
-        public enum TrackerDataType
-        {
+        public enum TrackerDataType {
             ROTATION = 0,
             FLEX_RESISTANCE = 1,
             FLEX_ANGLE = 2
         }
 
-        public enum TrackerPosition
-        {
+        public enum TrackerPosition {
             NONE = 0,
             HEAD = 1,
             NECK = 2,
@@ -128,8 +121,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR
             RIGHT_LITTLE_INTERMEDIATE = 49,
             RIGHT_LITTLE_DISTAL = 50
         }
-        public class UDPPackets
-        {
+        public class UDPPackets {
             public static int HEARTBEAT = 0;
             public static int ROTATION = 1;
             public static int GYRO = 2;
