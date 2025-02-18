@@ -20,11 +20,11 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
             Array.Reverse(longAsBytes);
             return BitConverter.ToInt64(longAsBytes, 0);
         }
-        public static short ReverseEndian(this float val)
+        public static float ReverseEndian(this float val)
         {
             byte[] floatAsBytes = BitConverter.GetBytes(val);
             Array.Reverse(floatAsBytes);
-            return BitConverter.ToInt16(floatAsBytes, 0);
+            return BitConverter.ToSingle(floatAsBytes, 0);
         }
         public static short ReverseEndian(this short val)
         {
@@ -32,11 +32,11 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
             Array.Reverse(shortAsBytes);
             return BitConverter.ToInt16(shortAsBytes, 0);
         }
-        public static short ReverseEndian(this double val)
+        public static double ReverseEndian(this double val)
         {
             byte[] doubleAsBytes = BitConverter.GetBytes(val);
             Array.Reverse(doubleAsBytes);
-            return BitConverter.ToInt16(doubleAsBytes, 0);
+            return BitConverter.ToDouble(doubleAsBytes, 0);
 
         }
         public static byte[] ReverseEndian(this byte[] val)
