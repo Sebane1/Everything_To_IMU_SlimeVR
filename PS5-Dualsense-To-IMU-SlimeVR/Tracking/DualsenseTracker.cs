@@ -56,7 +56,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 $"\r\nAcceleration:\r\n" +
                 $"X:{acceleration.X}, Y:{acceleration.Y}, Z:{acceleration.Z}";
 
-                await udpHandler.SetSensorRotation(euler.ToQuaternion());
+                await udpHandler.SetSensorRotation(new Vector3(-euler.X, euler.Y, euler.Z).ToQuaternion());
                 //await udpHandler.SetSensorGyro(gyro);
                 //await udpHandler.SetSensorAcceleration(acceleration);
                 await udpHandler.SetSensorBattery(dualsense.Battery.Level / 100f);
