@@ -43,7 +43,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility
         {
             Array.Reverse(val);
             return val;
-
         }
     }
 }
