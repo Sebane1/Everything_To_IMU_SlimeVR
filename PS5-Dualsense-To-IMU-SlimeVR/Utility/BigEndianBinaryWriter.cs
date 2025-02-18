@@ -17,7 +17,7 @@
             base.Write(value.CorrectEndian());
         }
         public override void Write(byte[] value) {
-            base.Write(value.CorrectEndian());
+            base.Write(value);
         }
     }
 }

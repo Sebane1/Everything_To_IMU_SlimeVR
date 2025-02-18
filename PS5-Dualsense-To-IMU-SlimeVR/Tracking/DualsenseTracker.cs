@@ -31,7 +31,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 sensorOrientation = new SensorOrientation(dualsense);
                 await Task.Delay(10000);
                 macSpoof = dualsense.DeviceID.Split("&")[3];
-                udpHandler = new UDPHandler("Dualsense5" + _id, _id,
+                udpHandler = new UDPHandler("Dualsense5", _id,
                  new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] });
                 rotationCalibration = -sensorOrientation.CurrentOrientation.QuaternionToEuler();
                 _ready = true;
@@ -57,8 +57,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 $"X:{acceleration.X}, Y:{acceleration.Y}, Z:{acceleration.Z}";
 
                 await udpHandler.SetSensorRotation(euler.ToQuaternion());
-                await udpHandler.SetSensorGyro(gyro);
-                await udpHandler.SetSensorAcceleration(acceleration);
+                //await udpHandler.SetSensorGyro(gyro);
+                //await udpHandler.SetSensorAcceleration(acceleration);
                 await udpHandler.SetSensorBattery(dualsense.Battery.Level / 100f);
                 Thread.Sleep(16);
             }
