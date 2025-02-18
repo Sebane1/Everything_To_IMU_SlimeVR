@@ -1,10 +1,13 @@
-﻿using AQuestReborn;
+﻿using PS5_Dualsense_To_IMU_SlimeVR.SlimeVR;
+using PS5_Dualsense_To_IMU_SlimeVR.Utility;
 using System;
 using System.Numerics;
 using Wujek_Dualsense_API;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR {
-    internal class DualsenseTracker {
+namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
+{
+    internal class DualsenseTracker
+    {
         private string _debug;
         private int _index;
         private int _id;
@@ -15,11 +18,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
         private bool _ready;
         private Dualsense dualsense;
 
-        public DualsenseTracker(int index, string dualsenseId, Color colour) {
+        public DualsenseTracker(int index, string dualsenseId, Color colour)
+        {
             Initialize(index, dualsenseId, colour);
         }
-        public async void Initialize(int index, string dualsenseId, Color colour) {
-            Task.Run(async () => {
+        public async void Initialize(int index, string dualsenseId, Color colour)
+        {
+            Task.Run(async () =>
+            {
                 _index = index;
                 _id = index + 1;
                 var rememberedColour = colour;
@@ -36,8 +42,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
                 _ready = true;
             });
         }
-        public async Task<bool> Update() {
-            if (_ready) {
+        public async Task<bool> Update()
+        {
+            if (_ready)
+            {
                 Vector3 euler = sensorOrientation.CurrentOrientation.QuaternionToEuler() + rotationCalibration;
                 Vector3 gyro = sensorOrientation.GyroData;
                 Vector3 acceleration = sensorOrientation.AccelerometerData;
@@ -58,7 +66,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
                 await udpHandler.SetSensorRotation(sensorOrientation.CurrentOrientation + rotationCalibration.ToQuaternion());
                 await udpHandler.SetSensorGyro(gyro);
                 await udpHandler.SetSensorAccelleration(acceleration);
-                await udpHandler.SetSensorBattery((float)dualsense.Battery.Level / 100f);
+                await udpHandler.SetSensorBattery(dualsense.Battery.Level / 100f);
                 Thread.Sleep(16);
             }
             return _ready;

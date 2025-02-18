@@ -1,4 +1,7 @@
-namespace PS5_Dualsense_To_IMU_SlimeVR {
+using PS5_Dualsense_To_IMU_SlimeVR.Tracking;
+
+namespace PS5_Dualsense_To_IMU_SlimeVR
+{
     public partial class DebugDisplay : Form {
         DualSenseTranslator dualSenseTranslator;
         public DebugDisplay() {
