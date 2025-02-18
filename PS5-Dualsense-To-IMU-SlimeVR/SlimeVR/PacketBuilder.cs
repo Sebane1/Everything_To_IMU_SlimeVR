@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static PS5_Dualsense_To_IMU_SlimeVR.SlimeVR.FirmwareConstants;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-using static PS5_Dualsense_To_IMU_SlimeVR.Utility.EndianExtensions;
+using static PS5_Dualsense_To_IMU_SlimeVR.Utility.BigEndianExtensions;
 using PS5_Dualsense_To_IMU_SlimeVR.Utility;
 using Microsoft.VisualBasic.Logging;
 namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {

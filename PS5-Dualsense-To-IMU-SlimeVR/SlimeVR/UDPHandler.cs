@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
-using System.Threading.Tasks;
 using static PS5_Dualsense_To_IMU_SlimeVR.SlimeVR.FirmwareConstants;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
@@ -19,11 +14,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
             packetBuilder = new PacketBuilder(trackerLabel, trackerId);
             udpClient = new UdpClient();
             udpClient.Connect("localhost", 6969);
-            Handshake(BoardType.WRANGLER, McuType.WRANGLER, macAddress);
-            AddImu(
-                FirmwareConstants.ImuType.UNKNOWN,
-                FirmwareConstants.TrackerPosition.NONE,
-                FirmwareConstants.TrackerDataType.ROTATION);
+            Handshake(BoardType.WRANGLER, ImuType.UNKNOWN, McuType.WRANGLER, macAddress);
+            AddImu(ImuType.UNKNOWN, TrackerPosition.NONE, TrackerDataType.ROTATION);
         }
 
         public void Heartbeat() {
@@ -52,8 +44,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
             await udpClient.SendAsync(packetBuilder.BuildRotationPacket(rotation));
             return true;
         }
-        public async Task<bool> SetSensorAcceleration(Vector3 accelleration) {
-            await udpClient.SendAsync(packetBuilder.BuildAccelerationPacket(accelleration));
+        public async Task<bool> SetSensorAcceleration(Vector3 acceleration) {
+            await udpClient.SendAsync(packetBuilder.BuildAccelerationPacket(acceleration));
             return true;
         }
         public async Task<bool> SetSensorGyro(Vector3 gyro) {
