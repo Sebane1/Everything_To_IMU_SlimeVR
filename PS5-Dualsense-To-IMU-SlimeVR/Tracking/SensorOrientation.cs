@@ -7,10 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Wujek_Dualsense_API;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
-{
-    internal class SensorOrientation
-    {
+namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
+    internal class SensorOrientation {
         private Quaternion currentOrientation = Quaternion.Identity;
         private Vector3 accelerometerData = Vector3.Zero;
         private Vector3 gyroData = Vector3.Zero;
@@ -28,22 +26,19 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
         public Vector3 AccelerometerData { get => accelerometerData; set => accelerometerData = value; }
         public Vector3 GyroData { get => gyroData; set => gyroData = value; }
 
-        public SensorOrientation(Dualsense dualsense)
-        {
+        public SensorOrientation(Dualsense dualsense) {
             _dualsense = dualsense;
             _accellerometerVectorCalibration = -(new Vector3(
                 _dualsense.ButtonState.accelerometer.X,
                 _dualsense.ButtonState.accelerometer.Y,
-                _dualsense.ButtonState.accelerometer.Z) / 1000);
+                _dualsense.ButtonState.accelerometer.Z));
             _gyroVectorCalibration = -(new Vector3(
                 _dualsense.ButtonState.gyro.X,
                 _dualsense.ButtonState.gyro.Y,
-                _dualsense.ButtonState.gyro.Z) / 1000);
+                _dualsense.ButtonState.gyro.Z));
             stopwatch.Start();
-            Task.Run(() =>
-            {
-                while (true)
-                {
+            Task.Run(() => {
+                while (true) {
                     Update();
                     Thread.Sleep(16);
                 }
@@ -51,8 +46,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
         }
 
         // Update method to simulate gyroscope and accelerometer data fusion
-        public void Update()
-        {
+        public void Update() {
             float currentTime = (float)stopwatch.Elapsed.TotalSeconds;
 
             // Calculate deltaTime (the difference between current and previous time)
@@ -62,16 +56,16 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
             _previousTime = currentTime;
 
             // Accelerometer data
-            accelerometerData = new Vector3(
+            accelerometerData = (new Vector3(
                 _dualsense.ButtonState.accelerometer.X,
                 _dualsense.ButtonState.accelerometer.Y,
-                _dualsense.ButtonState.accelerometer.Z) / 1000 + _accellerometerVectorCalibration;
+                _dualsense.ButtonState.accelerometer.Z) + _accellerometerVectorCalibration) / 1000;
 
             // Gyroscope data
-            gyroData = new Vector3(
+            gyroData = (new Vector3(
                 _dualsense.ButtonState.gyro.X,
                 _dualsense.ButtonState.gyro.Y,
-                _dualsense.ButtonState.gyro.Z) / 1000 + _gyroVectorCalibration;
+                _dualsense.ButtonState.gyro.Z) + _gyroVectorCalibration) / 1000;
 
             // Step 1: Calculate pitch and roll from accelerometer data
             Quaternion accelerometerOrientation = GetOrientationFromAccelerometer(accelerometerData);
@@ -85,15 +79,13 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
             // Normalize the quaternion to prevent drift
             currentOrientation = Quaternion.Normalize(currentOrientation);
 
-            if (!IsValid(currentOrientation))
-            {
+            if (!IsValid(currentOrientation)) {
                 currentOrientation = Quaternion.Identity;
             }
         }
 
         // Get orientation from accelerometer data (pitch and roll)
-        private Quaternion GetOrientationFromAccelerometer(Vector3 accelData)
-        {
+        private Quaternion GetOrientationFromAccelerometer(Vector3 accelData) {
             // Normalize the accelerometer data (gravity vector)
             accelData = Vector3.Normalize(accelData);
 
@@ -106,20 +98,17 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
 
             return orientation;
         }
-        public bool IsValid(Quaternion quaternion)
-        {
+        public bool IsValid(Quaternion quaternion) {
             bool isNaN = float.IsNaN(quaternion.X + quaternion.Y + quaternion.Z + quaternion.W);
             bool isZero = quaternion.X == 0 && quaternion.Y == 0 && quaternion.Z == 0 && quaternion.W == 0;
             return !(isNaN || isZero);
         }
         // Get delta rotation from gyroscope data
-        private Quaternion GetDeltaRotationFromGyroscope(Vector3 gyroData, float deltaTime)
-        {
+        private Quaternion GetDeltaRotationFromGyroscope(Vector3 gyroData, float deltaTime) {
             // Calculate the angle from the gyroscope angular velocity
             float angle = gyroData.Length() * deltaTime;
 
-            if (angle > 0)
-            {
+            if (angle > 0) {
                 // Normalize the gyro data to get the rotation axis
                 Vector3 axis = Vector3.Normalize(gyroData);
 
@@ -129,9 +118,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
                 float cosHalfAngle = (float)Math.Cos(halfAngle);
 
                 return new Quaternion(axis.X * sinHalfAngle, axis.Y * sinHalfAngle, axis.Z * sinHalfAngle, cosHalfAngle);
-            }
-            else
-            {
+            } else {
                 return Quaternion.Identity;
             }
         }
