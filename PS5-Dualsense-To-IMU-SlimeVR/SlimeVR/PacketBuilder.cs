@@ -149,7 +149,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
             writer.Write(UDPPackets.BATTERY_LEVEL); // Header
             writer.Write(_packetId++); // Packet counter
             writer.Write((byte)_trackerId); // Tracker id
-            writer.Write((float)battery); // Flex data
+            writer.Write((float)battery); // Battery data
             memoryStream.Position = 0;
             var data = memoryStream.ToArray();
             return data;

@@ -14,9 +14,13 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private UDPHandler udpHandler;
         private Vector3 rotationCalibration;
         private bool _ready;
+        private bool _disconnected;
+        private string _rememberedDualsenseId;
         private Dualsense dualsense;
+        private string _lastDualSenseId;
 
         public DualsenseTracker(int index, string dualsenseId, Color colour) {
+            _lastDualSenseId = dualsenseId;
             Initialize(index, dualsenseId, colour);
         }
         public async void Initialize(int index, string dualsenseId, Color colour) {
@@ -24,8 +28,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 _index = index;
                 _id = index + 1;
                 var rememberedColour = colour;
-                var rememberedDualsenseId = dualsenseId;
-                dualsense = new Dualsense(rememberedDualsenseId);
+                _rememberedDualsenseId = dualsenseId;
+                dualsense = new Dualsense(_rememberedDualsenseId);
+                dualsense.Connection.ControllerDisconnected += Connection_ControllerDisconnected;
                 dualsense.Start();
                 dualsense.SetLightbar(rememberedColour.R, rememberedColour.G, rememberedColour.B);
                 sensorOrientation = new SensorOrientation(dualsense);
@@ -37,6 +42,12 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 _ready = true;
             });
         }
+
+        private void Connection_ControllerDisconnected(object? sender, ConnectionStatus.Controller e) {
+            _ready = false;
+            _disconnected = true;
+        }
+
         public async Task<bool> Update() {
             if (_ready) {
                 Vector3 euler = sensorOrientation.CurrentOrientation.QuaternionToEuler() + rotationCalibration;
@@ -57,15 +68,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 $"X:{acceleration.X}, Y:{acceleration.Y}, Z:{acceleration.Z}";
 
                 await udpHandler.SetSensorRotation(new Vector3(-euler.X, euler.Y, euler.Z).ToQuaternion());
-                //await udpHandler.SetSensorGyro(gyro);
-                //await udpHandler.SetSensorAcceleration(acceleration);
                 await udpHandler.SetSensorBattery(dualsense.Battery.Level / 100f);
-                Thread.Sleep(16);
             }
             return _ready;
         }
 
         public string Debug { get => _debug; set => _debug = value; }
         public bool Ready { get => _ready; set => _ready = value; }
+        public bool Disconnected { get => _disconnected; set => _disconnected = value; }
+        public string RememberedDualsenseId { get => _rememberedDualsenseId; set => _rememberedDualsenseId = value; }
     }
 }
