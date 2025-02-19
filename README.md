@@ -6,6 +6,3 @@ Have Slime VR Server and PS5 controllers turned on and connected via bluetooth b
 ![20250218_181944](https://github.com/user-attachments/assets/0d0e687e-3ef1-42bc-8c37-9a5b58888fa7)
 
 https://github.com/user-attachments/assets/a89e2d11-5f15-434f-99fa-72ef49b22073
-
-https://github.com/user-attachments/assets/7c914cd5-94e0-4310-816d-44b866ddfa02
-
