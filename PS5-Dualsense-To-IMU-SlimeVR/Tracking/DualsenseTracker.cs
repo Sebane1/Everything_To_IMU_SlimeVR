@@ -4,6 +4,8 @@ using System;
 using System.Numerics;
 using Wujek_Dualsense_API;
 
+using Valve.VR;
+using OVRSharp.Math;
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
     internal class DualsenseTracker {
         private string _debug;
@@ -18,6 +20,11 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private string _rememberedDualsenseId;
         private Dualsense dualsense;
         private string _lastDualSenseId;
+        private bool _simulateKnees = true;
+        private FalseThighTracker _falseThighTracker;
+        private Vector3 _euler;
+        private Vector3 _gyro;
+        private Vector3 _acceleration;
 
         public DualsenseTracker(int index, string dualsenseId, Color colour) {
             _lastDualSenseId = dualsenseId;
@@ -39,6 +46,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 udpHandler = new UDPHandler("Dualsense5", _id,
                  new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] });
                 rotationCalibration = -sensorOrientation.CurrentOrientation.QuaternionToEuler();
+                if (_simulateKnees) {
+                    _falseThighTracker = new FalseThighTracker(this);
+                }
                 _ready = true;
             });
         }
@@ -50,9 +60,11 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
 
         public async Task<bool> Update() {
             if (_ready) {
-                Vector3 euler = sensorOrientation.CurrentOrientation.QuaternionToEuler() + rotationCalibration;
-                Vector3 gyro = sensorOrientation.GyroData;
-                Vector3 acceleration = sensorOrientation.AccelerometerData;
+                var hmdRotation = HmdReader.GetHMDRotation();
+                float hmdEuler = hmdRotation.GetYawFromQuaternion();
+                _euler = sensorOrientation.CurrentOrientation.QuaternionToEuler() + rotationCalibration + (new Vector3(0, 0, -hmdEuler));
+                _gyro = sensorOrientation.GyroData;
+                _acceleration = sensorOrientation.AccelerometerData;
                 _debug =
                 $"Device Id: {macSpoof}\r\n" +
                 $"Quaternion Rotation:\r\n" +
@@ -61,14 +73,21 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 $"Z:{sensorOrientation.CurrentOrientation.Z}, " +
                 $"W:{sensorOrientation.CurrentOrientation.W}\r\n" +
                 $"Euler Rotation:\r\n" +
-                $"X:{euler.X}, Y:{euler.Y}, Z:{euler.Z}" +
+                $"X:{-_euler.X}, Y:{_euler.Y}, Z:{_euler.Z}" +
                 $"\r\nGyro:\r\n" +
-                $"X:{gyro.X}, Y:{gyro.Y}, Z:{gyro.Z}" +
+                $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
                 $"\r\nAcceleration:\r\n" +
-                $"X:{acceleration.X}, Y:{acceleration.Y}, Z:{acceleration.Z}";
-
-                await udpHandler.SetSensorRotation(new Vector3(-euler.X, euler.Y, euler.Z).ToQuaternion());
+                $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
+                $"HMD Rotation: {macSpoof}\r\n" +
+                $"Y:{hmdEuler}\r\n"
+                + _falseThighTracker.Debug;
                 await udpHandler.SetSensorBattery(dualsense.Battery.Level / 100f);
+                if (!_simulateKnees) {
+                    await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _euler.Z).ToQuaternion());
+                } else {
+                    await udpHandler.SetSensorRotation((new Vector3(float.Clamp(-_euler.X, -float.MaxValue, float.MaxValue), _euler.Y, _euler.Z)).ToQuaternion());
+                    await _falseThighTracker.Update();
+                }
             }
             return _ready;
         }
@@ -77,5 +96,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public bool Ready { get => _ready; set => _ready = value; }
         public bool Disconnected { get => _disconnected; set => _disconnected = value; }
         public string RememberedDualsenseId { get => _rememberedDualsenseId; set => _rememberedDualsenseId = value; }
+        public int Id { get => _id; set => _id = value; }
+        public string MacSpoof { get => macSpoof; set => macSpoof = value; }
+        public Vector3 Euler { get => _euler; set => _euler = value; }
+        public Vector3 Gyro { get => _gyro; set => _gyro = value; }
+        public Vector3 Acceleration { get => _acceleration; set => _acceleration = value; }
     }
 }

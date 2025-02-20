@@ -45,7 +45,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(422, 421);
+            ClientSize = new Size(422, 457);
             Controls.Add(textBox1);
             Name = "DebugDisplay";
             Text = "Form1";

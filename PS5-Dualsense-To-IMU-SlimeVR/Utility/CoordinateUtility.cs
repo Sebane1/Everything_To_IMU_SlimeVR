@@ -95,6 +95,39 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Utility {
 
             return degrees;
         }
+        public static Vector3 QuaternionToEulerZXY(this Quaternion q) {
+            // Normalize the quaternion to prevent errors if it's not unit length
+            q = Quaternion.Normalize(q);
+
+            // Calculate Euler angles (yaw, pitch, roll)
+            float pitch = MathF.Asin(2.0f * (q.W * q.Y - q.Z * q.X));
+
+            float yaw = 0;
+            float roll = 0;
+            // Check for gimbal lock (pitch = ±90 degrees)
+            if (MathF.Abs(pitch) >= MathF.PI / 2) {
+                yaw = MathF.Atan2(q.Y, q.W);
+                roll = 0.0f;
+                return new Vector3(pitch, yaw, roll); // Yaw and Roll can be ambiguous here
+            }
+
+            roll = MathF.Atan2(2.0f * (q.W * q.X + q.Y * q.Z), 1.0f - 2.0f * (q.X * q.X + q.Y * q.Y));
+            yaw = MathF.Atan2(2.0f * (q.W * q.Z + q.X * q.Y), 1.0f - 2.0f * (q.Y * q.Y + q.Z * q.Z));
+
+            // Return the Euler angles (pitch, yaw, roll)
+            return new Vector3(ConvertRadiansToDegrees(pitch), ConvertRadiansToDegrees(yaw), ConvertRadiansToDegrees(roll));
+        }
+
+        // Function to extract the yaw (rotation around Y-axis) directly from the quaternion
+        public static float GetYawFromQuaternion(this Quaternion q) {
+            // Normalize quaternion to avoid errors if it's not unit length
+            q = Quaternion.Normalize(q);
+
+            // Extract yaw (Y-axis rotation) from quaternion
+            float yaw = MathF.Atan2(2.0f * (q.W * q.Y + q.X * q.Z), 1.0f - 2.0f * (q.Y * q.Y + q.Z * q.Z));
+
+            return ConvertRadiansToDegrees(yaw);
+        }
         public static Vector3 Transform(ref Vector3 v, ref Quaternion rotation) {
             // This operation is an optimized-down version of v' = q * v * q^-1.
             // The expanded form would be to treat v as an 'axis only' quaternion

@@ -16,7 +16,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private float _previousTime;
 
         // Complementary filter parameters
-        private float alpha = 0.8f; // Weighting factor for blending
+        private float alpha = 0.9f; // Weighting factor for blending
         private Dualsense _dualsense;
         private Vector3 _accellerometerVectorCalibration;
         private Vector3 _gyroVectorCalibration;

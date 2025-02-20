@@ -1,7 +1,6 @@
 using PS5_Dualsense_To_IMU_SlimeVR.Tracking;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR
-{
+namespace PS5_Dualsense_To_IMU_SlimeVR {
     public partial class DebugDisplay : Form {
         DualSenseTrackerManager dualSenseTranslator;
         public DebugDisplay() {
