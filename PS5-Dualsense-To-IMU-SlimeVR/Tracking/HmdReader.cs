@@ -12,13 +12,11 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
 
         public static Quaternion GetHMDRotation() {
             TrackedDevicePose_t[] trackedDevices = new TrackedDevicePose_t[1] { new TrackedDevicePose_t() };
-            if (_vrSystem == null) {
-                try {
-                    var err = EVRInitError.None;
-                    _vrSystem = OpenVR.Init(ref err, EVRApplicationType.VRApplication_Utility);
-                } catch {
+            try {
+                var err = EVRInitError.None;
+                _vrSystem = OpenVR.Init(ref err, EVRApplicationType.VRApplication_Utility);
+            } catch {
 
-                }
             }
             if (_vrSystem != null) {
                 _vrSystem.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseStanding, 0, trackedDevices);

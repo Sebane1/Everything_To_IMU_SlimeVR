@@ -49,7 +49,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 $"X:{gyro.X}, Y:{gyro.Y}, Z:{gyro.Z}" +
                 $"\r\nAcceleration:\r\n" +
                 $"X:{acceleration.X}, Y:{acceleration.Y}, Z:{acceleration.Z}";
-                await udpHandler.SetSensorRotation(new Vector3(float.Clamp(-euler.X, -float.MaxValue, -5), euler.Y, euler.Z).ToQuaternion());
+                await udpHandler.SetSensorRotation(new Vector3(-euler.X > 132 ? -euler.X : float.Clamp(-euler.X, -float.MaxValue, -5), euler.Y, euler.Z).ToQuaternion());
             }
             return _ready;
         }

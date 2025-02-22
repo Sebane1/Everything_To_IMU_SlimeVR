@@ -20,7 +20,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private string _rememberedDualsenseId;
         private Dualsense dualsense;
         private string _lastDualSenseId;
-        private bool _simulateKnees = true;
+        private bool _simulateThighs = true;
         private FalseThighTracker _falseThighTracker;
         private Vector3 _euler;
         private Vector3 _gyro;
@@ -46,7 +46,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 udpHandler = new UDPHandler("Dualsense5", _id,
                  new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] });
                 rotationCalibration = -sensorOrientation.CurrentOrientation.QuaternionToEuler();
-                if (_simulateKnees) {
+                if (_simulateThighs) {
                     _falseThighTracker = new FalseThighTracker(this);
                 }
                 _ready = true;
@@ -78,14 +78,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
                 $"\r\nAcceleration:\r\n" +
                 $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
-                $"HMD Rotation: {macSpoof}\r\n" +
+                $"HMD Rotation:\r\n" +
                 $"Y:{hmdEuler}\r\n"
                 + _falseThighTracker.Debug;
                 await udpHandler.SetSensorBattery(dualsense.Battery.Level / 100f);
-                if (!_simulateKnees) {
+                if (!_simulateThighs) {
                     await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _euler.Z).ToQuaternion());
                 } else {
-                    await udpHandler.SetSensorRotation((new Vector3(float.Clamp(-_euler.X, -float.MaxValue, float.MaxValue), _euler.Y, _euler.Z)).ToQuaternion());
+                    await udpHandler.SetSensorRotation((new Vector3(-_euler.X, _euler.Y, _euler.Z)).ToQuaternion());
                     await _falseThighTracker.Update();
                 }
             }
