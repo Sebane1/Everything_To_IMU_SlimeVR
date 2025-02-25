@@ -1,9 +1,11 @@
 ﻿using Wujek_Dualsense_API;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
-    public class DualSenseTrackerManager {
+    public class DualSenseTrackerManager : IDisposable {
         private List<DualsenseTracker> _trackers;
         private Dictionary<string, KeyValuePair<int, bool>> _trackerInfo = new Dictionary<string, KeyValuePair<int, bool>>();
+        private bool disposed = false;
+
         public DualSenseTrackerManager() {
             Color[] colours = new Color[4] {
                 Color.Aqua,
@@ -14,7 +16,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
 
             _trackers = new List<DualsenseTracker>();
             Task.Run(async () => {
-                while (true) {
+                while (!disposed) {
                     var controllers = DualsenseUtils.GetControllerIDs();
                     var controllerCount = controllers.Count();
                     for (int i = 0; i < controllerCount; i++) {
@@ -47,6 +49,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                             _trackerInfo[_trackers[i].RememberedDualsenseId] = new KeyValuePair<int, bool>(info.Key, false);
                             _trackers.RemoveAt(i);
                             i = 0;
+                            tracker.Dispose();
                         }
                     }
                     Thread.Sleep(8);
@@ -54,5 +57,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             });
         }
         internal List<DualsenseTracker> Trackers { get => _trackers; set => _trackers = value; }
+
+        public void Dispose() {
+            disposed = true;
+        }
     }
 }

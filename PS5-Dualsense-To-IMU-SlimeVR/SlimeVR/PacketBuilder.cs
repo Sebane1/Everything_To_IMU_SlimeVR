@@ -142,14 +142,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
             var data = memoryStream.ToArray();
             return data;
         }
-        public byte[] BuildBatteryLevelPacket(float battery) {
+        public byte[] BuildBatteryLevelPacket(byte battery) {
             MemoryStream memoryStream = new MemoryStream(new byte[128]);
             BigEndianBinaryWriter writer = new BigEndianBinaryWriter(memoryStream);
             memoryStream.Position = 0;
             writer.Write(UDPPackets.BATTERY_LEVEL); // Header
             writer.Write(_packetId++); // Packet counter
             writer.Write((byte)_trackerId); // Tracker id
-            writer.Write((float)battery); // Battery data
+            writer.Write((byte)battery); // Battery data
             memoryStream.Position = 0;
             var data = memoryStream.ToArray();
             return data;

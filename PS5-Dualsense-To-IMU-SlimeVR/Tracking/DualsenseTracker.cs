@@ -7,7 +7,7 @@ using Wujek_Dualsense_API;
 using Valve.VR;
 using OVRSharp.Math;
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
-    internal class DualsenseTracker {
+    internal class DualsenseTracker : IDisposable {
         private string _debug;
         private int _index;
         private int _id;
@@ -25,6 +25,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private Vector3 _euler;
         private Vector3 _gyro;
         private Vector3 _acceleration;
+        private Vector3 _magnetometer;
+        private bool disposed;
 
         public DualsenseTracker(int index, string dualsenseId, Color colour) {
             _lastDualSenseId = dualsenseId;
@@ -59,12 +61,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         }
 
         public async Task<bool> Update() {
-            if (_ready) {
+            if (_ready && !disposed) {
                 var hmdRotation = HmdReader.GetHMDRotation();
                 float hmdEuler = hmdRotation.GetYawFromQuaternion();
-                _euler = sensorOrientation.CurrentOrientation.QuaternionToEuler() + rotationCalibration + (new Vector3(0, 0, -hmdEuler));
+                var initialEuler = sensorOrientation.CurrentOrientation.QuaternionToEuler() + rotationCalibration;
+                _euler =  (new Vector3(initialEuler.X, initialEuler.Y, sensorOrientation.YawDegrees));
                 _gyro = sensorOrientation.GyroData;
                 _acceleration = sensorOrientation.AccelerometerData;
+                _magnetometer = sensorOrientation.Magnetometer;
                 _debug =
                 $"Device Id: {macSpoof}\r\n" +
                 $"Quaternion Rotation:\r\n" +
@@ -81,15 +85,17 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 $"HMD Rotation:\r\n" +
                 $"Y:{hmdEuler}\r\n"
                 + _falseThighTracker.Debug;
-                await udpHandler.SetSensorBattery(dualsense.Battery.Level / 100f);
-                if (!_simulateThighs) {
-                    await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _euler.Z).ToQuaternion());
-                } else {
-                    await udpHandler.SetSensorRotation((new Vector3(-_euler.X, _euler.Y, _euler.Z)).ToQuaternion());
+                await udpHandler.SetSensorBattery((byte)dualsense.Battery.Level);
+                await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _euler.Z).ToQuaternion());
+                if (_simulateThighs) {
                     await _falseThighTracker.Update();
                 }
             }
             return _ready;
+        }
+
+        public void Dispose() {
+            disposed = true;
         }
 
         public string Debug { get => _debug; set => _debug = value; }

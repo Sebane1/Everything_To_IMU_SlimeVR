@@ -11,7 +11,10 @@
 
   <ItemGroup>
     <PackageReference Include="OVRSharp" Version="1.2.0" />
-    <PackageReference Include="Wujek_Dualsense_API" Version="1.6.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wujek-Dualsense-API\Wujek Dualsense API\Wujek Dualsense API.csproj" />
   </ItemGroup>
 
 </Project>

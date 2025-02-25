@@ -70,7 +70,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
             }
         }
 
-        public async Task<bool> SetSensorBattery(float battery) {
+        public async Task<bool> SetSensorBattery(byte battery) {
             await udpClient.SendAsync(packetBuilder.BuildBatteryLevelPacket(battery));
             return true;
         }
