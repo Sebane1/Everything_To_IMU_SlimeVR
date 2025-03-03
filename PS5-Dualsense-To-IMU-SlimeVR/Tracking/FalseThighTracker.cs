@@ -1,5 +1,4 @@
 ﻿using PS5_Dualsense_To_IMU_SlimeVR.SlimeVR;
-using PS5_Dualsense_To_IMU_SlimeVR.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,6 +16,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private string _macSpoof;
         private UDPHandler udpHandler;
         private bool _ready;
+        private float _calibratedHeight;
         private string _debug;
 
         public string Debug { get => _debug; set => _debug = value; }
@@ -33,23 +33,32 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                  new byte[] { (byte)_macSpoof[0], (byte)_macSpoof[1], (byte)_macSpoof[2],
                      (byte) _macSpoof[3], (byte) _macSpoof[4], (byte) _macSpoof[5] });
                 _ready = true;
+                _calibratedHeight = HmdReader.GetHMDHeight();
             });
         }
 
         public async Task<bool> Update() {
             if (_ready) {
+                var hmdHeight = HmdReader.GetHMDHeight();
+                var sitting = hmdHeight < _calibratedHeight / 2;
                 Vector3 euler = _dualSenseTracker.Euler;
-               Vector3 gyro = _dualSenseTracker.Gyro;
+                Vector3 gyro = _dualSenseTracker.Gyro;
                 Vector3 acceleration = _dualSenseTracker.Acceleration;
                 _debug =
                 $"Device Id: {_macSpoof}\r\n" +
+                $"Euler Rotation: {hmdHeight}\r\n" +
                 $"Euler Rotation:\r\n" +
                 $"X:{-euler.X}, Y:{euler.Y}, Z:{euler.Z}" +
                 $"\r\nGyro:\r\n" +
                 $"X:{gyro.X}, Y:{gyro.Y}, Z:{gyro.Z}" +
                 $"\r\nAcceleration:\r\n" +
                 $"X:{acceleration.X}, Y:{acceleration.Y}, Z:{acceleration.Z}";
-                await udpHandler.SetSensorRotation(new Vector3(-euler.X > 132 ? -euler.X : float.Clamp(-euler.X, -float.MaxValue, -5), euler.Y, euler.Z).ToQuaternion());
+
+                float newX = -euler.X > 132 ? -euler.X : float.Clamp(-euler.X, -float.MaxValue, -5);
+                float finalX = sitting && -euler.X > -94 ? -newX + 180 : newX;
+                float finalY = !sitting ? -euler.Y : euler.Y;
+                float finalZ = sitting ? -euler.Z : euler.Z;
+                await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, finalZ + _dualSenseTracker.LastHmdPositon).ToQuaternion());
             }
             return _ready;
         }

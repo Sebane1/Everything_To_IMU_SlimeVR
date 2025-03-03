@@ -1,5 +1,4 @@
 ﻿using PS5_Dualsense_To_IMU_SlimeVR.SlimeVR;
-using PS5_Dualsense_To_IMU_SlimeVR.Utility;
 using System;
 using System.Numerics;
 using Wujek_Dualsense_API;
@@ -15,6 +14,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private string macSpoof;
         private UDPHandler udpHandler;
         private Vector3 rotationCalibration;
+        private float _calibratedHeight;
         private bool _ready;
         private bool _disconnected;
         private string _rememberedDualsenseId;
@@ -22,6 +22,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private string _lastDualSenseId;
         private bool _simulateThighs = true;
         private FalseThighTracker _falseThighTracker;
+        private float _lastHmdPositon;
         private Vector3 _euler;
         private Vector3 _gyro;
         private Vector3 _acceleration;
@@ -49,6 +50,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 if (_simulateThighs) {
                     _falseThighTracker = new FalseThighTracker(this);
                 }
+                _calibratedHeight = HmdReader.GetHMDHeight();
                 _ready = true;
             });
         }
@@ -60,9 +62,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
 
         public async Task<bool> Update() {
             if (_ready) {
+                var hmdHeight = HmdReader.GetHMDHeight();
+                bool sitting = hmdHeight < _calibratedHeight / 2;
                 var hmdRotation = HmdReader.GetHMDRotation();
                 float hmdEuler = hmdRotation.GetYawFromQuaternion();
-                _euler = sensorOrientation.CurrentOrientation.QuaternionToEuler() + rotationCalibration + (new Vector3(0, 0, -hmdEuler));
+                if (!sitting) {
+                    _lastHmdPositon = -hmdEuler;
+                }
+                _euler = sensorOrientation.CurrentOrientation.QuaternionToEuler() + rotationCalibration;
                 _gyro = sensorOrientation.GyroData;
                 _acceleration = sensorOrientation.AccelerometerData;
                 _debug =
@@ -75,17 +82,19 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 $"Euler Rotation:\r\n" +
                 $"X:{-_euler.X}, Y:{_euler.Y}, Z:{_euler.Z}" +
                 $"\r\nGyro:\r\n" +
-                $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
+                $"X  ,:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
                 $"\r\nAcceleration:\r\n" +
                 $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
                 $"HMD Rotation:\r\n" +
                 $"Y:{hmdEuler}\r\n"
                 + _falseThighTracker.Debug;
+                float finalY = !sitting ? -_euler.Y : _euler.Y;
+                float finalZ = sitting ? _euler.Z : _euler.Z;
                 await udpHandler.SetSensorBattery(dualsense.Battery.Level / 100f);
                 if (!_simulateThighs) {
-                    await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _euler.Z).ToQuaternion());
+                    await udpHandler.SetSensorRotation(new Vector3(-_euler.X, finalY, finalZ + _lastHmdPositon).ToQuaternion());
                 } else {
-                    await udpHandler.SetSensorRotation((new Vector3(-_euler.X, _euler.Y, _euler.Z)).ToQuaternion());
+                    await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, finalZ + _lastHmdPositon)).ToQuaternion());
                     await _falseThighTracker.Update();
                 }
             }
@@ -101,5 +110,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public Vector3 Euler { get => _euler; set => _euler = value; }
         public Vector3 Gyro { get => _gyro; set => _gyro = value; }
         public Vector3 Acceleration { get => _acceleration; set => _acceleration = value; }
+        public float LastHmdPositon { get => _lastHmdPositon; set => _lastHmdPositon = value; }
     }
 }
