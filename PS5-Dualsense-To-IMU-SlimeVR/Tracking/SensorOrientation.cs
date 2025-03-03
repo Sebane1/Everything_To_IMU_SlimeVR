@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using PS5_Dualsense_To_IMU_SlimeVR.Utility;
 using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 using Wujek_Dualsense_API;
+using static Wujek_Dualsense_API.Motion;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
-    internal class SensorOrientation {
+    internal class SensorOrientation : IDisposable {
         private Quaternion currentOrientation = Quaternion.Identity;
         private Vector3 accelerometerData = Vector3.Zero;
         private Vector3 gyroData = Vector3.Zero;
@@ -23,25 +20,35 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         Stopwatch stopwatch = new Stopwatch();
         bool _calibratedRotation = false;
         private bool disposed;
+        private Vector3 _magnetometer;
+        private float gyroYawRate;
+        private float gyroDriftCompensation;
+        private float yawRadians;
+        private float yawDegrees;
 
         public Quaternion CurrentOrientation { get => currentOrientation; set => currentOrientation = value; }
         public Vector3 AccelerometerData { get => accelerometerData; set => accelerometerData = value; }
         public Vector3 GyroData { get => gyroData; set => gyroData = value; }
+        public Vector3 Magnetometer { get => _magnetometer; set => _magnetometer = value; }
+        public float YawRadians { get => yawRadians; set => yawRadians = value; }
+        public float YawDegrees { get => yawDegrees; set => yawDegrees = value; }
 
         public SensorOrientation(Dualsense dualsense) {
             _dualsense = dualsense;
             _dualsense.Connection.ControllerDisconnected += Connection_ControllerDisconnected;
+
             _accellerometerVectorCalibration = -(new Vector3(
                 _dualsense.ButtonState.accelerometer.X,
                 _dualsense.ButtonState.accelerometer.Y,
                 _dualsense.ButtonState.accelerometer.Z));
+
             _gyroVectorCalibration = -(new Vector3(
                 _dualsense.ButtonState.gyro.X,
                 _dualsense.ButtonState.gyro.Y,
                 _dualsense.ButtonState.gyro.Z));
             stopwatch.Start();
             Task.Run(() => {
-                while (true) {
+                while (!disposed) {
                     Update();
                     Thread.Sleep(16);
                 }
@@ -107,11 +114,13 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
 
             return orientation;
         }
+
         public bool IsValid(Quaternion quaternion) {
             bool isNaN = float.IsNaN(quaternion.X + quaternion.Y + quaternion.Z + quaternion.W);
             bool isZero = quaternion.X == 0 && quaternion.Y == 0 && quaternion.Z == 0 && quaternion.W == 0;
             return !(isNaN || isZero);
         }
+
         // Get delta rotation from gyroscope data
         private Quaternion GetDeltaRotationFromGyroscope(Vector3 gyroData, float deltaTime) {
             // Calculate the angle from the gyroscope angular velocity
@@ -126,10 +135,22 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 float sinHalfAngle = (float)Math.Sin(halfAngle);
                 float cosHalfAngle = (float)Math.Cos(halfAngle);
 
+                gyroYawRate += gyroData.Z * deltaTime;
+                yawRadians = gyroDriftCompensation * (yawRadians + gyroData.Z * deltaTime) + (1 - gyroDriftCompensation) * gyroYawRate;
+                if (yawRadians > Math.PI) {
+                    yawRadians -= (float)(2 * Math.PI);
+                } else if (yawRadians < -Math.PI) {
+                    yawRadians += (float)(2 * Math.PI);
+                }
+                yawDegrees = yawRadians.ConvertRadiansToDegrees();
                 return new Quaternion(axis.X * sinHalfAngle, axis.Y * sinHalfAngle, axis.Z * sinHalfAngle, cosHalfAngle);
             } else {
                 return Quaternion.Identity;
             }
+        }
+
+        public void Dispose() {
+            disposed = true;
         }
     }
 }
