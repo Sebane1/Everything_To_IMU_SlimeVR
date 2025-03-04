@@ -90,7 +90,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 + _falseThighTracker.Debug;
                 float finalY = !sitting ? -_euler.Y : _euler.Y;
                 float finalZ = sitting ? _euler.Z : _euler.Z;
-                await udpHandler.SetSensorBattery(dualsense.Battery.Level / 100f);
+                await udpHandler.SetSensorBattery((byte)dualsense.Battery.Level);
                 if (!_simulateThighs) {
                     await udpHandler.SetSensorRotation(new Vector3(-_euler.X, finalY, finalZ + _lastHmdPositon).ToQuaternion());
                 } else {
