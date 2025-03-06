@@ -14,7 +14,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
 
         // Complementary filter parameters
         private float alpha = 0.98f; // Weighting factor for blending
-        private Dualsense _dualsense;
+        private IBodyTracker _bodyTracker;
+        private int _index;
         private Vector3 _accellerometerVectorCalibration;
         private Vector3 _gyroVectorCalibration;
         Stopwatch stopwatch = new Stopwatch();
@@ -25,27 +26,21 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private float gyroDriftCompensation;
         private float yawRadians;
         private float yawDegrees;
+        private Vector3 _accelerometer;
+        private Vector3 _gyro;
 
         public Quaternion CurrentOrientation { get => currentOrientation; set => currentOrientation = value; }
         public Vector3 AccelerometerData { get => accelerometerData; set => accelerometerData = value; }
         public Vector3 GyroData { get => gyroData; set => gyroData = value; }
-        public Vector3 Magnetometer { get => _magnetometer; set => _magnetometer = value; }
         public float YawRadians { get => yawRadians; set => yawRadians = value; }
         public float YawDegrees { get => yawDegrees; set => yawDegrees = value; }
 
-        public SensorOrientation(Dualsense dualsense) {
-            _dualsense = dualsense;
-            _dualsense.Connection.ControllerDisconnected += Connection_ControllerDisconnected;
+        public SensorOrientation(int index) {
+            _index = index;
+            RefreshSensorData();
+            _accellerometerVectorCalibration = -(_accelerometer);
 
-            _accellerometerVectorCalibration = -(new Vector3(
-                _dualsense.ButtonState.accelerometer.X,
-                _dualsense.ButtonState.accelerometer.Y,
-                _dualsense.ButtonState.accelerometer.Z));
-
-            _gyroVectorCalibration = -(new Vector3(
-                _dualsense.ButtonState.gyro.X,
-                _dualsense.ButtonState.gyro.Y,
-                _dualsense.ButtonState.gyro.Z));
+            _gyroVectorCalibration = -(_gyro);
             stopwatch.Start();
             Task.Run(() => {
                 while (!disposed) {
@@ -58,10 +53,15 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private void Connection_ControllerDisconnected(object? sender, ConnectionStatus.Controller e) {
             disposed = true;
         }
-
+        private void RefreshSensorData() {
+            var sensorData = JSL.JslGetMotionState(_index);
+            _accelerometer = new Vector3(sensorData.gravX, sensorData.gravY, sensorData.gravZ);
+            _gyro = new Vector3(sensorData.accelX, sensorData.accelY, sensorData.accelZ);
+        }
         // Update method to simulate gyroscope and accelerometer data fusion
         public void Update() {
             if (!disposed) {
+                RefreshSensorData();
                 float currentTime = (float)stopwatch.Elapsed.TotalSeconds;
 
                 // Calculate deltaTime (the difference between current and previous time)
@@ -71,16 +71,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 _previousTime = currentTime;
 
                 // Accelerometer data
-                accelerometerData = (new Vector3(
-                    _dualsense.ButtonState.accelerometer.X,
-                    _dualsense.ButtonState.accelerometer.Y,
-                    _dualsense.ButtonState.accelerometer.Z) + _accellerometerVectorCalibration) / 1000;
+                accelerometerData = (_accelerometer + _accellerometerVectorCalibration) * 10;
 
                 // Gyroscope data
-                gyroData = (new Vector3(
-                    _dualsense.ButtonState.gyro.X,
-                    _dualsense.ButtonState.gyro.Y,
-                    _dualsense.ButtonState.gyro.Z) + _gyroVectorCalibration) / 1000;
+                gyroData = (_gyro + _gyroVectorCalibration);
 
                 // Step 1: Calculate pitch and roll from accelerometer data
                 Quaternion accelerometerOrientation = GetOrientationFromAccelerometer(accelerometerData);
@@ -89,7 +83,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 Quaternion gyroDeltaRotation = GetDeltaRotationFromGyroscope(gyroData, _deltaTime);
 
                 // Step 3: Fuse accelerometer and gyroscope data using complementary filter
-                currentOrientation = Quaternion.Slerp(accelerometerOrientation, currentOrientation * gyroDeltaRotation, alpha);
+                currentOrientation = accelerometerOrientation;
 
                 // Normalize the quaternion to prevent drift
                 currentOrientation = Quaternion.Normalize(currentOrientation);

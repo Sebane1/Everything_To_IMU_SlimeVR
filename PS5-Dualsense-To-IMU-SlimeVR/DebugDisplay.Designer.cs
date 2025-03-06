@@ -24,17 +24,19 @@
         /// </summary>
         private void InitializeComponent() {
             components = new System.ComponentModel.Container();
-            textBox1 = new TextBox();
+            debugText = new TextBox();
             refreshTimer = new System.Windows.Forms.Timer(components);
             SuspendLayout();
             // 
-            // textBox1
+            // debugText
             // 
-            textBox1.Location = new Point(12, 12);
-            textBox1.Multiline = true;
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(398, 397);
-            textBox1.TabIndex = 0;
+            debugText.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            debugText.Location = new Point(12, 12);
+            debugText.Multiline = true;
+            debugText.Name = "debugText";
+            debugText.Size = new Size(398, 785);
+            debugText.TabIndex = 0;
+            debugText.TextChanged += textBox1_TextChanged;
             // 
             // refreshTimer
             // 
@@ -45,17 +47,17 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(422, 457);
-            Controls.Add(textBox1);
+            ClientSize = new Size(422, 809);
+            Controls.Add(debugText);
             Name = "DebugDisplay";
-            Text = "Form1";
+            Text = "Debug Display";
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
 
-        private TextBox textBox1;
+        private TextBox debugText;
         private System.Windows.Forms.Timer refreshTimer;
     }
 }

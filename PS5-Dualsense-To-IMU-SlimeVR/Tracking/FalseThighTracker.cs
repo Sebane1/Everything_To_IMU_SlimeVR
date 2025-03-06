@@ -1,14 +1,8 @@
 ﻿using PS5_Dualsense_To_IMU_SlimeVR.SlimeVR;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using Wujek_Dualsense_API;
+
 
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
     internal class FalseThighTracker : IDisposable {
@@ -29,14 +23,19 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             Task.Run(async () => {
                 _tracker = tracker;
                 _macSpoof = CalculateMD5Hash(tracker.MacSpoof);
-                udpHandler = new UDPHandler("FalseTracker" + tracker.Id, tracker.Id + 500,
+                udpHandler = new UDPHandler("FalseTracker", tracker.Id + 500,
                  new byte[] { (byte)_macSpoof[0], (byte)_macSpoof[1], (byte)_macSpoof[2],
                      (byte) _macSpoof[3], (byte) _macSpoof[4], (byte) _macSpoof[5] });
                 _ready = true;
                 _calibratedHeight = HmdReader.GetHMDHeight();
             });
         }
-
+        public float SpecialClamp(float value) { 
+            if(value < -220 || value > 0) {
+                return 0;
+            }
+            return value;
+        }
         public async Task<bool> Update() {
             if (_ready) {
                 var hmdHeight = HmdReader.GetHMDHeight();
@@ -47,7 +46,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 $"HMD Height: {hmdHeight}\r\n" +
                 $"Euler Rotation:\r\n" +
                 $"X:{-euler.X}, Y:{euler.Y}, Z:{euler.Z}";
-                float newX = -euler.X > 132 ? -euler.X : float.Clamp(-euler.X, -float.MaxValue, -5);
+                float newX = SpecialClamp(-euler.X);
                 float finalX = sitting && -euler.X > -94 ? -newX + 180 : newX;
                 float finalY = !sitting ? -euler.Y : euler.Y;
                 float finalZ = sitting ? -euler.Z : euler.Z;
@@ -69,7 +68,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         }
 
         public void Dispose() {
-            throw new NotImplementedException();
+            _ready = false;
         }
     }
 }

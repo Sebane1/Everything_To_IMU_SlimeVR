@@ -9,7 +9,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private List<GenericControllerTracker> _trackers = new List<GenericControllerTracker>();
         private Dictionary<int, KeyValuePair<int, bool>> _trackerInfo = new Dictionary<int, KeyValuePair<int, bool>>();
         private bool disposed = false;
-
+        public event EventHandler<string> OnTrackerError;
 
         public GenericControllerTrackerManager() {
             Color[] colours = new Color[] {
@@ -24,24 +24,29 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             };
             Task.Run(async () => {
                 while (!disposed) {
-                    var controllers = JSL.JslConnectDevices();
-                    var controllerCount = JSL.JslConnectDevices();
-                    for (int i = 0; i < controllerCount; i++) {
-                        if (!_trackerInfo.ContainsKey(i)) {
-                            _trackerInfo[i] = new KeyValuePair<int, bool>(_trackers.Count, false);
-                        }
-                        var info = _trackerInfo[i];
-                        if (!info.Value) {
-                            var newTracker = new GenericControllerTracker(info.Key, colours[info.Key]);
-                            while (!newTracker.Ready) {
-                                Thread.Sleep(100);
+                    try {
+                        var controllers = JSL.JslConnectDevices();
+                        var controllerCount = JSL.JslConnectDevices();
+                        for (int i = 0; i < controllerCount; i++) {
+                            if (!_trackerInfo.ContainsKey(i)) {
+                                _trackerInfo[i] = new KeyValuePair<int, bool>(_trackers.Count, false);
                             }
-                            _trackers.Add(newTracker);
-                            _trackerInfo[i] = new KeyValuePair<int, bool>(info.Key, true);
+                            var info = _trackerInfo[i];
+                            if (!info.Value) {
+                                var newTracker = new GenericControllerTracker(info.Key, colours[info.Key]);
+                                while (!newTracker.Ready) {
+                                    Thread.Sleep(100);
+                                }
+                                newTracker.OnTrackerError += NewTracker_OnTrackerError;
+                                _trackers.Add(newTracker);
+                                _trackerInfo[i] = new KeyValuePair<int, bool>(info.Key, true);
+                            }
+                            Thread.Sleep(500);
                         }
-                        Thread.Sleep(500);
+                        Thread.Sleep(2000);
+                    } catch (Exception e) {
+                        OnTrackerError?.Invoke(this, e.Message);
                     }
-                    Thread.Sleep(2000);
                 }
             });
             Task.Run(async () => {
@@ -61,6 +66,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     Thread.Sleep(8);
                 }
             });
+        }
+
+        private void NewTracker_OnTrackerError(object? sender, string e) {
+            OnTrackerError.Invoke(sender, e);
         }
 
         internal List<GenericControllerTracker> Trackers { get => _trackers; set => _trackers = value; }

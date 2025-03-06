@@ -57,6 +57,11 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
             return true;
         }
 
+        public async Task<bool> SendButton() {
+            await udpClient.SendAsync(packetBuilder.BuildButtonPushedPacket());
+            return true;
+        }
+
         public async Task<bool> SendPacket(byte[] packet) {
             await udpClient.SendAsync(packet);
             return true;

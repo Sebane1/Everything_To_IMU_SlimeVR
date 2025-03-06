@@ -41,7 +41,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 dualsense.Connection.ControllerDisconnected += Connection_ControllerDisconnected;
                 dualsense.Start();
                 dualsense.SetLightbar(rememberedColour.R, rememberedColour.G, rememberedColour.B);
-                sensorOrientation = new SensorOrientation(dualsense);
+                sensorOrientation = new SensorOrientation(_index);
                 await Task.Delay(10000);
                 macSpoof = dualsense.DeviceID.Split("&")[3];
                 udpHandler = new UDPHandler("Dualsense5", _id,
