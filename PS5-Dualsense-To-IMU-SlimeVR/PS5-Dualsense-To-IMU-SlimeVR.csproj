@@ -14,10 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Wujek-Dualsense-API\Wujek Dualsense API\Wujek Dualsense API.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="JoyShockLibrary.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

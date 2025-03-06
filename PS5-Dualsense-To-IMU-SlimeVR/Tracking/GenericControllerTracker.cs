@@ -1,7 +1,6 @@
 ﻿using PS5_Dualsense_To_IMU_SlimeVR.SlimeVR;
 using System;
 using System.Numerics;
-using Wujek_Dualsense_API;
 
 using Valve.VR;
 using OVRSharp.Math;

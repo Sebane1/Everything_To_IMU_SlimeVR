@@ -1,8 +1,6 @@
 ﻿using PS5_Dualsense_To_IMU_SlimeVR.Utility;
 using System.Diagnostics;
 using System.Numerics;
-using Wujek_Dualsense_API;
-using static Wujek_Dualsense_API.Motion;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
     internal class SensorOrientation : IDisposable {
@@ -50,9 +48,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             });
         }
 
-        private void Connection_ControllerDisconnected(object? sender, ConnectionStatus.Controller e) {
-            disposed = true;
-        }
         private void RefreshSensorData() {
             var sensorData = JSL.JslGetMotionState(_index);
             _accelerometer = new Vector3(sensorData.gravX, sensorData.gravY, sensorData.gravZ);
