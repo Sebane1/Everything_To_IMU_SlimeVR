@@ -25,7 +25,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             Task.Run(async () => {
                 while (!disposed) {
                     try {
-                        var controllers = JSL.JslConnectDevices();
                         var controllerCount = JSL.JslConnectDevices();
                         for (int i = 0; i < controllerCount; i++) {
                             if (!_trackerInfo.ContainsKey(i)) {
