@@ -8,14 +8,22 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
         private PacketBuilder packetBuilder;
         private int slimevrPort = 6969;
         UdpClient udpClient;
-
+        int handshakeDelay = 1000;
 
         public UDPHandler(string trackerLabel, int trackerId, byte[] macAddress) {
             packetBuilder = new PacketBuilder(trackerLabel, trackerId);
             udpClient = new UdpClient();
             udpClient.Connect("localhost", 6969);
-            Handshake(BoardType.WRANGLER, ImuType.UNKNOWN, McuType.WRANGLER, macAddress);
-            AddImu(ImuType.UNKNOWN, TrackerPosition.NONE, TrackerDataType.ROTATION);
+            Task.Run(() => {
+                while (true) {
+                    Handshake(BoardType.WRANGLER, ImuType.UNKNOWN, McuType.WRANGLER, macAddress);
+                    AddImu(ImuType.UNKNOWN, TrackerPosition.NONE, TrackerDataType.ROTATION);
+                    Thread.Sleep(handshakeDelay += 5000);
+                    if(handshakeDelay > 30000) {
+                        break;
+                    }
+                }
+            });
         }
 
         public void Heartbeat() {

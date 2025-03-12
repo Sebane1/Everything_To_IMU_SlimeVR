@@ -65,7 +65,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     if (!sitting) {
                         _lastHmdPositon = -hmdEuler;
                     }
-                    _rotation = (_sensorOrientation.CurrentOrientation);
+                    var motionState = JSL.JslGetMotionState(_index);
+
+                    _rotation = !_simulateThighs ? new Quaternion(motionState.quatX, motionState.quatY, motionState.quatZ, motionState.quatW) : (_sensorOrientation.CurrentOrientation);
                     _euler = _rotation.QuaternionToEuler() + _rotationCalibration;
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
@@ -89,12 +91,12 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     } else {
                         _waitForRelease = false;
                     }
-                    float finalY = !sitting ? _euler.Y : -_euler.Y;
-                    float finalZ = sitting ? _euler.Z : _euler.Z;
                     await udpHandler.SetSensorBattery(100);
                     if (!_simulateThighs) {
-                        await udpHandler.SetSensorRotation(new Vector3(-_euler.X, finalY, finalZ + _lastHmdPositon).ToQuaternion());
+                        await udpHandler.SetSensorRotation(_rotation);
                     } else {
+                        float finalY = _euler.Y;
+                        float finalZ = sitting ? _euler.Z : _euler.Z;
                         await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, finalZ + _lastHmdPositon)).ToQuaternion());
                         await _falseThighTracker.Update();
                     }
@@ -108,6 +110,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             //JSL.JslStartContinuousCalibration(_index);
             await Task.Delay(5000);
             var value = JSL.JslGetMotionState(_index);
+            JSL.JslResetContinuousCalibration(_index);  
             _calibratedHeight = HmdReader.GetHMDHeight();
             _rotationCalibration = -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
             await udpHandler.SendButton();
@@ -128,5 +131,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public Vector3 Gyro { get => _gyro; set => _gyro = value; }
         public Vector3 Acceleration { get => _acceleration; set => _acceleration = value; }
         public float LastHmdPositon { get => _lastHmdPositon; set => _lastHmdPositon = value; }
+        public bool SimulateThighs { get => _simulateThighs; set => _simulateThighs = value; }
     }
 }

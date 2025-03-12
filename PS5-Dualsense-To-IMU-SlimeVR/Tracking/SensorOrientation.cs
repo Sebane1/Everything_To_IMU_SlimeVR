@@ -74,8 +74,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 // Step 1: Calculate pitch and roll from accelerometer data
                 Quaternion accelerometerOrientation = GetOrientationFromAccelerometer(accelerometerData);
 
-                // Step 2: Calculate delta rotation from gyroscope data
-                Quaternion gyroDeltaRotation = GetDeltaRotationFromGyroscope(gyroData, _deltaTime);
+                //// Step 2: Calculate delta rotation from gyroscope data
+                //Quaternion gyroDeltaRotation = GetDeltaRotationFromGyroscope(gyroData, _deltaTime);
 
                 // Step 3: Fuse accelerometer and gyroscope data using complementary filter
                 currentOrientation = accelerometerOrientation;

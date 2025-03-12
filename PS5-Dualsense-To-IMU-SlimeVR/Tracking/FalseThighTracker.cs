@@ -48,7 +48,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 $"X:{-euler.X}, Y:{euler.Y}, Z:{euler.Z}";
                 float newX = SpecialClamp(-euler.X);
                 float finalX = sitting && -euler.X > -94 ? -newX + 180 : newX;
-                float finalY = !sitting ? -euler.Y : euler.Y;
+                float finalY = euler.Y;
                 float finalZ = sitting ? -euler.Z : euler.Z;
                 await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, finalZ + _tracker.LastHmdPositon).ToQuaternion());
             }
