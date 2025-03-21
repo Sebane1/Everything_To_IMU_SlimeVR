@@ -17,7 +17,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private float _calibratedHeight;
         private bool _ready;
         private bool _disconnected;
-        private string _rememberedStringId;
         private string _lastDualSenseId;
         private bool _simulateThighs = true;
         private FalseThighTracker _falseThighTracker;
@@ -27,6 +26,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private Vector3 _gyro;
         private Vector3 _acceleration;
         private bool _waitForRelease;
+        private string _rememberedStringId;
+
         public event EventHandler<string> OnTrackerError;
 
         public GenericControllerTracker(int index, Color colour) {
@@ -54,7 +55,16 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 }
             });
         }
-
+        public bool GetGlobalState(int code) {
+            int connections = GenericControllerTrackerManager.ControllerCount;
+            for (int i = 0; i < connections; i++) {
+                var buttons = JSL.JslGetSimpleState(i).buttons;
+                if ((buttons & code) != 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
         public async Task<bool> Update() {
             if (_ready) {
                 try {
@@ -62,13 +72,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     bool sitting = hmdHeight < _calibratedHeight / 2;
                     var hmdRotation = HmdReader.GetHMDRotation();
                     float hmdEuler = hmdRotation.GetYawFromQuaternion();
-                    if (!sitting) {
+                    if (!sitting || GetGlobalState(0x08000)) {
                         _lastHmdPositon = -hmdEuler;
                     }
                     var motionState = JSL.JslGetMotionState(_index);
+                    var motionQuaternion = new Quaternion(motionState.quatX, motionState.quatY, motionState.quatZ, motionState.quatW);
 
-                    _rotation = !_simulateThighs ? new Quaternion(motionState.quatX, motionState.quatY, motionState.quatZ, motionState.quatW) : (_sensorOrientation.CurrentOrientation);
-                    _euler = _rotation.QuaternionToEuler() + _rotationCalibration;
+                    _rotation = !_simulateThighs ? motionQuaternion : (_sensorOrientation.CurrentOrientation);
+                    _euler = _rotation.QuaternionToEuler() + (!_simulateThighs ? new Vector3() : _rotationCalibration);
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
                     _debug =
@@ -76,7 +87,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     $"Euler Rotation:\r\n" +
                     $"X:{_euler.X}, Y:{_euler.Y}, Z:{_rotation.Z}" +
                     $"\r\nGyro:\r\n" +
-                    $"X  ,:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
+                    $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
                     $"\r\nAcceleration:\r\n" +
                     $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
                     $"HMD Rotation:\r\n" +
@@ -93,7 +104,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     }
                     await udpHandler.SetSensorBattery(100);
                     if (!_simulateThighs) {
-                        await udpHandler.SetSensorRotation(_rotation);
+                        await udpHandler.SetSensorRotation(new Vector3(_euler.X, _euler.Z, _euler.Y).ToQuaternion());
                     } else {
                         float finalY = _euler.Y;
                         float finalZ = sitting ? _euler.Z : _euler.Z;
@@ -107,10 +118,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             return _ready;
         }
         public async void Recalibrate() {
-            //JSL.JslStartContinuousCalibration(_index);
             await Task.Delay(5000);
-            var value = JSL.JslGetMotionState(_index);
-            JSL.JslResetContinuousCalibration(_index);  
+            JSL.JslResetContinuousCalibration(_index);
             _calibratedHeight = HmdReader.GetHMDHeight();
             _rotationCalibration = -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
             await udpHandler.SendButton();
@@ -124,7 +133,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public string Debug { get => _debug; set => _debug = value; }
         public bool Ready { get => _ready; set => _ready = value; }
         public bool Disconnected { get => _disconnected; set => _disconnected = value; }
-        public string RememberedDualsenseId { get => _rememberedStringId; set => _rememberedStringId = value; }
         public int Id { get => _id; set => _id = value; }
         public string MacSpoof { get => macSpoof; set => macSpoof = value; }
         public Vector3 Euler { get => _euler; set => _euler = value; }

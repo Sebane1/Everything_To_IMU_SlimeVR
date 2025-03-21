@@ -2,8 +2,8 @@ using PS5_Dualsense_To_IMU_SlimeVR.Tracking;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR {
     public partial class DebugDisplay : Form {
-        // DualSenseTrackerManager dualSenseTranslator;
         private GenericControllerTrackerManager _genericControllerTranslator;
+        private Configuration _configuration = new Configuration();
         Queue<string> errorQueue = new Queue<string>();
         int _currentIndex = 0;
         private bool _suppressCheckBoxEvent;
@@ -12,7 +12,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
 
         public DebugDisplay() {
             InitializeComponent();
-            _genericControllerTranslator = new GenericControllerTrackerManager();
+            _configuration = Configuration.LoadConfig();
+            _genericControllerTranslator = new GenericControllerTrackerManager(_configuration);
             _genericControllerTranslator.OnTrackerError += _genericControllerTranslator_OnTrackerError;
         }
 
@@ -31,7 +32,12 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             foreach (var item in _genericControllerTranslator.Trackers) {
                 deviceList.Items.Add("Tracker " + item.Id);
             }
-            deviceList.SelectedIndex = _currentIndex;
+            if (deviceList.Items.Count > 0) {
+                deviceList.SelectedIndex = _currentIndex;
+                falseThighSimulationCheckBox.Visible = true;
+            } else {
+                falseThighSimulationCheckBox.Visible = false;
+            }
             if (errorQueue.Count > 0) {
                 var value = errorQueue.Dequeue();
                 MessageBox.Show(value, "Tracking Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -46,6 +52,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             refreshTimer.Stop();
             _currentIndex = deviceList.SelectedIndex;
             _suppressCheckBoxEvent = true;
+            falseThighSimulationCheckBox.Checked = _configuration.TrackerConfigs[_currentIndex].SimulatesThighs;
             falseThighSimulationCheckBox.Checked = _genericControllerTranslator.Trackers[_currentIndex].SimulateThighs;
             _suppressCheckBoxEvent = false;
             refreshTimer.Start();
@@ -58,6 +65,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
         private void falseThighSimulationCheckBox_CheckedChanged(object sender, EventArgs e) {
             if (!_suppressCheckBoxEvent) {
                 _genericControllerTranslator.Trackers[_currentIndex].SimulateThighs = falseThighSimulationCheckBox.Checked;
+                _configuration.TrackerConfigs[_currentIndex].SimulatesThighs = falseThighSimulationCheckBox.Checked;
+                _configuration.SaveConfig();
             }
         }
     }

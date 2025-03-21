@@ -76,10 +76,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
         }
 
         public async void ListenForHandshake() {
-            var data = await udpClient.ReceiveAsync();
-            string value = Encoding.UTF8.GetString(data.Buffer);
-            if (value.Contains("Hey OVR =D 5")) {
-                udpClient.Connect(data.RemoteEndPoint.Address.ToString(), 6969);
+            try {
+                var data = await udpClient.ReceiveAsync();
+                string value = Encoding.UTF8.GetString(data.Buffer);
+                if (value.Contains("Hey OVR =D 5")) {
+                    udpClient.Connect(data.RemoteEndPoint.Address.ToString(), 6969);
+                }
+            } catch {
+
             }
         }
 
