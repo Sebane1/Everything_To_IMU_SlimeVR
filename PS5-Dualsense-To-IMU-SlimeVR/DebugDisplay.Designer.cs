@@ -29,8 +29,12 @@
             falseThighSimulationCheckBox = new CheckBox();
             tabControl1 = new TabControl();
             settingsPage = new TabPage();
+            rediscoverTrackerButton = new Button();
+            trackerConfigLabel = new Label();
             debugPage = new TabPage();
             debugText = new TextBox();
+            trackerCalibrationButton = new Button();
+            donateButton = new Button();
             tabControl1.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
@@ -55,7 +59,7 @@
             // falseThighSimulationCheckBox
             // 
             falseThighSimulationCheckBox.AutoSize = true;
-            falseThighSimulationCheckBox.Location = new Point(6, 15);
+            falseThighSimulationCheckBox.Location = new Point(10, 36);
             falseThighSimulationCheckBox.Name = "falseThighSimulationCheckBox";
             falseThighSimulationCheckBox.Size = new Size(117, 19);
             falseThighSimulationCheckBox.TabIndex = 1;
@@ -70,20 +74,41 @@
             tabControl1.Location = new Point(99, -2);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(322, 394);
+            tabControl1.Size = new Size(322, 357);
             tabControl1.TabIndex = 2;
             // 
             // settingsPage
             // 
+            settingsPage.Controls.Add(rediscoverTrackerButton);
+            settingsPage.Controls.Add(trackerConfigLabel);
             settingsPage.Controls.Add(falseThighSimulationCheckBox);
             settingsPage.Location = new Point(4, 24);
             settingsPage.Name = "settingsPage";
             settingsPage.Padding = new Padding(3);
-            settingsPage.Size = new Size(314, 366);
+            settingsPage.Size = new Size(314, 329);
             settingsPage.TabIndex = 0;
             settingsPage.Text = "Settings";
             settingsPage.UseVisualStyleBackColor = true;
             settingsPage.Click += tabPage1_Click;
+            // 
+            // rediscoverTrackerButton
+            // 
+            rediscoverTrackerButton.Location = new Point(10, 66);
+            rediscoverTrackerButton.Name = "rediscoverTrackerButton";
+            rediscoverTrackerButton.Size = new Size(117, 23);
+            rediscoverTrackerButton.TabIndex = 3;
+            rediscoverTrackerButton.Text = "Rediscover Tracker";
+            rediscoverTrackerButton.UseVisualStyleBackColor = true;
+            rediscoverTrackerButton.Click += rediscoverTrackerButton_Clicked;
+            // 
+            // trackerConfigLabel
+            // 
+            trackerConfigLabel.AutoSize = true;
+            trackerConfigLabel.Location = new Point(6, 3);
+            trackerConfigLabel.Name = "trackerConfigLabel";
+            trackerConfigLabel.Size = new Size(121, 15);
+            trackerConfigLabel.TabIndex = 2;
+            trackerConfigLabel.Text = "Tracker Configuration";
             // 
             // debugPage
             // 
@@ -91,7 +116,7 @@
             debugPage.Location = new Point(4, 24);
             debugPage.Name = "debugPage";
             debugPage.Padding = new Padding(3);
-            debugPage.Size = new Size(314, 366);
+            debugPage.Size = new Size(314, 329);
             debugPage.TabIndex = 1;
             debugPage.Text = "Debug";
             debugPage.UseVisualStyleBackColor = true;
@@ -104,11 +129,36 @@
             debugText.Size = new Size(296, 339);
             debugText.TabIndex = 0;
             // 
+            // trackerCalibrationButton
+            // 
+            trackerCalibrationButton.Location = new Point(113, 357);
+            trackerCalibrationButton.Name = "trackerCalibrationButton";
+            trackerCalibrationButton.Size = new Size(183, 31);
+            trackerCalibrationButton.TabIndex = 4;
+            trackerCalibrationButton.Text = "Recalibrate Controller Trackers";
+            trackerCalibrationButton.UseVisualStyleBackColor = true;
+            trackerCalibrationButton.Click += trackerCalibrationButton_Click;
+            // 
+            // donateButton
+            // 
+            donateButton.BackColor = Color.RosyBrown;
+            donateButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            donateButton.ForeColor = Color.Snow;
+            donateButton.Location = new Point(294, 357);
+            donateButton.Name = "donateButton";
+            donateButton.Size = new Size(127, 31);
+            donateButton.TabIndex = 5;
+            donateButton.Text = "Donate";
+            donateButton.UseVisualStyleBackColor = false;
+            donateButton.Click += donateButton_Click;
+            // 
             // DebugDisplay
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(421, 389);
+            Controls.Add(donateButton);
+            Controls.Add(trackerCalibrationButton);
             Controls.Add(tabControl1);
             Controls.Add(deviceList);
             FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -131,5 +181,9 @@
         private TabPage settingsPage;
         private TabPage debugPage;
         private TextBox debugText;
+        private Label trackerConfigLabel;
+        private Button rediscoverTrackerButton;
+        private Button trackerCalibrationButton;
+        private Button donateButton;
     }
 }

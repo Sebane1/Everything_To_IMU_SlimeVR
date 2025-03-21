@@ -1,4 +1,6 @@
 using PS5_Dualsense_To_IMU_SlimeVR.Tracking;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR {
     public partial class DebugDisplay : Form {
@@ -34,9 +36,11 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             }
             if (deviceList.Items.Count > 0) {
                 deviceList.SelectedIndex = _currentIndex;
+                rediscoverTrackerButton.Visible = true;
                 falseThighSimulationCheckBox.Visible = true;
             } else {
                 falseThighSimulationCheckBox.Visible = false;
+                rediscoverTrackerButton.Visible = false;
             }
             if (errorQueue.Count > 0) {
                 var value = errorQueue.Dequeue();
@@ -54,6 +58,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             _suppressCheckBoxEvent = true;
             falseThighSimulationCheckBox.Checked = _configuration.TrackerConfigs[_currentIndex].SimulatesThighs;
             falseThighSimulationCheckBox.Checked = _genericControllerTranslator.Trackers[_currentIndex].SimulateThighs;
+            trackerConfigLabel.Text = $"Tracker {_currentIndex + 1} Config";
             _suppressCheckBoxEvent = false;
             refreshTimer.Start();
         }
@@ -67,6 +72,35 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
                 _genericControllerTranslator.Trackers[_currentIndex].SimulateThighs = falseThighSimulationCheckBox.Checked;
                 _configuration.TrackerConfigs[_currentIndex].SimulatesThighs = falseThighSimulationCheckBox.Checked;
                 _configuration.SaveConfig();
+            }
+        }
+
+        private void rediscoverTrackerButton_Clicked(object sender, EventArgs e) {
+            _genericControllerTranslator.Trackers[_currentIndex].Rediscover();
+        }
+
+        private void trackerCalibrationButton_Click(object sender, EventArgs e) {
+            foreach (var item in _genericControllerTranslator.Trackers) {
+                item.Recalibrate();
+            }
+        }
+
+        private void donateButton_Click(object sender, EventArgs e) {
+            OpenURL("https://ko-fi.com/sebastina");
+        }
+        public void OpenURL(string url) {
+            try {
+                Process.Start(url);
+            } catch {
+                // Handle exceptions, such as the browser not being installed
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                    Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+                } else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
+                    // Handle for Linux and macOS
+                    Process process = new Process();
+                    process.StartInfo = new ProcessStartInfo("xdg-open", url) { UseShellExecute = false };
+                    process.Start();
+                }
             }
         }
     }

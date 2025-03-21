@@ -5,31 +5,48 @@ using static PS5_Dualsense_To_IMU_SlimeVR.SlimeVR.FirmwareConstants;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
     public class UDPHandler {
+        private byte[] _macAddress;
         private PacketBuilder packetBuilder;
         private int slimevrPort = 6969;
         UdpClient udpClient;
-        int handshakeDelay = 1000;
+        int handshakeCount = 1000;
+        bool _active = false;
+
+        public bool Active { get => _active; set => _active = value; }
 
         public UDPHandler(string trackerLabel, int trackerId, byte[] macAddress) {
+            _macAddress = macAddress;
             packetBuilder = new PacketBuilder(trackerLabel, trackerId);
             udpClient = new UdpClient();
             udpClient.Connect("localhost", 6969);
             Task.Run(() => {
                 while (true) {
-                    Handshake(BoardType.WRANGLER, ImuType.UNKNOWN, McuType.WRANGLER, macAddress);
-                    AddImu(ImuType.UNKNOWN, TrackerPosition.NONE, TrackerDataType.ROTATION);
-                    Thread.Sleep(handshakeDelay += 5000);
-                    if(handshakeDelay > 30000) {
-                        break;
+                    if (_active) {
+                        Handshake(BoardType.WRANGLER, ImuType.UNKNOWN, McuType.WRANGLER, macAddress);
+                        AddImu(ImuType.UNKNOWN, TrackerPosition.NONE, TrackerDataType.ROTATION);
+                        Thread.Sleep(1000);
+                        handshakeCount += 1;
+                        if (handshakeCount > 10) {
+                            break;
+                        }
+                    } else {
+                        Thread.Sleep(5000);
                     }
                 }
             });
         }
 
+        public void Initialize() {
+            Handshake(BoardType.WRANGLER, ImuType.UNKNOWN, McuType.WRANGLER, _macAddress);
+            AddImu(ImuType.UNKNOWN, TrackerPosition.NONE, TrackerDataType.ROTATION);
+        }
+
         public void Heartbeat() {
             Task.Run(async () => {
                 while (true) {
-                    await udpClient.SendAsync(packetBuilder.HeartBeat);
+                    if (_active) {
+                        await udpClient.SendAsync(packetBuilder.HeartBeat);
+                    }
                     await Task.Delay(800); // At least 1 time per second (<1000ms)
                 }
             });

@@ -48,6 +48,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     }
                     udpHandler = new UDPHandler("GenericController" + _rememberedStringId, _id,
                      new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] });
+                    udpHandler.Active = true;
                     Recalibrate();
                     _ready = true;
                 } catch (Exception e) {
@@ -111,6 +112,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                         await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, finalZ + _lastHmdPositon)).ToQuaternion());
                         await _falseThighTracker.Update();
                     }
+                    _falseThighTracker.IsActive = _simulateThighs;
                 } catch (Exception e) {
                     OnTrackerError.Invoke(this, e.Message);
                 }
@@ -123,6 +125,12 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             _calibratedHeight = HmdReader.GetHMDHeight();
             _rotationCalibration = -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
             await udpHandler.SendButton();
+        }
+        public void Rediscover() {
+            udpHandler.Initialize();
+            if (SimulateThighs) {
+                _falseThighTracker.UdpHandler.Initialize();
+            }
         }
         public void Dispose() {
             _ready = false;

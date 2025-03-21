@@ -8,12 +8,20 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
     internal class FalseThighTracker : IDisposable {
         private IBodyTracker _tracker;
         private string _macSpoof;
-        private UDPHandler udpHandler;
+        private UDPHandler _udpHandler;
         private bool _ready;
         private float _calibratedHeight;
         private string _debug;
-
+        public bool IsActive {
+            get {
+                return _udpHandler.Active;
+            }
+            set {
+                _udpHandler.Active = value;
+            }
+        }
         public string Debug { get => _debug; set => _debug = value; }
+        public UDPHandler UdpHandler { get => _udpHandler; set => _udpHandler = value; }
 
         public FalseThighTracker(IBodyTracker dualsenseTracker) {
             Initialize(dualsenseTracker);
@@ -23,15 +31,15 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             Task.Run(async () => {
                 _tracker = tracker;
                 _macSpoof = CalculateMD5Hash(tracker.MacSpoof);
-                udpHandler = new UDPHandler("FalseTracker", tracker.Id + 500,
+                _udpHandler = new UDPHandler("FalseTracker", tracker.Id + 500,
                  new byte[] { (byte)_macSpoof[0], (byte)_macSpoof[1], (byte)_macSpoof[2],
                      (byte) _macSpoof[3], (byte) _macSpoof[4], (byte) _macSpoof[5] });
                 _ready = true;
                 _calibratedHeight = HmdReader.GetHMDHeight();
             });
         }
-        public float SpecialClamp(float value) { 
-            if(value < -220 || value > 0) {
+        public float SpecialClamp(float value) {
+            if (value < -220 || value > 0) {
                 return 0;
             }
             return value;
@@ -50,7 +58,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 float finalX = sitting && -euler.X > -94 ? -newX + 180 : newX;
                 float finalY = euler.Y;
                 float finalZ = sitting ? -euler.Z : euler.Z;
-                await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, finalZ + _tracker.LastHmdPositon).ToQuaternion());
+                await _udpHandler.SetSensorRotation(new Vector3(finalX, finalY, finalZ + _tracker.LastHmdPositon).ToQuaternion());
             }
             return _ready;
         }
