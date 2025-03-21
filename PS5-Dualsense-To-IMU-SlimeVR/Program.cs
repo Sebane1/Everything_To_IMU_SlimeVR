@@ -1,3 +1,5 @@
+using AutoUpdaterDotNET;
+
 namespace PS5_Dualsense_To_IMU_SlimeVR {
     internal static class Program {
         /// <summary>
@@ -7,8 +9,22 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
         static void Main() {
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
-            ApplicationConfiguration.Initialize();
-            Application.Run(new ConfigurationDisplay());
+
+
+            bool launchForm = true;
+            AutoUpdater.DownloadPath = Application.StartupPath;
+            AutoUpdater.Synchronous = true;
+            AutoUpdater.Mandatory = true;
+            AutoUpdater.UpdateMode = Mode.ForcedDownload;
+            AutoUpdater.Start("https://raw.githubusercontent.com/Sebane1/PS5_Dualsense_To_IMU_SlimeVR/update.xml");
+            AutoUpdater.ApplicationExitEvent += delegate () {
+                launchForm = false;
+            };
+
+            if (launchForm) {
+                ApplicationConfiguration.Initialize();
+                Application.Run(new ConfigurationDisplay());
+            }
         }
     }
 }

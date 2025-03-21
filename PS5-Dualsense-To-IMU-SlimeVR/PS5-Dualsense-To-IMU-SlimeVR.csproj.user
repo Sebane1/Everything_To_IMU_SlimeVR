@@ -4,7 +4,7 @@
     <_LastSelectedProfileId>C:\Users\stel9\source\repos\PS5-Dualsense-To-IMU-SlimeVR\PS5-Dualsense-To-IMU-SlimeVR\Properties\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Update="DebugDisplay.cs">
+    <Compile Update="ConfigurationDisplay.cs">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>

@@ -14,6 +14,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
 
         public ConfigurationDisplay() {
             InitializeComponent();
+            AutoScaleDimensions = new SizeF(96, 96);
             _configuration = Configuration.LoadConfig();
             _genericControllerTranslator = new GenericControllerTrackerManager(_configuration);
             _genericControllerTranslator.OnTrackerError += _genericControllerTranslator_OnTrackerError;

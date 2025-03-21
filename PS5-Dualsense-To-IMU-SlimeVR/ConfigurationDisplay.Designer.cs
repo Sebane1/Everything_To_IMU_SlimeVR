@@ -27,7 +27,7 @@
             refreshTimer = new System.Windows.Forms.Timer(components);
             deviceList = new ListBox();
             falseThighSimulationCheckBox = new CheckBox();
-            tabControl1 = new TabControl();
+            tabOptions = new TabControl();
             settingsPage = new TabPage();
             rediscoverTrackerButton = new Button();
             trackerConfigLabel = new Label();
@@ -35,7 +35,7 @@
             debugText = new TextBox();
             trackerCalibrationButton = new Button();
             donateButton = new Button();
-            tabControl1.SuspendLayout();
+            tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
             SuspendLayout();
@@ -48,6 +48,7 @@
             // 
             // deviceList
             // 
+            deviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             deviceList.FormattingEnabled = true;
             deviceList.ItemHeight = 15;
             deviceList.Location = new Point(-2, -2);
@@ -67,15 +68,16 @@
             falseThighSimulationCheckBox.UseVisualStyleBackColor = true;
             falseThighSimulationCheckBox.CheckedChanged += falseThighSimulationCheckBox_CheckedChanged;
             // 
-            // tabControl1
+            // tabOptions
             // 
-            tabControl1.Controls.Add(settingsPage);
-            tabControl1.Controls.Add(debugPage);
-            tabControl1.Location = new Point(99, -2);
-            tabControl1.Name = "tabControl1";
-            tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(322, 357);
-            tabControl1.TabIndex = 2;
+            tabOptions.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tabOptions.Controls.Add(settingsPage);
+            tabOptions.Controls.Add(debugPage);
+            tabOptions.Location = new Point(99, -2);
+            tabOptions.Name = "tabOptions";
+            tabOptions.SelectedIndex = 0;
+            tabOptions.Size = new Size(322, 357);
+            tabOptions.TabIndex = 2;
             // 
             // settingsPage
             // 
@@ -131,6 +133,7 @@
             // 
             // trackerCalibrationButton
             // 
+            trackerCalibrationButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             trackerCalibrationButton.Location = new Point(113, 357);
             trackerCalibrationButton.Name = "trackerCalibrationButton";
             trackerCalibrationButton.Size = new Size(183, 31);
@@ -141,6 +144,7 @@
             // 
             // donateButton
             // 
+            donateButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             donateButton.BackColor = Color.RosyBrown;
             donateButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             donateButton.ForeColor = Color.Snow;
@@ -154,18 +158,18 @@
             // 
             // ConfigurationDisplay
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
-            AutoScaleMode = AutoScaleMode.Font;
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
             ClientSize = new Size(421, 389);
             Controls.Add(donateButton);
             Controls.Add(trackerCalibrationButton);
-            Controls.Add(tabControl1);
+            Controls.Add(tabOptions);
             Controls.Add(deviceList);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             Name = "ConfigurationDisplay";
             Text = "Configuration Display";
-            tabControl1.ResumeLayout(false);
+            tabOptions.ResumeLayout(false);
             settingsPage.ResumeLayout(false);
             settingsPage.PerformLayout();
             debugPage.ResumeLayout(false);
@@ -177,7 +181,7 @@
         private System.Windows.Forms.Timer refreshTimer;
         private ListBox deviceList;
         private CheckBox falseThighSimulationCheckBox;
-        private TabControl tabControl1;
+        private TabControl tabOptions;
         private TabPage settingsPage;
         private TabPage debugPage;
         private TextBox debugText;
