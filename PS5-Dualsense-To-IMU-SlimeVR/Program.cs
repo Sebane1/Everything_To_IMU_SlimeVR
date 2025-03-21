@@ -8,7 +8,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            Application.Run(new DebugDisplay());
+            Application.Run(new ConfigurationDisplay());
         }
     }
 }

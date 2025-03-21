@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR {
-    public partial class DebugDisplay : Form {
+    public partial class ConfigurationDisplay : Form {
         private GenericControllerTrackerManager _genericControllerTranslator;
         private Configuration _configuration = new Configuration();
         Queue<string> errorQueue = new Queue<string>();
@@ -12,7 +12,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
 
         public int CurrentIndex { get => _currentIndex; set => _currentIndex = value; }
 
-        public DebugDisplay() {
+        public ConfigurationDisplay() {
             InitializeComponent();
             _configuration = Configuration.LoadConfig();
             _genericControllerTranslator = new GenericControllerTrackerManager(_configuration);

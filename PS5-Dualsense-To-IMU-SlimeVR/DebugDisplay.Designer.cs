@@ -1,5 +1,5 @@
 ﻿namespace PS5_Dualsense_To_IMU_SlimeVR {
-    partial class DebugDisplay {
+    partial class ConfigurationDisplay {
         /// <summary>
         ///  Required designer variable.
         /// </summary>
@@ -59,11 +59,11 @@
             // falseThighSimulationCheckBox
             // 
             falseThighSimulationCheckBox.AutoSize = true;
-            falseThighSimulationCheckBox.Location = new Point(10, 36);
+            falseThighSimulationCheckBox.Location = new Point(10, 32);
             falseThighSimulationCheckBox.Name = "falseThighSimulationCheckBox";
-            falseThighSimulationCheckBox.Size = new Size(117, 19);
+            falseThighSimulationCheckBox.Size = new Size(236, 19);
             falseThighSimulationCheckBox.TabIndex = 1;
-            falseThighSimulationCheckBox.Text = "Uses False Thighs";
+            falseThighSimulationCheckBox.Text = "Thigh Tracker Simulation (Experimental)";
             falseThighSimulationCheckBox.UseVisualStyleBackColor = true;
             falseThighSimulationCheckBox.CheckedChanged += falseThighSimulationCheckBox_CheckedChanged;
             // 
@@ -152,7 +152,7 @@
             donateButton.UseVisualStyleBackColor = false;
             donateButton.Click += donateButton_Click;
             // 
-            // DebugDisplay
+            // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -163,8 +163,8 @@
             Controls.Add(deviceList);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
-            Name = "DebugDisplay";
-            Text = "Debug Display";
+            Name = "ConfigurationDisplay";
+            Text = "Configuration Display";
             tabControl1.ResumeLayout(false);
             settingsPage.ResumeLayout(false);
             settingsPage.PerformLayout();
