@@ -1,12 +1,8 @@
 ﻿using PS5_Dualsense_To_IMU_SlimeVR.SlimeVR;
-using System;
 using System.Numerics;
-
-using Valve.VR;
-using OVRSharp.Math;
-using System.Diagnostics;
+using static PS5_Dualsense_To_IMU_SlimeVR.TrackerConfig;
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
-    internal class GenericControllerTracker : IDisposable, IBodyTracker {
+    public class GenericControllerTracker : IDisposable, IBodyTracker {
         private string _debug;
         private int _index;
         private int _id;
@@ -19,14 +15,16 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private bool _disconnected;
         private string _lastDualSenseId;
         private bool _simulateThighs = true;
+        private bool _useWaistTrackerForYaw;
         private FalseThighTracker _falseThighTracker;
-        private float _lastHmdPositon;
+        private float _lastEulerPositon;
         private Quaternion _rotation;
         private Vector3 _euler;
         private Vector3 _gyro;
         private Vector3 _acceleration;
         private bool _waitForRelease;
         private string _rememberedStringId;
+        private RotationReferenceType _yawReferenceTypeValue;
 
         public event EventHandler<string> OnTrackerError;
 
@@ -66,20 +64,33 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             }
             return false;
         }
+
+        private Quaternion GetTrackerRotation(RotationReferenceType yawReferenceType) {
+            switch (yawReferenceType) {
+                case RotationReferenceType.HmdRotation:
+                    return OpenVRReader.GetHMDRotation();
+                case RotationReferenceType.WaistRotation:
+                    return OpenVRReader.GetWaistTrackerRotation();
+                case RotationReferenceType.TrackerRotation:
+                    var motionState = JSL.JslGetMotionState(_index);
+                    var motionQuaternion = new Quaternion(motionState.quatX, motionState.quatY, motionState.quatZ, motionState.quatW);
+                    return motionQuaternion;
+            }
+            return Quaternion.Identity;
+        }
+
         public async Task<bool> Update() {
             if (_ready) {
                 try {
-                    var hmdHeight = HmdReader.GetHMDHeight();
-                    bool sitting = hmdHeight < _calibratedHeight / 2;
-                    var hmdRotation = HmdReader.GetHMDRotation();
-                    float hmdEuler = hmdRotation.GetYawFromQuaternion();
-                    if (!sitting || GetGlobalState(0x08000)) {
-                        _lastHmdPositon = -hmdEuler;
+                    var hmdHeight = OpenVRReader.GetHMDHeight();
+                    bool isClamped = !_falseThighTracker.IsClamped;
+                    var trackerRotation = GetTrackerRotation(!_simulateThighs ? RotationReferenceType.TrackerRotation : YawReferenceTypeValue);
+                    float trackerEuler = trackerRotation.GetYawFromQuaternion();
+                    if (!isClamped || GetGlobalState(0x08000) || YawReferenceTypeValue != RotationReferenceType.HmdRotation) {
+                        _lastEulerPositon = YawReferenceTypeValue != RotationReferenceType.TrackerRotation ? -trackerEuler : trackerEuler;
                     }
-                    var motionState = JSL.JslGetMotionState(_index);
-                    var motionQuaternion = new Quaternion(motionState.quatX, motionState.quatY, motionState.quatZ, motionState.quatW);
 
-                    _rotation = !_simulateThighs ? motionQuaternion : (_sensorOrientation.CurrentOrientation);
+                    _rotation = !_simulateThighs ? trackerRotation : (_sensorOrientation.CurrentOrientation);
                     _euler = _rotation.QuaternionToEuler() + (!_simulateThighs ? new Vector3() : _rotationCalibration);
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
@@ -91,8 +102,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
                     $"\r\nAcceleration:\r\n" +
                     $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
-                    $"HMD Rotation:\r\n" +
-                    $"Y:{hmdEuler}\r\n"
+                    $"Yaw Reference Rotation:\r\n" +
+                    $"Y:{trackerEuler}\r\n"
                     + _falseThighTracker.Debug;
                     var buttons = JSL.JslGetSimpleState(_index).buttons;
                     if ((buttons & 0x20000) != 0) {
@@ -108,8 +119,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                         await udpHandler.SetSensorRotation(new Vector3(_euler.X, _euler.Z, _euler.Y).ToQuaternion());
                     } else {
                         float finalY = _euler.Y;
-                        float finalZ = sitting ? _euler.Z : _euler.Z;
-                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, finalZ + _lastHmdPositon)).ToQuaternion());
+                        float finalZ = isClamped ? _euler.Z : _euler.Z;
+                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, finalZ + _lastEulerPositon)).ToQuaternion());
                         await _falseThighTracker.Update();
                     }
                     _falseThighTracker.IsActive = _simulateThighs;
@@ -122,7 +133,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public async void Recalibrate() {
             await Task.Delay(5000);
             JSL.JslResetContinuousCalibration(_index);
-            _calibratedHeight = HmdReader.GetHMDHeight();
+            _calibratedHeight = OpenVRReader.GetHMDHeight();
             _rotationCalibration = -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
             await udpHandler.SendButton();
         }
@@ -146,7 +157,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public Vector3 Euler { get => _euler; set => _euler = value; }
         public Vector3 Gyro { get => _gyro; set => _gyro = value; }
         public Vector3 Acceleration { get => _acceleration; set => _acceleration = value; }
-        public float LastHmdPositon { get => _lastHmdPositon; set => _lastHmdPositon = value; }
+        public float LastHmdPositon { get => _lastEulerPositon; set => _lastEulerPositon = value; }
         public bool SimulateThighs { get => _simulateThighs; set => _simulateThighs = value; }
+        public bool UseWaistTrackerForYaw { get => _useWaistTrackerForYaw; set => _useWaistTrackerForYaw = value; }
+        public RotationReferenceType YawReferenceTypeValue { get => _yawReferenceTypeValue; set => _yawReferenceTypeValue = value; }
     }
 }

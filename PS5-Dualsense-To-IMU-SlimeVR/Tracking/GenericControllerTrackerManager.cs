@@ -4,6 +4,7 @@
         private Dictionary<int, KeyValuePair<int, bool>> _trackerInfo = new Dictionary<int, KeyValuePair<int, bool>>();
         private bool disposed = false;
         public event EventHandler<string> OnTrackerError;
+        private int pollingRate = 8;
         Color[] colours = new Color[] {
                 Color.Aqua,
                 Color.Red,
@@ -73,7 +74,7 @@
                             await tracker.Update();
                         }
                     }
-                    Thread.Sleep(8);
+                    Thread.Sleep(pollingRate);
                 }
             });
         }
@@ -84,5 +85,6 @@
 
         internal List<GenericControllerTracker> Trackers { get => _trackers; set => _trackers = value; }
         public static int ControllerCount { get => _controllerCount; set => _controllerCount = value; }
+        public int PollingRate { get => pollingRate; set => pollingRate = value; }
     }
 }

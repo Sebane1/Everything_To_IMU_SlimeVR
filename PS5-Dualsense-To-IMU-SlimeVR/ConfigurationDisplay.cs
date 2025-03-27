@@ -1,6 +1,7 @@
 using PS5_Dualsense_To_IMU_SlimeVR.Tracking;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using static PS5_Dualsense_To_IMU_SlimeVR.TrackerConfig;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR {
     public partial class ConfigurationDisplay : Form {
@@ -18,6 +19,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             _configuration = Configuration.LoadConfig();
             _genericControllerTranslator = new GenericControllerTrackerManager(_configuration);
             _genericControllerTranslator.OnTrackerError += _genericControllerTranslator_OnTrackerError;
+            _genericControllerTranslator.PollingRate = _configuration.PollingRate;
+            polllingRateLabel.Text = "Polling Rate: " + _configuration.PollingRate + "ms";
+            pollingRate.Value = _configuration.PollingRate;
         }
 
         private void _genericControllerTranslator_OnTrackerError(object? sender, string e) {
@@ -58,7 +62,11 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             _currentIndex = deviceList.SelectedIndex;
             _suppressCheckBoxEvent = true;
             falseThighSimulationCheckBox.Checked = _configuration.TrackerConfigs[_currentIndex].SimulatesThighs;
-            falseThighSimulationCheckBox.Checked = _genericControllerTranslator.Trackers[_currentIndex].SimulateThighs;
+            _genericControllerTranslator.Trackers[_currentIndex].SimulateThighs = _configuration.TrackerConfigs[_currentIndex].SimulatesThighs;
+
+            yawForSimulatedTracker.SelectedIndex = (int)_configuration.TrackerConfigs[_currentIndex].YawReferenceTypeValue;
+            _genericControllerTranslator.Trackers[_currentIndex].YawReferenceTypeValue = _configuration.TrackerConfigs[_currentIndex].YawReferenceTypeValue;
+
             trackerConfigLabel.Text = $"Tracker {_currentIndex + 1} Config";
             _suppressCheckBoxEvent = false;
             refreshTimer.Start();
@@ -69,6 +77,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
         }
 
         private void falseThighSimulationCheckBox_CheckedChanged(object sender, EventArgs e) {
+            yawForSimulatedTracker.Enabled = falseThighSimulationCheckBox.Checked;
             if (!_suppressCheckBoxEvent) {
                 _genericControllerTranslator.Trackers[_currentIndex].SimulateThighs = falseThighSimulationCheckBox.Checked;
                 _configuration.TrackerConfigs[_currentIndex].SimulatesThighs = falseThighSimulationCheckBox.Checked;
@@ -102,6 +111,25 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
                     process.StartInfo = new ProcessStartInfo("xdg-open", url) { UseShellExecute = false };
                     process.Start();
                 }
+            }
+        }
+
+        private void ConfigurationDisplay_Load(object sender, EventArgs e) {
+
+        }
+
+        private void pollingRate_Scroll(object sender, EventArgs e) {
+            _configuration.PollingRate = pollingRate.Value;
+            _genericControllerTranslator.PollingRate = _configuration.PollingRate;
+            polllingRateLabel.Text = "Polling Rate: " + pollingRate.Value + "ms";
+            _configuration.SaveConfig();
+        }
+
+        private void yawForSimulatedTracker_SelectedIndexChanged(object sender, EventArgs e) {
+            if (!_suppressCheckBoxEvent) {
+                _genericControllerTranslator.Trackers[_currentIndex].YawReferenceTypeValue = (RotationReferenceType)yawForSimulatedTracker.SelectedIndex;
+                _configuration.TrackerConfigs[_currentIndex].YawReferenceTypeValue = (RotationReferenceType)yawForSimulatedTracker.SelectedIndex;
+                _configuration.SaveConfig();
             }
         }
     }

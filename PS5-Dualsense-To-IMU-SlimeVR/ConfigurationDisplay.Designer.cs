@@ -29,15 +29,19 @@
             falseThighSimulationCheckBox = new CheckBox();
             tabOptions = new TabControl();
             settingsPage = new TabPage();
+            yawForSimulatedTracker = new ComboBox();
             rediscoverTrackerButton = new Button();
             trackerConfigLabel = new Label();
             debugPage = new TabPage();
             debugText = new TextBox();
             trackerCalibrationButton = new Button();
             donateButton = new Button();
+            pollingRate = new TrackBar();
+            polllingRateLabel = new Label();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pollingRate).BeginInit();
             SuspendLayout();
             // 
             // refreshTimer
@@ -53,7 +57,7 @@
             deviceList.ItemHeight = 15;
             deviceList.Location = new Point(-2, -2);
             deviceList.Name = "deviceList";
-            deviceList.Size = new Size(104, 394);
+            deviceList.Size = new Size(104, 379);
             deviceList.TabIndex = 0;
             deviceList.SelectedIndexChanged += selectedDevice_SelectedIndexChanged;
             // 
@@ -70,32 +74,43 @@
             // 
             // tabOptions
             // 
-            tabOptions.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tabOptions.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tabOptions.Controls.Add(settingsPage);
             tabOptions.Controls.Add(debugPage);
             tabOptions.Location = new Point(99, -2);
             tabOptions.Name = "tabOptions";
             tabOptions.SelectedIndex = 0;
-            tabOptions.Size = new Size(322, 357);
+            tabOptions.Size = new Size(345, 357);
             tabOptions.TabIndex = 2;
             // 
             // settingsPage
             // 
+            settingsPage.Controls.Add(yawForSimulatedTracker);
             settingsPage.Controls.Add(rediscoverTrackerButton);
             settingsPage.Controls.Add(trackerConfigLabel);
             settingsPage.Controls.Add(falseThighSimulationCheckBox);
             settingsPage.Location = new Point(4, 24);
             settingsPage.Name = "settingsPage";
             settingsPage.Padding = new Padding(3);
-            settingsPage.Size = new Size(314, 329);
+            settingsPage.Size = new Size(337, 329);
             settingsPage.TabIndex = 0;
             settingsPage.Text = "Settings";
             settingsPage.UseVisualStyleBackColor = true;
             settingsPage.Click += tabPage1_Click;
             // 
+            // yawForSimulatedTracker
+            // 
+            yawForSimulatedTracker.FormattingEnabled = true;
+            yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw For Simulated Thighs (No Drift)", "Waist Yaw For Simulated Thighs (Waist Tracker Drift)", "Tracker Yaw For Simulated Thighs (Can Drift)" });
+            yawForSimulatedTracker.Location = new Point(10, 57);
+            yawForSimulatedTracker.Name = "yawForSimulatedTracker";
+            yawForSimulatedTracker.Size = new Size(319, 23);
+            yawForSimulatedTracker.TabIndex = 5;
+            yawForSimulatedTracker.SelectedIndexChanged += yawForSimulatedTracker_SelectedIndexChanged;
+            // 
             // rediscoverTrackerButton
             // 
-            rediscoverTrackerButton.Location = new Point(10, 66);
+            rediscoverTrackerButton.Location = new Point(10, 92);
             rediscoverTrackerButton.Name = "rediscoverTrackerButton";
             rediscoverTrackerButton.Size = new Size(117, 23);
             rediscoverTrackerButton.TabIndex = 3;
@@ -118,7 +133,7 @@
             debugPage.Location = new Point(4, 24);
             debugPage.Name = "debugPage";
             debugPage.Padding = new Padding(3);
-            debugPage.Size = new Size(314, 329);
+            debugPage.Size = new Size(337, 329);
             debugPage.TabIndex = 1;
             debugPage.Text = "Debug";
             debugPage.UseVisualStyleBackColor = true;
@@ -134,9 +149,9 @@
             // trackerCalibrationButton
             // 
             trackerCalibrationButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            trackerCalibrationButton.Location = new Point(113, 357);
+            trackerCalibrationButton.Location = new Point(103, 356);
             trackerCalibrationButton.Name = "trackerCalibrationButton";
-            trackerCalibrationButton.Size = new Size(183, 31);
+            trackerCalibrationButton.Size = new Size(216, 23);
             trackerCalibrationButton.TabIndex = 4;
             trackerCalibrationButton.Text = "Recalibrate Controller Trackers";
             trackerCalibrationButton.UseVisualStyleBackColor = true;
@@ -148,19 +163,43 @@
             donateButton.BackColor = Color.RosyBrown;
             donateButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             donateButton.ForeColor = Color.Snow;
-            donateButton.Location = new Point(294, 357);
+            donateButton.Location = new Point(317, 356);
             donateButton.Name = "donateButton";
-            donateButton.Size = new Size(127, 31);
+            donateButton.Size = new Size(127, 23);
             donateButton.TabIndex = 5;
             donateButton.Text = "Donate";
             donateButton.UseVisualStyleBackColor = false;
             donateButton.Click += donateButton_Click;
             // 
+            // pollingRate
+            // 
+            pollingRate.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            pollingRate.Location = new Point(103, 383);
+            pollingRate.Maximum = 120;
+            pollingRate.Minimum = 8;
+            pollingRate.Name = "pollingRate";
+            pollingRate.Size = new Size(337, 45);
+            pollingRate.TabIndex = 6;
+            pollingRate.Value = 8;
+            pollingRate.Scroll += pollingRate_Scroll;
+            // 
+            // polllingRateLabel
+            // 
+            polllingRateLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            polllingRateLabel.AutoSize = true;
+            polllingRateLabel.Location = new Point(2, 387);
+            polllingRateLabel.Name = "polllingRateLabel";
+            polllingRateLabel.Size = new Size(105, 15);
+            polllingRateLabel.TabIndex = 7;
+            polllingRateLabel.Text = "Update Rate: 30ms";
+            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(421, 389);
+            ClientSize = new Size(444, 432);
+            Controls.Add(polllingRateLabel);
+            Controls.Add(pollingRate);
             Controls.Add(donateButton);
             Controls.Add(trackerCalibrationButton);
             Controls.Add(tabOptions);
@@ -169,12 +208,15 @@
             MaximizeBox = false;
             Name = "ConfigurationDisplay";
             Text = "Configuration Display";
+            Load += ConfigurationDisplay_Load;
             tabOptions.ResumeLayout(false);
             settingsPage.ResumeLayout(false);
             settingsPage.PerformLayout();
             debugPage.ResumeLayout(false);
             debugPage.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pollingRate).EndInit();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -189,5 +231,8 @@
         private Button rediscoverTrackerButton;
         private Button trackerCalibrationButton;
         private Button donateButton;
+        private TrackBar pollingRate;
+        private Label polllingRateLabel;
+        private ComboBox yawForSimulatedTracker;
     }
 }
