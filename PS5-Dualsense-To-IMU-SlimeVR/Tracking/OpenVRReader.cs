@@ -41,7 +41,42 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 return 1.5f;
             }
         }
+        public static float GetWaistTrackerHeight() {
+            EVRInitError eError = EVRInitError.None;
+            if (_vrSystem == null && IsSteamVRRunning()) {
+                OpenVR.Init(ref eError, EVRApplicationType.VRApplication_Utility);
+            } else {
+                if (eError != EVRInitError.None) {
+                    Console.WriteLine("Error initializing OpenVR: " + eError.ToString());
+                }
 
+                // Initialize an array to hold the device indices
+                uint[] deviceIndices = new uint[20];
+
+                // Get sorted tracked device indices of class GenericTracker (trackers like waist trackers)
+                uint numDevices = OpenVR.System.GetSortedTrackedDeviceIndicesOfClass(ETrackedDeviceClass.GenericTracker, deviceIndices, 0);
+
+                if (numDevices > 0) {
+                    for (uint i = 0; i < numDevices; i++) {
+                        uint deviceIndex = deviceIndices[i];
+
+                        // Check if the device is a waist tracker
+                        if (IsWaistTracker(deviceIndex)) {
+                            // Get the device pose (position and rotation)
+                            TrackedDevicePose_t[] poseArray = new TrackedDevicePose_t[20];
+                            OpenVR.System.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseStanding, 0, poseArray);
+
+                            // Process the pose data (position/rotation) for the waist tracker
+                            // Console.WriteLine($"Waist Tracker Position: {pose.mDeviceToAbsoluteTracking.m0}, {pose.mDeviceToAbsoluteTracking.m1}, {pose.mDeviceToAbsoluteTracking.m2}");
+                            return poseArray[deviceIndex].mDeviceToAbsoluteTracking.m7;
+                        }
+                    }
+                } else {
+                    Console.WriteLine("No trackers found.");
+                }
+            }
+            return 0.0f;
+        }
         public static Quaternion GetWaistTrackerRotation() {
             EVRInitError eError = EVRInitError.None;
             if (_vrSystem == null && IsSteamVRRunning()) {

@@ -135,6 +135,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             JSL.JslResetContinuousCalibration(_index);
             _calibratedHeight = OpenVRReader.GetHMDHeight();
             _rotationCalibration = -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
+            _falseThighTracker.Recalibrate();
             await udpHandler.SendButton();
         }
         public void Rediscover() {

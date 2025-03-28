@@ -38,7 +38,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                  new byte[] { (byte)_macSpoof[0], (byte)_macSpoof[1], (byte)_macSpoof[2],
                      (byte) _macSpoof[3], (byte) _macSpoof[4], (byte) _macSpoof[5] });
                 _ready = true;
-                _calibratedHeight = OpenVRReader.GetHMDHeight();
+                Recalibrate();
             });
         }
         public float SpecialClamp(float value) {
@@ -50,7 +50,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public async Task<bool> Update() {
             if (_ready) {
                 var hmdHeight = OpenVRReader.GetHMDHeight();
-                bool sitting = hmdHeight < _calibratedHeight / 2;
+                bool sitting = hmdHeight < _calibratedHeight / 2 && hmdHeight > OpenVRReader.GetWaistTrackerHeight();
                 Vector3 euler = _tracker.Euler;
                 _debug =
                 $"Device Id: {_macSpoof}\r\n" +
@@ -81,6 +81,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
 
         public void Dispose() {
             _ready = false;
+        }
+
+        internal void Recalibrate() {
+            _calibratedHeight = OpenVRReader.GetHMDHeight();
         }
     }
 }
