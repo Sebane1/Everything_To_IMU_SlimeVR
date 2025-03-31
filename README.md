@@ -1,4 +1,5 @@
 A very rough and experimental attempt to make PS5 Dualsense controllers work as SlimeVR trackers.
+
 Also thanks to the JoyShock library, PS4 Dualshock, Switch Pro Controllers, Joycons, and potentially other gyro based controllers are compatible with the project but largely untested by me personally.
 
 This repository currently exists for fellow developers to help test, troubleshoot, and iron out tracking data bugs.
