@@ -66,15 +66,19 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         }
 
         private Quaternion GetTrackerRotation(RotationReferenceType yawReferenceType) {
-            switch (yawReferenceType) {
-                case RotationReferenceType.HmdRotation:
-                    return OpenVRReader.GetHMDRotation();
-                case RotationReferenceType.WaistRotation:
-                    return OpenVRReader.GetWaistTrackerRotation();
-                case RotationReferenceType.TrackerRotation:
-                    var motionState = JSL.JslGetMotionState(_index);
-                    var motionQuaternion = new Quaternion(motionState.quatX, motionState.quatY, motionState.quatZ, motionState.quatW);
-                    return motionQuaternion;
+            try {
+                switch (yawReferenceType) {
+                    case RotationReferenceType.HmdRotation:
+                        return OpenVRReader.GetHMDRotation();
+                    case RotationReferenceType.WaistRotation:
+                        return OpenVRReader.GetWaistTrackerRotation();
+                    case RotationReferenceType.TrackerRotation:
+                        var motionState = JSL.JslGetMotionState(_index);
+                        var motionQuaternion = new Quaternion(motionState.quatX, motionState.quatY, motionState.quatZ, motionState.quatW);
+                        return motionQuaternion;
+                }
+            } catch {
+
             }
             return Quaternion.Identity;
         }
@@ -116,7 +120,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     }
                     await udpHandler.SetSensorBattery(100);
                     if (!_simulateThighs) {
-                        await udpHandler.SetSensorRotation(new Vector3(_euler.X, _euler.Z, _euler.Y).ToQuaternion());
+                        await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Z, _euler.Y).ToQuaternion());
                     } else {
                         float finalY = _euler.Y;
                         float finalZ = isClamped ? _euler.Z : _euler.Z;
@@ -125,7 +129,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     }
                     _falseThighTracker.IsActive = _simulateThighs;
                 } catch (Exception e) {
-                    OnTrackerError.Invoke(this, e.Message);
+                    OnTrackerError.Invoke(this, e.StackTrace + "\r\n" + e.Message);
                 }
             }
             return _ready;

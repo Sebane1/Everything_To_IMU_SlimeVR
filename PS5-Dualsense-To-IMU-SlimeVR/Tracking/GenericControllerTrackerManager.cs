@@ -17,6 +17,7 @@
             };
         private static int _controllerCount;
         private Configuration _configuration;
+        private int _pollingRatePerTracker;
 
         public GenericControllerTrackerManager(Configuration configuration) {
             _configuration = configuration;

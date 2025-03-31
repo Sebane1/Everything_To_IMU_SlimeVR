@@ -41,9 +41,15 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 Recalibrate();
             });
         }
-        public float SpecialClamp(float value) {
-            if (value < -220 || value > 0) {
-                return 0;
+        public float SpecialClamp(float value, float lessThan, float greaterThan, float clamp) {
+            if (value < lessThan || value > greaterThan) {
+                return clamp;
+            }
+            return value;
+        }
+        public float SpecialClamp(float value, float lessThan, float clamp) {
+            if (value < lessThan) {
+                return clamp;
             }
             return value;
         }
@@ -57,7 +63,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 $"HMD Height: {hmdHeight}\r\n" +
                 $"Euler Rotation:\r\n" +
                 $"X:{-euler.X}, Y:{euler.Y}, Z:{euler.Z}";
-                float newX = SpecialClamp(-euler.X);
+                float newX = sitting && OpenVRReader.IsTiltedMostlyForward() ? SpecialClamp(-euler.X, -120, -270) : SpecialClamp(-euler.X, -180, 0, 0);
                 _isClamped = Math.Round(newX) == 0;
                 float finalX = sitting && -euler.X > -94 ? -newX + 180 : newX;
                 float finalY = euler.Y;
