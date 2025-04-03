@@ -42,14 +42,51 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             }
         }
 
-        public static bool IsTiltedMostlyForward() {
-            var direction = new Vector3(0, GetWaistTrackerRotation().GetYawFromQuaternion(), 0).ToQuaternion().VectorDirection(new Vector3(1, 0, 0));
+
+        /// <summary>
+        /// Math isn't mathing with this implementation. Supposed to detect if the waist is in front of the HMD and report true if so.
+        /// </summary>
+        /// <returns></returns>
+        public static Tuple<bool, string> WaistIsInFrontOfHMDOld() {
+            string debug = "";
+            var waistRotation = GetWaistTrackerRotation().GetYawFromQuaternion() + 180;
+            var direction = waistRotation.AngleToForward();
             var hmdPosition = GetHMDPosition();
             var waistPosition = GetWaistTrackerPosition();
-            var forward = Math.Abs(Vector3.Distance(waistPosition, hmdPosition + (direction * 1)));
-            var backward = Math.Abs(Vector3.Distance(waistPosition, hmdPosition + (direction * -1)));
 
-            return forward < backward;
+            var yStrippedHMDPosition = new Vector3(hmdPosition.X, 0, hmdPosition.Z);
+            var yStrippedWaistPosition = new Vector3(waistPosition.X, 0, waistPosition.Z);
+
+            var targetForward = yStrippedHMDPosition + direction;
+
+
+            Vector3 delta = Vector3.Normalize((yStrippedHMDPosition - yStrippedWaistPosition));
+            Vector3 cross = Vector3.Cross(delta, targetForward);
+
+            debug += $"Waist Rotation: {waistRotation}\r\n";
+            debug += $"Waist Direction: {direction}\r\n";
+            debug += $"HMD Position: {hmdPosition}\r\n";
+            debug += $"Waist Position: {waistPosition}\r\n";
+            debug += $"Y Stripped HMD Position: {yStrippedHMDPosition}\r\n";
+            debug += $"Y Stripped Waist Position: {yStrippedWaistPosition}\r\n";
+
+            debug += $"Forward Target: {targetForward}\r\n";
+
+            return new Tuple<bool, string>(cross == Vector3.Zero, debug);
+        }
+
+
+        /// <summary>
+        /// Detect if waist is in front of hmd.
+        /// </summary>
+        /// <returns></returns>
+        public static Tuple<bool, string> WaistIsInFrontOfHMD() {
+            string debug = "";
+            var waistRotation = GetWaistTrackerRotation().GetXAxisFromQuaternion();
+
+            debug += $"Waist X Rotation: {waistRotation}\r\n";
+
+            return new Tuple<bool, string>(waistRotation > 0, debug);
         }
 
         public static Vector3 GetHMDPosition() {
@@ -63,11 +100,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 }
             }
             if (_vrSystem != null) {
-                _vrSystem.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseStanding, 0, trackedDevices);
-                return new Vector3(
-                    trackedDevices[0].mDeviceToAbsoluteTracking.m6,
-                    trackedDevices[0].mDeviceToAbsoluteTracking.m7,
-                    trackedDevices[0].mDeviceToAbsoluteTracking.m8);
+                _vrSystem.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseRawAndUncalibrated, 0, trackedDevices);
+                return trackedDevices[0].mDeviceToAbsoluteTracking.ToMatrix4x4().Translation;
+
             } else {
                 return new Vector3();
             }
@@ -130,13 +165,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                         if (IsWaistTracker(deviceIndex)) {
                             // Get the device pose (position and rotation)
                             TrackedDevicePose_t[] poseArray = new TrackedDevicePose_t[20];
-                            OpenVR.System.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseStanding, 0, poseArray);
+                            OpenVR.System.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseRawAndUncalibrated, 0, poseArray);
 
                             // Get position
-                            return new Vector3(
-                                poseArray[deviceIndex].mDeviceToAbsoluteTracking.m6,
-                                poseArray[deviceIndex].mDeviceToAbsoluteTracking.m7,
-                                poseArray[deviceIndex].mDeviceToAbsoluteTracking.m8);
+                            return poseArray[deviceIndex].mDeviceToAbsoluteTracking.ToMatrix4x4().Translation;
                         }
                     }
                 } else {
@@ -146,38 +178,42 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             return new Vector3();
         }
         public static Quaternion GetWaistTrackerRotation() {
-            EVRInitError eError = EVRInitError.None;
-            if (_vrSystem == null && IsSteamVRRunning()) {
-                OpenVR.Init(ref eError, EVRApplicationType.VRApplication_Utility);
-            } else {
-                if (eError != EVRInitError.None) {
-                    Console.WriteLine("Error initializing OpenVR: " + eError.ToString());
-                }
-
-                // Initialize an array to hold the device indices
-                uint[] deviceIndices = new uint[20];
-
-                // Get sorted tracked device indices of class GenericTracker (trackers like waist trackers)
-                uint numDevices = OpenVR.System.GetSortedTrackedDeviceIndicesOfClass(ETrackedDeviceClass.GenericTracker, deviceIndices, 0);
-
-                if (numDevices > 0) {
-                    for (uint i = 0; i < numDevices; i++) {
-                        uint deviceIndex = deviceIndices[i];
-
-                        // Check if the device is a waist tracker
-                        if (IsWaistTracker(deviceIndex)) {
-                            // Get the device pose (position and rotation)
-                            TrackedDevicePose_t[] poseArray = new TrackedDevicePose_t[20];
-                            OpenVR.System.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseStanding, 0, poseArray);
-
-                            // Process the pose data (position/rotation) for the waist tracker
-                            // Console.WriteLine($"Waist Tracker Position: {pose.mDeviceToAbsoluteTracking.m0}, {pose.mDeviceToAbsoluteTracking.m1}, {pose.mDeviceToAbsoluteTracking.m2}");
-                            return Quaternion.CreateFromRotationMatrix(poseArray[deviceIndex].mDeviceToAbsoluteTracking.ToMatrix4x4());
-                        }
-                    }
+            try {
+                EVRInitError eError = EVRInitError.None;
+                if (_vrSystem == null && IsSteamVRRunning()) {
+                    OpenVR.Init(ref eError, EVRApplicationType.VRApplication_Utility);
                 } else {
-                    Console.WriteLine("No trackers found.");
+                    if (eError != EVRInitError.None) {
+                        Console.WriteLine("Error initializing OpenVR: " + eError.ToString());
+                    }
+
+                    // Initialize an array to hold the device indices
+                    uint[] deviceIndices = new uint[20];
+
+                    // Get sorted tracked device indices of class GenericTracker (trackers like waist trackers)
+                    uint numDevices = OpenVR.System.GetSortedTrackedDeviceIndicesOfClass(ETrackedDeviceClass.GenericTracker, deviceIndices, 0);
+
+                    if (numDevices > 0) {
+                        for (uint i = 0; i < numDevices; i++) {
+                            uint deviceIndex = deviceIndices[i];
+
+                            // Check if the device is a waist tracker
+                            if (IsWaistTracker(deviceIndex)) {
+                                // Get the device pose (position and rotation)
+                                TrackedDevicePose_t[] poseArray = new TrackedDevicePose_t[20];
+                                OpenVR.System.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseStanding, 0, poseArray);
+
+                                // Process the pose data (position/rotation) for the waist tracker
+                                // Console.WriteLine($"Waist Tracker Position: {pose.mDeviceToAbsoluteTracking.m0}, {pose.mDeviceToAbsoluteTracking.m1}, {pose.mDeviceToAbsoluteTracking.m2}");
+                                return Quaternion.CreateFromRotationMatrix(poseArray[deviceIndex].mDeviceToAbsoluteTracking.ToMatrix4x4());
+                            }
+                        }
+                    } else {
+                        Console.WriteLine("No trackers found.");
+                    }
                 }
+            } catch {
+
             }
             return Quaternion.Identity;
         }

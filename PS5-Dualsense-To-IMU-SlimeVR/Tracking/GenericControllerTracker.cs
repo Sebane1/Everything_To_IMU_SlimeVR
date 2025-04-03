@@ -1,6 +1,8 @@
 ﻿using PS5_Dualsense_To_IMU_SlimeVR.SlimeVR;
+using System.Diagnostics;
 using System.Numerics;
 using static PS5_Dualsense_To_IMU_SlimeVR.TrackerConfig;
+
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
     public class GenericControllerTracker : IDisposable, IBodyTracker {
         private string _debug;
@@ -25,6 +27,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private bool _waitForRelease;
         private string _rememberedStringId;
         private RotationReferenceType _yawReferenceTypeValue;
+        Stopwatch buttonPressTimer = new Stopwatch();
 
         public event EventHandler<string> OnTrackerError;
 
@@ -98,22 +101,33 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     _euler = _rotation.QuaternionToEuler() + (!_simulateThighs ? new Vector3() : _rotationCalibration);
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
-                    _debug =
-                    $"Device Id: {macSpoof}\r\n" +
-                    $"Euler Rotation:\r\n" +
-                    $"X:{_euler.X}, Y:{_euler.Y}, Z:{_rotation.Z}" +
-                    $"\r\nGyro:\r\n" +
-                    $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
-                    $"\r\nAcceleration:\r\n" +
-                    $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
-                    $"Yaw Reference Rotation:\r\n" +
-                    $"Y:{trackerEuler}\r\n"
-                    + _falseThighTracker.Debug;
+
+                    if (GenericControllerTrackerManager.DebugOpen) {
+                        _debug =
+                        $"Device Id: {macSpoof}\r\n" +
+                        $"Euler Rotation:\r\n" +
+                        $"X:{_euler.X}, Y:{_euler.Y}, Z:{_rotation.Z}" +
+                        $"\r\nGyro:\r\n" +
+                        $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
+                        $"\r\nAcceleration:\r\n" +
+                        $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
+                        $"Yaw Reference Rotation:\r\n" +
+                        $"Y:{trackerEuler}\r\n"
+                        + _falseThighTracker.Debug;
+                    }
+
                     var buttons = JSL.JslGetSimpleState(_index).buttons;
                     if ((buttons & 0x20000) != 0) {
                         if (!_waitForRelease) {
-                            _waitForRelease = true;
-                            Recalibrate();
+                            if (!buttonPressTimer.IsRunning) {
+                                buttonPressTimer.Start();
+                            } else if(buttonPressTimer.ElapsedMilliseconds < 250){
+                                _waitForRelease = true;
+                                Recalibrate();
+                                buttonPressTimer.Reset();
+                            } else {
+                                buttonPressTimer.Reset();
+                            }
                         }
                     } else {
                         _waitForRelease = false;
@@ -141,6 +155,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             _rotationCalibration = -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
             _falseThighTracker.Recalibrate();
             await udpHandler.SendButton();
+            await _falseThighTracker.UdpHandler.SendButton();
         }
         public void Rediscover() {
             udpHandler.Initialize();

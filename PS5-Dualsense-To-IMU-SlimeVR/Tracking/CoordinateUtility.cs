@@ -145,6 +145,20 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
 
             return yaw.ConvertRadiansToDegrees();
         }
+        public static float GetXAxisFromQuaternion(this Quaternion q) {
+            float w = q.W;
+            float x = q.X;
+            float y = q.Y;
+            float z = q.Z;
+
+            // Calculate the pitch (rotation around the x-axis) in radians
+            float pitchInRadians = (float)Math.Atan2(2.0f * (w * x + y * z), 1.0f - 2.0f * (x * x + y * y));
+
+            // Convert radians to degrees
+            float pitchInDegrees = pitchInRadians * (180.0f / (float)Math.PI);
+
+            return pitchInDegrees;
+        }
         public static Vector3 Transform(ref Vector3 v, ref Quaternion rotation)
         {
             // This operation is an optimized-down version of v' = q * v * q^-1.
@@ -216,6 +230,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
             Vector3 axis = Vector3.Cross(fromDirection, toDirection);
             float angle = (float)Math.Acos(dot);
             return Quaternion.CreateFromAxisAngle(axis, angle);
+        }
+
+        public static Vector3 AngleToForward(this float angle) {
+            return new Vector3((float)Math.Cos(angle), 0, (float)Math.Sin(angle));
         }
 
         public static Quaternion ToQuaternion(double x, double y, double z) // roll (x), pitch (y), yaw (z), angles are in radians

@@ -58,12 +58,19 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 var hmdHeight = OpenVRReader.GetHMDHeight();
                 bool sitting = hmdHeight < _calibratedHeight / 2 && hmdHeight > OpenVRReader.GetWaistTrackerHeight();
                 Vector3 euler = _tracker.Euler;
-                _debug =
+                if (GenericControllerTrackerManager.DebugOpen) {
+                    _debug =
                 $"Device Id: {_macSpoof}\r\n" +
                 $"HMD Height: {hmdHeight}\r\n" +
                 $"Euler Rotation:\r\n" +
-                $"X:{-euler.X}, Y:{euler.Y}, Z:{euler.Z}";
-                float newX = sitting && OpenVRReader.IsTiltedMostlyForward() ? SpecialClamp(-euler.X, -120, -270) : SpecialClamp(-euler.X, -180, 0, 0);
+                $"X:{-euler.X}, Y:{euler.Y}, Z:{euler.Z}\r\n";
+                }
+                var directionalData = OpenVRReader.WaistIsInFrontOfHMD();
+                if (GenericControllerTrackerManager.DebugOpen) {
+                    _debug += $"Is Leaning Back: {directionalData.Item1.ToString()} \r\n";
+                    _debug += directionalData.Item2;
+                }
+                float newX = sitting && directionalData.Item1 ? SpecialClamp(-euler.X, -120, -270) : SpecialClamp(-euler.X, -180, 0, 0);
                 _isClamped = Math.Round(newX) == 0;
                 float finalX = sitting && -euler.X > -94 ? -newX + 180 : newX;
                 float finalY = euler.Y;

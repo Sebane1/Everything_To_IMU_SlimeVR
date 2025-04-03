@@ -38,10 +38,13 @@
             donateButton = new Button();
             pollingRate = new TrackBar();
             polllingRateLabel = new Label();
+            errorLog = new TabPage();
+            errorLogText = new TextBox();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pollingRate).BeginInit();
+            errorLog.SuspendLayout();
             SuspendLayout();
             // 
             // refreshTimer
@@ -57,7 +60,7 @@
             deviceList.ItemHeight = 15;
             deviceList.Location = new Point(-2, -2);
             deviceList.Name = "deviceList";
-            deviceList.Size = new Size(104, 379);
+            deviceList.Size = new Size(104, 514);
             deviceList.TabIndex = 0;
             deviceList.SelectedIndexChanged += selectedDevice_SelectedIndexChanged;
             // 
@@ -77,10 +80,11 @@
             tabOptions.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tabOptions.Controls.Add(settingsPage);
             tabOptions.Controls.Add(debugPage);
+            tabOptions.Controls.Add(errorLog);
             tabOptions.Location = new Point(99, -2);
             tabOptions.Name = "tabOptions";
             tabOptions.SelectedIndex = 0;
-            tabOptions.Size = new Size(345, 357);
+            tabOptions.Size = new Size(345, 505);
             tabOptions.TabIndex = 2;
             // 
             // settingsPage
@@ -92,7 +96,7 @@
             settingsPage.Location = new Point(4, 24);
             settingsPage.Name = "settingsPage";
             settingsPage.Padding = new Padding(3);
-            settingsPage.Size = new Size(337, 329);
+            settingsPage.Size = new Size(337, 477);
             settingsPage.TabIndex = 0;
             settingsPage.Text = "Settings";
             settingsPage.UseVisualStyleBackColor = true;
@@ -133,7 +137,7 @@
             debugPage.Location = new Point(4, 24);
             debugPage.Name = "debugPage";
             debugPage.Padding = new Padding(3);
-            debugPage.Size = new Size(337, 329);
+            debugPage.Size = new Size(337, 477);
             debugPage.TabIndex = 1;
             debugPage.Text = "Debug";
             debugPage.UseVisualStyleBackColor = true;
@@ -143,13 +147,13 @@
             debugText.Location = new Point(6, 6);
             debugText.Multiline = true;
             debugText.Name = "debugText";
-            debugText.Size = new Size(296, 339);
+            debugText.Size = new Size(323, 471);
             debugText.TabIndex = 0;
             // 
             // trackerCalibrationButton
             // 
             trackerCalibrationButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            trackerCalibrationButton.Location = new Point(103, 356);
+            trackerCalibrationButton.Location = new Point(103, 504);
             trackerCalibrationButton.Name = "trackerCalibrationButton";
             trackerCalibrationButton.Size = new Size(216, 23);
             trackerCalibrationButton.TabIndex = 4;
@@ -163,7 +167,7 @@
             donateButton.BackColor = Color.RosyBrown;
             donateButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             donateButton.ForeColor = Color.Snow;
-            donateButton.Location = new Point(317, 356);
+            donateButton.Location = new Point(317, 504);
             donateButton.Name = "donateButton";
             donateButton.Size = new Size(127, 23);
             donateButton.TabIndex = 5;
@@ -174,7 +178,7 @@
             // pollingRate
             // 
             pollingRate.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            pollingRate.Location = new Point(103, 383);
+            pollingRate.Location = new Point(103, 531);
             pollingRate.Maximum = 120;
             pollingRate.Minimum = 8;
             pollingRate.Name = "pollingRate";
@@ -187,17 +191,35 @@
             // 
             polllingRateLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             polllingRateLabel.AutoSize = true;
-            polllingRateLabel.Location = new Point(2, 387);
+            polllingRateLabel.Location = new Point(2, 535);
             polllingRateLabel.Name = "polllingRateLabel";
             polllingRateLabel.Size = new Size(105, 15);
             polllingRateLabel.TabIndex = 7;
             polllingRateLabel.Text = "Update Rate: 30ms";
             // 
+            // errorLog
+            // 
+            errorLog.Controls.Add(errorLogText);
+            errorLog.Location = new Point(4, 24);
+            errorLog.Name = "errorLog";
+            errorLog.Size = new Size(337, 477);
+            errorLog.TabIndex = 2;
+            errorLog.Text = "Error Log";
+            errorLog.UseVisualStyleBackColor = true;
+            // 
+            // errorLogText
+            // 
+            errorLogText.Location = new Point(5, 3);
+            errorLogText.Multiline = true;
+            errorLogText.Name = "errorLogText";
+            errorLogText.Size = new Size(332, 471);
+            errorLogText.TabIndex = 0;
+            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(444, 432);
+            ClientSize = new Size(444, 580);
             Controls.Add(polllingRateLabel);
             Controls.Add(pollingRate);
             Controls.Add(donateButton);
@@ -215,6 +237,8 @@
             debugPage.ResumeLayout(false);
             debugPage.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)pollingRate).EndInit();
+            errorLog.ResumeLayout(false);
+            errorLog.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -234,5 +258,7 @@
         private TrackBar pollingRate;
         private Label polllingRateLabel;
         private ComboBox yawForSimulatedTracker;
+        private TabPage errorLog;
+        private TextBox errorLogText;
     }
 }

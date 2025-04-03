@@ -10,7 +10,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
         Queue<string> errorQueue = new Queue<string>();
         int _currentIndex = 0;
         private bool _suppressCheckBoxEvent;
-
+        string _lastErrorLog = "";
         public int CurrentIndex { get => _currentIndex; set => _currentIndex = value; }
 
         public ConfigurationDisplay() {
@@ -29,13 +29,18 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
         }
 
         private void refreshTimer_Tick(object sender, EventArgs e) {
-            debugText.Text = "";
-            try {
-                debugText.Text += _genericControllerTranslator.Trackers[_currentIndex].Debug;
-            } catch {
+            if (tabOptions.SelectedIndex == 1) {
+                debugText.Text = "";
+                try {
+                    debugText.Text += _genericControllerTranslator.Trackers[_currentIndex].Debug;
+                } catch {
 
+                }
+                GenericControllerTrackerManager.DebugOpen = true;
+            } else {
+                GenericControllerTrackerManager.DebugOpen = false;
             }
-            deviceList.Items.Clear();
+                deviceList.Items.Clear();
             foreach (var item in _genericControllerTranslator.Trackers) {
                 deviceList.Items.Add("Tracker " + item.Id);
             }
@@ -49,7 +54,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             }
             if (errorQueue.Count > 0) {
                 var value = errorQueue.Dequeue();
-                MessageBox.Show(value, "Tracking Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (_lastErrorLog != value) {
+                    errorLogText.Text += value + "\r\n";
+                }
+                _lastErrorLog = value;
             }
         }
 

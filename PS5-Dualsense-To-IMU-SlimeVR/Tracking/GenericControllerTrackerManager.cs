@@ -2,6 +2,7 @@
     public class GenericControllerTrackerManager {
         private List<GenericControllerTracker> _trackers = new List<GenericControllerTracker>();
         private Dictionary<int, KeyValuePair<int, bool>> _trackerInfo = new Dictionary<int, KeyValuePair<int, bool>>();
+
         private bool disposed = false;
         public event EventHandler<string> OnTrackerError;
         private int pollingRate = 8;
@@ -47,6 +48,7 @@
                                     _configuration.TrackerConfigs.Add(new TrackerConfig());
                                 }
                                 newTracker.SimulateThighs = _configuration.TrackerConfigs[i].SimulatesThighs;
+                                newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
                                 _trackers.Add(newTracker);
                                 _trackerInfo[i] = new KeyValuePair<int, bool>(info.Key, true);
                             }
@@ -87,5 +89,6 @@
         internal List<GenericControllerTracker> Trackers { get => _trackers; set => _trackers = value; }
         public static int ControllerCount { get => _controllerCount; set => _controllerCount = value; }
         public int PollingRate { get => pollingRate; set => pollingRate = value; }
+        public static bool DebugOpen { get; set; }
     }
 }

@@ -2,7 +2,7 @@
 namespace PS5_Dualsense_To_IMU_SlimeVR {
     public class Configuration {
         List<TrackerConfig> _trackerConfigs = new List<TrackerConfig>();
-        private int _pollingRate = 0;
+        private int _pollingRate = 8;
         public List<TrackerConfig> TrackerConfigs { get => _trackerConfigs; set => _trackerConfigs = value; }
         public int PollingRate { get => _pollingRate; set => _pollingRate = value; }
 
