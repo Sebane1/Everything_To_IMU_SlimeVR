@@ -16,7 +16,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             AutoUpdater.Synchronous = true;
             AutoUpdater.Mandatory = true;
             AutoUpdater.UpdateMode = Mode.ForcedDownload;
-            AutoUpdater.Start("https://raw.githubusercontent.com/Sebane1/PS5_Dualsense_To_IMU_SlimeVR/update.xml");
+            AutoUpdater.Start("https://raw.githubusercontent.com/Sebane1/PS5_Dualsense_To_IMU_SlimeVR/main/update.xml");
             AutoUpdater.ApplicationExitEvent += delegate () {
                 launchForm = false;
             };

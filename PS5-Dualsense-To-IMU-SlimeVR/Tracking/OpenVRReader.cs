@@ -80,13 +80,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         /// Detect if waist is in front of hmd.
         /// </summary>
         /// <returns></returns>
-        public static Tuple<bool, string> WaistIsInFrontOfHMD() {
+        public static Tuple<bool, string, float> WaistIsInFrontOfHMD() {
             string debug = "";
             var waistRotation = GetWaistTrackerRotation().GetXAxisFromQuaternion();
+            if (GenericControllerTrackerManager.DebugOpen) {
+                debug += $"Waist X Rotation: {waistRotation}\r\n";
+            }
 
-            debug += $"Waist X Rotation: {waistRotation}\r\n";
-
-            return new Tuple<bool, string>(waistRotation > 0, debug);
+            return new Tuple<bool, string, float>(waistRotation > 0, debug, waistRotation);
         }
 
         public static Vector3 GetHMDPosition() {

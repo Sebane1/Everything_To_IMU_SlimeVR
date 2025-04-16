@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Windows;
 
 
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
@@ -13,6 +14,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private float _calibratedHeight;
         private string _debug;
         private bool _isClamped;
+        private float _smoothedLegBend;
 
         public bool IsActive {
             get {
@@ -56,6 +58,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public async Task<bool> Update() {
             if (_ready) {
                 var hmdHeight = OpenVRReader.GetHMDHeight();
+                var hmdHeightToQuadrants = (_calibratedHeight / 4f);
+                var legDifferenceToSubtract = hmdHeightToQuadrants * 3;
+                var legCalibratedHmdHeight = _calibratedHeight - legDifferenceToSubtract;
+                var legHmdHeight = hmdHeight - legDifferenceToSubtract;
                 bool sitting = hmdHeight < _calibratedHeight / 2 && hmdHeight > OpenVRReader.GetWaistTrackerHeight();
                 Vector3 euler = _tracker.Euler;
                 if (GenericControllerTrackerManager.DebugOpen) {
@@ -67,10 +73,13 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 }
                 var directionalData = OpenVRReader.WaistIsInFrontOfHMD();
                 if (GenericControllerTrackerManager.DebugOpen) {
-                    _debug += $"Is Leaning Back: {directionalData.Item1.ToString()} \r\n";
+                    _debug += $"Is Leaning Forward: {directionalData.Item1.ToString()} \r\n";
                     _debug += directionalData.Item2;
                 }
-                float newX = sitting && directionalData.Item1 ? SpecialClamp(-euler.X, -120, -270) : SpecialClamp(-euler.X, -180, 0, 0);
+                float bendPercentage = Math.Clamp((legHmdHeight / legCalibratedHmdHeight), 0,1);
+                float upperLegBend = sitting || directionalData.Item3 > 30 || hmdHeight < legDifferenceToSubtract - (_calibratedHeight * 0.025f) ? 0 : -float.Lerp(0, 90, 1 - bendPercentage);
+                _smoothedLegBend = float.Lerp(_smoothedLegBend, upperLegBend, 0.1f);
+                float newX = sitting && directionalData.Item1 ? SpecialClamp(-euler.X, -120, -270) : SpecialClamp(-euler.X, -180, _smoothedLegBend, _smoothedLegBend);
                 _isClamped = Math.Round(newX) == 0;
                 float finalX = sitting && -euler.X > -94 ? -newX + 180 : newX;
                 float finalY = euler.Y;

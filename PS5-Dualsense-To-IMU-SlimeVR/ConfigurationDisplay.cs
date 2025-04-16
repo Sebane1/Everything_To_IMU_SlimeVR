@@ -37,8 +37,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
 
                 }
                 GenericControllerTrackerManager.DebugOpen = true;
+                refreshTimer.Interval = 1;
             } else {
                 GenericControllerTrackerManager.DebugOpen = false;
+                refreshTimer.Interval = 1000;
             }
                 deviceList.Items.Clear();
             foreach (var item in _genericControllerTranslator.Trackers) {
