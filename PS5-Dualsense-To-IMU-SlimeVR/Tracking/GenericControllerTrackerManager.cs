@@ -1,7 +1,9 @@
 ﻿namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
     public class GenericControllerTrackerManager {
         private List<GenericControllerTracker> _trackers = new List<GenericControllerTracker>();
+        private List<GenericControllerTracker> _trackers3ds = new List<GenericControllerTracker>();
         private Dictionary<int, KeyValuePair<int, bool>> _trackerInfo = new Dictionary<int, KeyValuePair<int, bool>>();
+        private Dictionary<int, KeyValuePair<int, bool>> _trackerInfo3ds = new Dictionary<int, KeyValuePair<int, bool>>();
 
         private bool disposed = false;
         public event EventHandler<string> OnTrackerError;
@@ -51,6 +53,33 @@
                                 newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
                                 _trackers.Add(newTracker);
                                 _trackerInfo[i] = new KeyValuePair<int, bool>(info.Key, true);
+                            }
+                            Thread.Sleep(500);
+                        }
+                        for (int i = 0; i < Forwarded3DSDataManager.DeviceMap.Count; i++) {
+                            // Track whether or not we've seen this controller before this session.
+                            if (!_trackerInfo3ds.ContainsKey(i)) {
+                                _trackerInfo3ds[i] = new KeyValuePair<int, bool>(_trackers.Count, false);
+                            }
+
+                            // Get this controllers information.
+                            var info = _trackerInfo3ds[i];
+
+                            // Have we dealt with setting up this controller tracker yet?
+                            if (!info.Value) {
+                                // Set up the controller tracker.
+                                var newTracker = new GenericControllerTracker(info.Key, colours[info.Key]);
+                                while (!newTracker.Ready) {
+                                    Thread.Sleep(100);
+                                }
+                                newTracker.OnTrackerError += NewTracker_OnTrackerError;
+                                if (i > _configuration.TrackerConfigs.Count - 1) {
+                                    _configuration.TrackerConfigs.Add(new TrackerConfig());
+                                }
+                                newTracker.SimulateThighs = _configuration.TrackerConfigs[i].SimulatesThighs;
+                                newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
+                                _trackers3ds.Add(newTracker);
+                                _trackerInfo3ds[i] = new KeyValuePair<int, bool>(info.Key, true);
                             }
                             Thread.Sleep(500);
                         }

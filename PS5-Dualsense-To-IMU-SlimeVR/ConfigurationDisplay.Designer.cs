@@ -34,17 +34,17 @@
             trackerConfigLabel = new Label();
             debugPage = new TabPage();
             debugText = new TextBox();
+            errorLog = new TabPage();
+            errorLogText = new TextBox();
             trackerCalibrationButton = new Button();
             donateButton = new Button();
             pollingRate = new TrackBar();
             polllingRateLabel = new Label();
-            errorLog = new TabPage();
-            errorLogText = new TextBox();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)pollingRate).BeginInit();
             errorLog.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pollingRate).BeginInit();
             SuspendLayout();
             // 
             // refreshTimer
@@ -150,6 +150,24 @@
             debugText.Size = new Size(323, 471);
             debugText.TabIndex = 0;
             // 
+            // errorLog
+            // 
+            errorLog.Controls.Add(errorLogText);
+            errorLog.Location = new Point(4, 24);
+            errorLog.Name = "errorLog";
+            errorLog.Size = new Size(337, 477);
+            errorLog.TabIndex = 2;
+            errorLog.Text = "Error Log";
+            errorLog.UseVisualStyleBackColor = true;
+            // 
+            // errorLogText
+            // 
+            errorLogText.Location = new Point(5, 3);
+            errorLogText.Multiline = true;
+            errorLogText.Name = "errorLogText";
+            errorLogText.Size = new Size(332, 471);
+            errorLogText.TabIndex = 0;
+            // 
             // trackerCalibrationButton
             // 
             trackerCalibrationButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
@@ -197,24 +215,6 @@
             polllingRateLabel.TabIndex = 7;
             polllingRateLabel.Text = "Update Rate: 30ms";
             // 
-            // errorLog
-            // 
-            errorLog.Controls.Add(errorLogText);
-            errorLog.Location = new Point(4, 24);
-            errorLog.Name = "errorLog";
-            errorLog.Size = new Size(337, 477);
-            errorLog.TabIndex = 2;
-            errorLog.Text = "Error Log";
-            errorLog.UseVisualStyleBackColor = true;
-            // 
-            // errorLogText
-            // 
-            errorLogText.Location = new Point(5, 3);
-            errorLogText.Multiline = true;
-            errorLogText.Name = "errorLogText";
-            errorLogText.Size = new Size(332, 471);
-            errorLogText.TabIndex = 0;
-            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
@@ -236,9 +236,9 @@
             settingsPage.PerformLayout();
             debugPage.ResumeLayout(false);
             debugPage.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)pollingRate).EndInit();
             errorLog.ResumeLayout(false);
             errorLog.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pollingRate).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }

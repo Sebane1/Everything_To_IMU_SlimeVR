@@ -35,10 +35,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
 
         public SensorOrientation(int index) {
             _index = index;
-            RefreshSensorData();
-            _accellerometerVectorCalibration = -(_accelerometer);
-
-            _gyroVectorCalibration = -(_gyro);
+            Recalibrate();
             stopwatch.Start();
             Task.Run(() => {
                 while (!disposed) {
@@ -52,6 +49,12 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             var sensorData = JSL.JslGetMotionState(_index);
             _accelerometer = new Vector3(sensorData.gravX, sensorData.gravY, sensorData.gravZ);
             _gyro = new Vector3(sensorData.accelX, sensorData.accelY, sensorData.accelZ);
+        }
+
+        public void Recalibrate() {
+            RefreshSensorData();
+            _accellerometerVectorCalibration = -(_accelerometer);
+            _gyroVectorCalibration = -(_gyro);
         }
         // Update method to simulate gyroscope and accelerometer data fusion
         public void Update() {

@@ -11,6 +11,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
         int _currentIndex = 0;
         private bool _suppressCheckBoxEvent;
         string _lastErrorLog = "";
+        private readonly ForwardedWiimoteManager _forwardedWiimoteManager;
+        private readonly Forwarded3DSDataManager _forwarded3DSDataManager;
+
         public int CurrentIndex { get => _currentIndex; set => _currentIndex = value; }
 
         public ConfigurationDisplay() {
@@ -22,6 +25,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             _genericControllerTranslator.PollingRate = _configuration.PollingRate;
             polllingRateLabel.Text = "Polling Rate: " + _configuration.PollingRate + "ms";
             pollingRate.Value = _configuration.PollingRate;
+            _forwardedWiimoteManager = new ForwardedWiimoteManager();
+            _forwarded3DSDataManager = new Forwarded3DSDataManager();
         }
 
         private void _genericControllerTranslator_OnTrackerError(object? sender, string e) {

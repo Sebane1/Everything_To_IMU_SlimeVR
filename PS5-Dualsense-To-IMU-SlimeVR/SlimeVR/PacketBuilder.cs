@@ -88,7 +88,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
             writer.Write((byte)_trackerId); // Tracker Id
             writer.Write((byte)0); // Sensor status
             writer.Write((byte)imuType); // imu type
-            writer.Write((short)0); // Magnometer support
+            writer.Write((short)0); // Magnetometer support
             writer.Write((byte)trackerPosition); // Tracker Position
             writer.Write((byte)trackerDataType); // Tracker Data Type
             sensorInfoStream.Position = 0;
