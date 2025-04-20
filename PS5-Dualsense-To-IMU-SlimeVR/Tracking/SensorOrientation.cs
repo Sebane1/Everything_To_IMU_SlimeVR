@@ -14,6 +14,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private float alpha = 0.98f; // Weighting factor for blending
         private IBodyTracker _bodyTracker;
         private int _index;
+        private SensorType _sensorType;
         private Vector3 _accellerometerVectorCalibration;
         private Vector3 _gyroVectorCalibration;
         Stopwatch stopwatch = new Stopwatch();
@@ -33,8 +34,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public float YawRadians { get => yawRadians; set => yawRadians = value; }
         public float YawDegrees { get => yawDegrees; set => yawDegrees = value; }
 
-        public SensorOrientation(int index) {
+        public SensorOrientation(int index, SensorType sensorType) {
             _index = index;
+            _sensorType = sensorType;
             Recalibrate();
             stopwatch.Start();
             Task.Run(() => {
@@ -45,8 +47,27 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             });
         }
 
+        private JSL.MOTION_STATE GetReleventMotionState(int index, SensorType sensorType) {
+            switch (sensorType) {
+                case SensorType.Bluetooth:
+                    return JSL.JslGetMotionState(index);
+                case SensorType.ThreeDs:
+                    return  Forwarded3DSDataManager.DeviceMap.ElementAt(index).Value;
+                case SensorType.Wiimote:
+                    break;
+                case SensorType.Nunchuck:
+                    break;
+            }
+            return new JSL.MOTION_STATE();
+        }
+        public enum SensorType {
+            Bluetooth = 0,
+            ThreeDs = 1,
+            Wiimote = 2,
+            Nunchuck = 3
+        }
         private void RefreshSensorData() {
-            var sensorData = JSL.JslGetMotionState(_index);
+            var sensorData = GetReleventMotionState(_index, SensorOrientation.SensorType.ThreeDs);
             _accelerometer = new Vector3(sensorData.gravX, sensorData.gravY, sensorData.gravZ);
             _gyro = new Vector3(sensorData.accelX, sensorData.accelY, sensorData.accelZ);
         }

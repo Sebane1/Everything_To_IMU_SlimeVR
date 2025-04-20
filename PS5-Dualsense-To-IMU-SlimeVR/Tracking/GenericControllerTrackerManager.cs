@@ -1,7 +1,7 @@
 ﻿namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
     public class GenericControllerTrackerManager {
         private List<GenericControllerTracker> _trackers = new List<GenericControllerTracker>();
-        private List<GenericControllerTracker> _trackers3ds = new List<GenericControllerTracker>();
+        private List<ThreeDsControllerTracker> _trackers3ds = new List<ThreeDsControllerTracker>();
         private Dictionary<int, KeyValuePair<int, bool>> _trackerInfo = new Dictionary<int, KeyValuePair<int, bool>>();
         private Dictionary<int, KeyValuePair<int, bool>> _trackerInfo3ds = new Dictionary<int, KeyValuePair<int, bool>>();
 
@@ -59,7 +59,7 @@
                         for (int i = 0; i < Forwarded3DSDataManager.DeviceMap.Count; i++) {
                             // Track whether or not we've seen this controller before this session.
                             if (!_trackerInfo3ds.ContainsKey(i)) {
-                                _trackerInfo3ds[i] = new KeyValuePair<int, bool>(_trackers.Count, false);
+                                _trackerInfo3ds[i] = new KeyValuePair<int, bool>(_trackerInfo3ds.Count, false);
                             }
 
                             // Get this controllers information.
@@ -68,16 +68,16 @@
                             // Have we dealt with setting up this controller tracker yet?
                             if (!info.Value) {
                                 // Set up the controller tracker.
-                                var newTracker = new GenericControllerTracker(info.Key, colours[info.Key]);
+                                var newTracker = new ThreeDsControllerTracker(info.Key);
                                 while (!newTracker.Ready) {
                                     Thread.Sleep(100);
                                 }
                                 newTracker.OnTrackerError += NewTracker_OnTrackerError;
-                                if (i > _configuration.TrackerConfigs.Count - 1) {
-                                    _configuration.TrackerConfigs.Add(new TrackerConfig());
+                                if (i > _configuration.TrackerConfigs3ds.Count - 1) {
+                                    _configuration.TrackerConfigs3ds.Add(new TrackerConfig());
                                 }
-                                newTracker.SimulateThighs = _configuration.TrackerConfigs[i].SimulatesThighs;
-                                newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
+                                newTracker.SimulateThighs = _configuration.TrackerConfigs3ds[i].SimulatesThighs;
+                                newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs3ds[i].YawReferenceTypeValue;
                                 _trackers3ds.Add(newTracker);
                                 _trackerInfo3ds[i] = new KeyValuePair<int, bool>(info.Key, true);
                             }
@@ -106,6 +106,20 @@
                             await tracker.Update();
                         }
                     }
+                    for (int i = 0; i < _trackers3ds .Count; i++) {
+                        var tracker = _trackers3ds[i];
+                        // Remove tracker if its been disconnected.
+                        if (tracker.Disconnected) {
+                            var info = _trackerInfo3ds[i];
+                            _trackerInfo3ds[i] = new KeyValuePair<int, bool>(info.Key, false);
+                            _trackers3ds.RemoveAt(i);
+                            i = 0;
+                            tracker.Dispose();
+                        } else {
+                            // Update tracker.
+                            await tracker.Update();
+                        }
+                    }
                     Thread.Sleep(pollingRate);
                 }
             });
@@ -119,5 +133,7 @@
         public static int ControllerCount { get => _controllerCount; set => _controllerCount = value; }
         public int PollingRate { get => pollingRate; set => pollingRate = value; }
         public static bool DebugOpen { get; set; }
+        public List<ThreeDsControllerTracker> Trackers3ds { get => _trackers3ds; set => _trackers3ds = value; }
+        public Dictionary<int, KeyValuePair<int, bool>> TrackerInfo3ds { get => _trackerInfo3ds; set => _trackerInfo3ds = value; }
     }
 }

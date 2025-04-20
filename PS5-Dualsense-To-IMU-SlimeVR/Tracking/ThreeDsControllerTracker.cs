@@ -4,7 +4,7 @@ using System.Numerics;
 using static PS5_Dualsense_To_IMU_SlimeVR.TrackerConfig;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
-    public class GenericControllerTracker : IDisposable, IBodyTracker {
+    public class ThreeDsControllerTracker : IDisposable, IBodyTracker {
         private string _debug;
         private int _index;
         private int _id;
@@ -26,28 +26,26 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private Vector3 _acceleration;
         private bool _waitForRelease;
         private string _rememberedStringId;
-        private RotationReferenceType _yawReferenceTypeValue;
+        private RotationReferenceType _yawReferenceTypeValue = RotationReferenceType.WaistRotation;
         Stopwatch buttonPressTimer = new Stopwatch();
 
         public event EventHandler<string> OnTrackerError;
 
-        public GenericControllerTracker(int index, Color colour) {
-            Initialize(index, colour);
+        public ThreeDsControllerTracker(int index) {
+            Initialize(index);
         }
-        public async void Initialize(int index, Color colour) {
+        public async void Initialize(int index) {
             Task.Run(async () => {
                 try {
                     _index = index;
                     _id = index + 1;
-                    var rememberedColour = colour;
-                    _rememberedStringId = index + " " + JSL.JslGetControllerType(index);
-                    JSL.JslSetLightColour(index, colour.ToArgb());
-                    macSpoof = _rememberedStringId + "GenericController";
-                    _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.Bluetooth);
+                    _rememberedStringId = Forwarded3DSDataManager.DeviceMap.Keys.ElementAt(index).ToString();
+                    macSpoof = _rememberedStringId + "3DS_Tracker";
+                    _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.ThreeDs);
                     if (_simulateThighs) {
                         _falseThighTracker = new FalseThighTracker(this);
                     }
-                    udpHandler = new UDPHandler("GenericController" + _rememberedStringId, _id,
+                    udpHandler = new UDPHandler("3DS_Tracker" + _rememberedStringId, _id,
                      new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] });
                     udpHandler.Active = true;
                     Recalibrate();
@@ -57,16 +55,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 }
             });
         }
-        public bool GetGlobalState(int code) {
-            int connections = GenericControllerTrackerManager.ControllerCount;
-            for (int i = 0; i < connections; i++) {
-                var buttons = JSL.JslGetSimpleState(i).buttons;
-                if ((buttons & code) != 0) {
-                    return true;
-                }
-            }
-            return false;
-        }
 
         private Quaternion GetTrackerRotation(RotationReferenceType yawReferenceType) {
             try {
@@ -75,10 +63,11 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                         return OpenVRReader.GetHMDRotation();
                     case RotationReferenceType.WaistRotation:
                         return OpenVRReader.GetWaistTrackerRotation();
-                    case RotationReferenceType.TrackerRotation:
-                        var motionState = JSL.JslGetMotionState(_index);
-                        var motionQuaternion = new Quaternion(motionState.quatX, motionState.quatY, motionState.quatZ, motionState.quatW);
-                        return motionQuaternion;
+                        //case RotationReferenceType.TrackerRotation:
+                        //    var motionState = JSL.JslGetMotionState(_index);
+                        //    var motionQuaternion = 
+                        //    new Quaternion(motionState.quatX, motionState.quatY, motionState.quatZ, motionState.quatW);
+                        //    return motionQuaternion;
                 }
             } catch {
 
@@ -91,14 +80,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 try {
                     var hmdHeight = OpenVRReader.GetHMDHeight();
                     bool isClamped = !_falseThighTracker.IsClamped;
-                    var trackerRotation = GetTrackerRotation(!_simulateThighs ? RotationReferenceType.TrackerRotation : YawReferenceTypeValue);
+                    var trackerRotation = GetTrackerRotation(RotationReferenceType.WaistRotation);
                     float trackerEuler = trackerRotation.GetYawFromQuaternion();
-                    if (!isClamped || GetGlobalState(0x08000) || YawReferenceTypeValue != RotationReferenceType.HmdRotation) {
+                    if (!isClamped || YawReferenceTypeValue != RotationReferenceType.HmdRotation) {
                         _lastEulerPositon = YawReferenceTypeValue != RotationReferenceType.TrackerRotation ? -trackerEuler : trackerEuler;
                     }
-
-                    _rotation = !_simulateThighs ? trackerRotation : (_sensorOrientation.CurrentOrientation);
-                    _euler = _rotation.QuaternionToEuler() + (!_simulateThighs ? new Vector3() : _rotationCalibration);
+                    var value = Forwarded3DSDataManager.DeviceMap.ElementAt(_index);
+                    _rotation = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
+                    _euler = _rotation.QuaternionToEuler() + _rotationCalibration;
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
 
@@ -115,26 +104,9 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                         $"Y:{trackerEuler}\r\n"
                         + _falseThighTracker.Debug;
                     }
-
-                    var buttons = JSL.JslGetSimpleState(_index).buttons;
-                    if ((buttons & 0x20000) != 0) {
-                        if (!_waitForRelease) {
-                            if (!buttonPressTimer.IsRunning) {
-                                buttonPressTimer.Start();
-                            } else if(buttonPressTimer.ElapsedMilliseconds < 250){
-                                _waitForRelease = true;
-                                Recalibrate();
-                                buttonPressTimer.Reset();
-                            } else {
-                                buttonPressTimer.Reset();
-                            }
-                        }
-                    } else {
-                        _waitForRelease = false;
-                    }
-                    await udpHandler.SetSensorBattery(100);
+                    //await udpHandler.SetSensorBattery(100);
                     if (!_simulateThighs) {
-                        await udpHandler.SetSensorRotation(new Vector3(_euler.X, _euler.Y, _euler.Z).ToQuaternion());
+                        await udpHandler.SetSensorRotation(new Vector3(-_euler.Y, _euler.Z, _euler.X + _lastEulerPositon).ToQuaternion());
                     } else {
                         float finalY = _euler.Y;
                         float finalZ = isClamped ? _euler.Z : _euler.Z;
@@ -150,10 +122,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         }
         public async void Recalibrate() {
             await Task.Delay(5000);
-            JSL.JslResetContinuousCalibration(_index);
             _calibratedHeight = OpenVRReader.GetHMDHeight();
-            _sensorOrientation.Recalibrate();
-            _rotationCalibration = -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
+            var value = Forwarded3DSDataManager.DeviceMap.ElementAt(_index);
+            _rotation = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
+            _rotationCalibration = -_rotation.QuaternionToEuler();
             _falseThighTracker.Recalibrate();
             await udpHandler.SendButton();
             await _falseThighTracker.UdpHandler.SendButton();

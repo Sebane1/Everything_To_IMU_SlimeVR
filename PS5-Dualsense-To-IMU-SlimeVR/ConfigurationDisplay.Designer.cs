@@ -25,7 +25,7 @@
         private void InitializeComponent() {
             components = new System.ComponentModel.Container();
             refreshTimer = new System.Windows.Forms.Timer(components);
-            deviceList = new ListBox();
+            controllerDeviceList = new ListBox();
             falseThighSimulationCheckBox = new CheckBox();
             tabOptions = new TabControl();
             settingsPage = new TabPage();
@@ -40,6 +40,7 @@
             donateButton = new Button();
             pollingRate = new TrackBar();
             polllingRateLabel = new Label();
+            threeDsDeviceList = new ListBox();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
@@ -53,16 +54,16 @@
             refreshTimer.Interval = 500;
             refreshTimer.Tick += refreshTimer_Tick;
             // 
-            // deviceList
+            // controllerDeviceList
             // 
-            deviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
-            deviceList.FormattingEnabled = true;
-            deviceList.ItemHeight = 15;
-            deviceList.Location = new Point(-2, -2);
-            deviceList.Name = "deviceList";
-            deviceList.Size = new Size(104, 514);
-            deviceList.TabIndex = 0;
-            deviceList.SelectedIndexChanged += selectedDevice_SelectedIndexChanged;
+            controllerDeviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            controllerDeviceList.FormattingEnabled = true;
+            controllerDeviceList.ItemHeight = 15;
+            controllerDeviceList.Location = new Point(-2, -2);
+            controllerDeviceList.Name = "controllerDeviceList";
+            controllerDeviceList.Size = new Size(104, 244);
+            controllerDeviceList.TabIndex = 0;
+            controllerDeviceList.SelectedIndexChanged += selectedDevice_SelectedIndexChanged;
             // 
             // falseThighSimulationCheckBox
             // 
@@ -215,17 +216,29 @@
             polllingRateLabel.TabIndex = 7;
             polllingRateLabel.Text = "Update Rate: 30ms";
             // 
+            // threeDsDeviceList
+            // 
+            threeDsDeviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            threeDsDeviceList.FormattingEnabled = true;
+            threeDsDeviceList.ItemHeight = 15;
+            threeDsDeviceList.Location = new Point(-2, 250);
+            threeDsDeviceList.Name = "threeDsDeviceList";
+            threeDsDeviceList.Size = new Size(104, 274);
+            threeDsDeviceList.TabIndex = 8;
+            threeDsDeviceList.SelectedIndexChanged += threeDsDeviceList_SelectedIndexChanged;
+            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
             ClientSize = new Size(444, 580);
+            Controls.Add(threeDsDeviceList);
             Controls.Add(polllingRateLabel);
             Controls.Add(pollingRate);
             Controls.Add(donateButton);
             Controls.Add(trackerCalibrationButton);
             Controls.Add(tabOptions);
-            Controls.Add(deviceList);
+            Controls.Add(controllerDeviceList);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             Name = "ConfigurationDisplay";
@@ -245,7 +258,7 @@
 
         #endregion
         private System.Windows.Forms.Timer refreshTimer;
-        private ListBox deviceList;
+        private ListBox controllerDeviceList;
         private CheckBox falseThighSimulationCheckBox;
         private TabControl tabOptions;
         private TabPage settingsPage;
@@ -260,5 +273,6 @@
         private ComboBox yawForSimulatedTracker;
         private TabPage errorLog;
         private TextBox errorLogText;
+        private ListBox threeDsDeviceList;
     }
 }

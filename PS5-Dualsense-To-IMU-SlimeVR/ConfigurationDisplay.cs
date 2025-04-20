@@ -8,13 +8,12 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
         private GenericControllerTrackerManager _genericControllerTranslator;
         private Configuration _configuration = new Configuration();
         Queue<string> errorQueue = new Queue<string>();
-        int _currentIndex = 0;
+        private TrackerConfig _currentTrackerConfig;
+        private IBodyTracker _currentTracker;
         private bool _suppressCheckBoxEvent;
         string _lastErrorLog = "";
         private readonly ForwardedWiimoteManager _forwardedWiimoteManager;
         private readonly Forwarded3DSDataManager _forwarded3DSDataManager;
-
-        public int CurrentIndex { get => _currentIndex; set => _currentIndex = value; }
 
         public ConfigurationDisplay() {
             InitializeComponent();
@@ -37,7 +36,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             if (tabOptions.SelectedIndex == 1) {
                 debugText.Text = "";
                 try {
-                    debugText.Text += _genericControllerTranslator.Trackers[_currentIndex].Debug;
+                    debugText.Text += _currentTracker.Debug;
                 } catch {
 
                 }
@@ -47,12 +46,15 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
                 GenericControllerTrackerManager.DebugOpen = false;
                 refreshTimer.Interval = 1000;
             }
-                deviceList.Items.Clear();
+            controllerDeviceList.Items.Clear();
+            threeDsDeviceList.Items.Clear();
             foreach (var item in _genericControllerTranslator.Trackers) {
-                deviceList.Items.Add("Tracker " + item.Id);
+                controllerDeviceList.Items.Add("Tracker " + item.Id);
             }
-            if (deviceList.Items.Count > 0) {
-                deviceList.SelectedIndex = _currentIndex;
+            foreach (var item in _genericControllerTranslator.Trackers3ds) {
+                threeDsDeviceList.Items.Add("Tracker " + item.Id);
+            }
+            if (controllerDeviceList.Items.Count > 0) {
                 rediscoverTrackerButton.Visible = true;
                 falseThighSimulationCheckBox.Visible = true;
             } else {
@@ -74,19 +76,43 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
 
         private void selectedDevice_SelectedIndexChanged(object sender, EventArgs e) {
             refreshTimer.Stop();
-            _currentIndex = deviceList.SelectedIndex;
-            _suppressCheckBoxEvent = true;
-            falseThighSimulationCheckBox.Checked = _configuration.TrackerConfigs[_currentIndex].SimulatesThighs;
-            _genericControllerTranslator.Trackers[_currentIndex].SimulateThighs = _configuration.TrackerConfigs[_currentIndex].SimulatesThighs;
+            var currentIndex = controllerDeviceList.SelectedIndex;
+            if (currentIndex >= 0) {
+                _currentTrackerConfig = _configuration.TrackerConfigs[currentIndex];
+                _currentTracker = _genericControllerTranslator.Trackers[currentIndex];
 
-            yawForSimulatedTracker.SelectedIndex = (int)_configuration.TrackerConfigs[_currentIndex].YawReferenceTypeValue;
-            _genericControllerTranslator.Trackers[_currentIndex].YawReferenceTypeValue = _configuration.TrackerConfigs[_currentIndex].YawReferenceTypeValue;
+                _suppressCheckBoxEvent = true;
+                falseThighSimulationCheckBox.Checked = _currentTrackerConfig.SimulatesThighs;
+                _currentTracker.SimulateThighs = _currentTrackerConfig.SimulatesThighs;
 
-            trackerConfigLabel.Text = $"Tracker {_currentIndex + 1} Config";
-            _suppressCheckBoxEvent = false;
-            refreshTimer.Start();
+                yawForSimulatedTracker.SelectedIndex = (int)_currentTrackerConfig.YawReferenceTypeValue;
+                _currentTracker.YawReferenceTypeValue = _currentTrackerConfig.YawReferenceTypeValue;
+
+                trackerConfigLabel.Text = $"Tracker {_currentTracker.Id} Config";
+                _suppressCheckBoxEvent = false;
+                refreshTimer.Start();
+            }
         }
+        private void threeDsDeviceList_SelectedIndexChanged(object sender, EventArgs e) {
+            refreshTimer.Stop();
+            var currentIndex = threeDsDeviceList.SelectedIndex;
+            if (currentIndex >= 0) {
+                _currentTrackerConfig = _configuration.TrackerConfigs3ds[currentIndex];
+                _currentTracker = _genericControllerTranslator.Trackers3ds[currentIndex];
 
+
+                _suppressCheckBoxEvent = true;
+                falseThighSimulationCheckBox.Checked = _currentTrackerConfig.SimulatesThighs;
+                _currentTracker.SimulateThighs = _currentTrackerConfig.SimulatesThighs;
+
+                yawForSimulatedTracker.SelectedIndex = (int)_currentTrackerConfig.YawReferenceTypeValue;
+                _currentTracker.YawReferenceTypeValue = _currentTrackerConfig.YawReferenceTypeValue;
+
+                trackerConfigLabel.Text = $"Tracker {_currentTracker.Id} Config";
+                _suppressCheckBoxEvent = false;
+                refreshTimer.Start();
+            }
+        }
         private void tabPage1_Click(object sender, EventArgs e) {
 
         }
@@ -94,14 +120,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
         private void falseThighSimulationCheckBox_CheckedChanged(object sender, EventArgs e) {
             yawForSimulatedTracker.Enabled = falseThighSimulationCheckBox.Checked;
             if (!_suppressCheckBoxEvent) {
-                _genericControllerTranslator.Trackers[_currentIndex].SimulateThighs = falseThighSimulationCheckBox.Checked;
-                _configuration.TrackerConfigs[_currentIndex].SimulatesThighs = falseThighSimulationCheckBox.Checked;
+                _currentTracker.SimulateThighs = falseThighSimulationCheckBox.Checked;
+                _currentTrackerConfig.SimulatesThighs = falseThighSimulationCheckBox.Checked;
                 _configuration.SaveConfig();
             }
         }
 
         private void rediscoverTrackerButton_Clicked(object sender, EventArgs e) {
-            _genericControllerTranslator.Trackers[_currentIndex].Rediscover();
+            _currentTracker.Rediscover();
         }
 
         private void trackerCalibrationButton_Click(object sender, EventArgs e) {
@@ -142,8 +168,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
 
         private void yawForSimulatedTracker_SelectedIndexChanged(object sender, EventArgs e) {
             if (!_suppressCheckBoxEvent) {
-                _genericControllerTranslator.Trackers[_currentIndex].YawReferenceTypeValue = (RotationReferenceType)yawForSimulatedTracker.SelectedIndex;
-                _configuration.TrackerConfigs[_currentIndex].YawReferenceTypeValue = (RotationReferenceType)yawForSimulatedTracker.SelectedIndex;
+                _currentTracker.YawReferenceTypeValue = (RotationReferenceType)yawForSimulatedTracker.SelectedIndex;
+                _currentTrackerConfig.YawReferenceTypeValue = (RotationReferenceType)yawForSimulatedTracker.SelectedIndex;
                 _configuration.SaveConfig();
             }
         }
