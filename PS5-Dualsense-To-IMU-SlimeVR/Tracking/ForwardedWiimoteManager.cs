@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
@@ -16,12 +11,11 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         }
 
         async void Initialize() {
-            var udp = new UdpClient(9930);
-            var ep = new IPEndPoint(IPAddress.Any, 9930);
+            var udp = new UdpClient(9909);
+            var ep = new IPEndPoint(IPAddress.Any, 0);
 
             while (true) {
                 byte[] data = udp.Receive(ref ep);
-
                 try {
                     WiimotePacket packet = ParsePacket(data);
                     Console.WriteLine(packet.ToString());
