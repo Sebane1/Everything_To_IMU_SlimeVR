@@ -138,8 +138,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                         await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, -GetTrackerRotation(RotationReferenceType.WaistRotation).GetYawFromQuaternion()).ToQuaternion());
                     } else {
                         float finalY = _euler.Y;
-                        float finalZ = isClamped ? _euler.Z : _euler.Z;
-                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, (!_usingWiimoteKnees ? finalZ : 0) + _lastEulerPositon)).ToQuaternion());
+                        float finalZ = _euler.Z;
+                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, (!_usingWiimoteKnees ? finalZ + _lastEulerPositon : -GetTrackerRotation(RotationReferenceType.WaistRotation).GetYawFromQuaternion()))).ToQuaternion());
                         if (!_simulateThighs) {
                             await _falseThighTracker.Update();
                         }

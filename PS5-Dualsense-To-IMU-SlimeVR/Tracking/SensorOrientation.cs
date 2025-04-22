@@ -49,16 +49,16 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             }
         }
 
-        private JSL.MOTION_STATE GetReleventMotionState(int index) {
+        private JSL.MOTION_STATE GetReleventMotionState() {
             switch (_sensorType) {
                 case SensorType.Bluetooth:
-                    return JSL.JslGetMotionState(index);
+                    return JSL.JslGetMotionState(_index);
                 case SensorType.ThreeDs:
-                    return Forwarded3DSDataManager.DeviceMap.ElementAt(index).Value;
+                    return Forwarded3DSDataManager.DeviceMap.ElementAt(_index).Value;
                 case SensorType.Wiimote:
-                    return ForwardedWiimoteManager.Wiimotes.ElementAt(index).Value;
+                    return ForwardedWiimoteManager.Wiimotes.ElementAt(_index).Value;
                 case SensorType.Nunchuck:
-                    return ForwardedWiimoteManager.Nunchucks.ElementAt(index).Value;
+                    return ForwardedWiimoteManager.Nunchucks.ElementAt(_index).Value;
             }
             return new JSL.MOTION_STATE();
         }
@@ -69,7 +69,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             Nunchuck = 3
         }
         private void RefreshSensorData() {
-            var sensorData = GetReleventMotionState(_index);
+            var sensorData = GetReleventMotionState();
             _accelerometer = new Vector3(sensorData.gravX, sensorData.gravY, sensorData.gravZ);
             _gyro = new Vector3(sensorData.accelX, sensorData.accelY, sensorData.accelZ);
         }
