@@ -35,7 +35,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public async void Initialize(IBodyTracker tracker) {
             Task.Run(async () => {
                 _tracker = tracker;
-                _macSpoof = CalculateMD5Hash(tracker.MacSpoof);
+                _macSpoof = HashUtility.CalculateMD5Hash(tracker.MacSpoof);
                 _udpHandler = new UDPHandler("FalseTracker", tracker.Id + 500,
                  new byte[] { (byte)_macSpoof[0], (byte)_macSpoof[1], (byte)_macSpoof[2],
                      (byte) _macSpoof[3], (byte) _macSpoof[4], (byte) _macSpoof[5] });
@@ -89,17 +89,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             return _ready;
         }
 
-        public static string CalculateMD5Hash(string input) {
-            using (MD5 md5 = MD5.Create()) {
-                byte[] inputBytes = Encoding.UTF8.GetBytes(input);
-                byte[] hashBytes = md5.ComputeHash(inputBytes);
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < hashBytes.Length; i++) {
-                    sb.Append(hashBytes[i].ToString("x2"));
-                }
-                return sb.ToString();
-            }
-        }
 
         public void Dispose() {
             _ready = false;

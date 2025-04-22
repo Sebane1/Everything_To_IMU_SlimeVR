@@ -1,14 +1,17 @@
 ﻿using Newtonsoft.Json.Linq;
 using PS5_Dualsense_To_IMU_SlimeVR.SlimeVR;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Numerics;
 using static PS5_Dualsense_To_IMU_SlimeVR.TrackerConfig;
 
 namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
-    public class ThreeDsControllerTracker : IDisposable, IBodyTracker {
+    public class WiiTracker : IDisposable, IBodyTracker {
         private string _debug;
         private int _index;
         private int _id;
+        private string _firmwareId;
+        private ConcurrentDictionary<string, JSL.MOTION_STATE> _motionStateList;
         private string macSpoof;
         private SensorOrientation _sensorOrientation;
         private UDPHandler udpHandler;
@@ -22,6 +25,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private FalseThighTracker _falseThighTracker;
         private float _lastEulerPositon;
         private Quaternion _rotation;
+        private Vector3 _eulerUncalibrated;
         private Vector3 _euler;
         private Vector3 _gyro;
         private Vector3 _acceleration;
@@ -32,21 +36,32 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
 
         public event EventHandler<string> OnTrackerError;
 
-        public ThreeDsControllerTracker(int index) {
-            Initialize(index);
+        public WiiTracker(int index, bool nunchuck) {
+            Initialize(index, nunchuck);
         }
-        public async void Initialize(int index) {
+        public async void Initialize(int index, bool nunchuck) {
             Task.Run(async () => {
                 try {
                     _index = index;
                     _id = index + 1;
-                    _rememberedStringId = Forwarded3DSDataManager.DeviceMap.Keys.ElementAt(index).ToString();
-                    macSpoof = _rememberedStringId + "3DS_Tracker";
-                    _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.ThreeDs);
+                    _firmwareId = "";
+                    if (nunchuck) {
+                        _rememberedStringId = ForwardedWiimoteManager.Nunchucks.Keys.ElementAt(index).ToString();
+                        macSpoof = HashUtility.CalculateMD5Hash(_rememberedStringId + "Nunchuck_Tracker");
+                        _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.Nunchuck);
+                        _firmwareId = "Nunchuck_Tracker" + _rememberedStringId;
+                        _motionStateList = ForwardedWiimoteManager.Nunchucks;
+                    } else {
+                        _rememberedStringId = ForwardedWiimoteManager.Wiimotes.Keys.ElementAt(index).ToString();
+                        macSpoof = HashUtility.CalculateMD5Hash(_rememberedStringId + "Wiimote_Tracker");
+                        _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.Wiimote);
+                        _firmwareId = "Wiimote_Tracker" + _rememberedStringId;
+                        _motionStateList = ForwardedWiimoteManager.Wiimotes;
+                    }
                     if (_simulateThighs) {
                         _falseThighTracker = new FalseThighTracker(this);
                     }
-                    udpHandler = new UDPHandler("3DS_Tracker" + _rememberedStringId, _id,
+                    udpHandler = new UDPHandler(_firmwareId, _id,
                      new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] });
                     udpHandler.Active = true;
                     Recalibrate();
@@ -65,7 +80,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     case RotationReferenceType.WaistRotation:
                         return OpenVRReader.GetWaistTrackerRotation();
                     case RotationReferenceType.TrackerRotation:
-                        var value = Forwarded3DSDataManager.DeviceMap.ElementAt(_index);
+                        var value = _motionStateList.ElementAt(_index);
                         var motionQuaternion = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
                         return motionQuaternion;
                 }
@@ -84,16 +99,19 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     if (!isClamped || YawReferenceTypeValue != RotationReferenceType.HmdRotation) {
                         _lastEulerPositon = YawReferenceTypeValue != RotationReferenceType.TrackerRotation ? -trackerEuler : trackerEuler;
                     }
-                    var value = Forwarded3DSDataManager.DeviceMap.ElementAt(_index);
+                    var value = _motionStateList.ElementAt(_index);
                     _rotation = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
-                    _euler = _rotation.QuaternionToEuler() + _rotationCalibration;
+                    _eulerUncalibrated = _rotation.QuaternionToEuler();
+                    _euler = _eulerUncalibrated + _rotationCalibration;
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
 
                     if (GenericControllerTrackerManager.DebugOpen) {
                         _debug =
                         $"Device Id: {macSpoof}\r\n" +
-                        $"Euler Rotation:\r\n" +
+                        $"Euler Rotation Uncalibrated:\r\n" +
+                        $"X:{_eulerUncalibrated.X}, Y:{_eulerUncalibrated.Y}, Z:{_eulerUncalibrated.Z}" +
+                        $"\r\nEuler Rotation:\r\n" +
                         $"X:{_euler.X}, Y:{_euler.Y}, Z:{_rotation.Z}" +
                         $"\r\nGyro:\r\n" +
                         $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
@@ -105,10 +123,10 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                     }
                     //await udpHandler.SetSensorBattery(100);
                     if (!_simulateThighs) {
-                        await udpHandler.SetSensorRotation(new Vector3(-_euler.Y, _euler.Z, _euler.X + _lastEulerPositon).ToQuaternion());
+                        await udpHandler.SetSensorRotation(new Vector3(-_euler.X , _euler.Y, _lastEulerPositon).ToQuaternion());
                     } else {
                         float finalY = _euler.Y;
-                        float finalZ = isClamped ? _euler.Z : _euler.Z;
+                        float finalZ = 0;
                         await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, finalZ + _lastEulerPositon)).ToQuaternion());
                         await _falseThighTracker.Update();
                     }
@@ -122,7 +140,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public async void Recalibrate() {
             await Task.Delay(5000);
             _calibratedHeight = OpenVRReader.GetHMDHeight();
-            var value = Forwarded3DSDataManager.DeviceMap.ElementAt(_index);
+            var value = _motionStateList.ElementAt(_index);
             _rotation = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
             _rotationCalibration = -_rotation.QuaternionToEuler();
             _falseThighTracker.Recalibrate();

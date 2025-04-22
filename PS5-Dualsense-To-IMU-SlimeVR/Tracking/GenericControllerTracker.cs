@@ -18,6 +18,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private string _lastDualSenseId;
         private bool _simulateThighs = true;
         private bool _useWaistTrackerForYaw;
+        private bool _usingWiimoteKnees = true;
         private FalseThighTracker _falseThighTracker;
         private float _lastEulerPositon;
         private Quaternion _rotation;
@@ -91,13 +92,13 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                 try {
                     var hmdHeight = OpenVRReader.GetHMDHeight();
                     bool isClamped = !_falseThighTracker.IsClamped;
-                    var trackerRotation = GetTrackerRotation(!_simulateThighs ? RotationReferenceType.TrackerRotation : YawReferenceTypeValue);
+                    var trackerRotation = GetTrackerRotation(!_simulateThighs && !_usingWiimoteKnees ? RotationReferenceType.TrackerRotation : YawReferenceTypeValue);
                     float trackerEuler = trackerRotation.GetYawFromQuaternion();
                     if (!isClamped || GetGlobalState(0x08000) || YawReferenceTypeValue != RotationReferenceType.HmdRotation) {
                         _lastEulerPositon = YawReferenceTypeValue != RotationReferenceType.TrackerRotation ? -trackerEuler : trackerEuler;
                     }
 
-                    _rotation = !_simulateThighs ? trackerRotation : (_sensorOrientation.CurrentOrientation);
+                    _rotation = !_simulateThighs && !_usingWiimoteKnees ? trackerRotation : (_sensorOrientation.CurrentOrientation);
                     _euler = _rotation.QuaternionToEuler() + (!_simulateThighs ? new Vector3() : _rotationCalibration);
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
@@ -121,7 +122,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                         if (!_waitForRelease) {
                             if (!buttonPressTimer.IsRunning) {
                                 buttonPressTimer.Start();
-                            } else if(buttonPressTimer.ElapsedMilliseconds < 250){
+                            } else if (buttonPressTimer.ElapsedMilliseconds < 250) {
                                 _waitForRelease = true;
                                 Recalibrate();
                                 buttonPressTimer.Reset();
@@ -133,13 +134,15 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
                         _waitForRelease = false;
                     }
                     await udpHandler.SetSensorBattery(100);
-                    if (!_simulateThighs) {
-                        await udpHandler.SetSensorRotation(new Vector3(_euler.X, _euler.Y, _euler.Z).ToQuaternion());
+                    if (!_simulateThighs && !_usingWiimoteKnees) {
+                        await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, -GetTrackerRotation(RotationReferenceType.WaistRotation).GetYawFromQuaternion()).ToQuaternion());
                     } else {
                         float finalY = _euler.Y;
                         float finalZ = isClamped ? _euler.Z : _euler.Z;
-                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, finalZ + _lastEulerPositon)).ToQuaternion());
-                        await _falseThighTracker.Update();
+                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, (!_usingWiimoteKnees ? finalZ : 0) + _lastEulerPositon)).ToQuaternion());
+                        if (!_simulateThighs) {
+                            await _falseThighTracker.Update();
+                        }
                     }
                     _falseThighTracker.IsActive = _simulateThighs;
                 } catch (Exception e) {
@@ -183,5 +186,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public bool SimulateThighs { get => _simulateThighs; set => _simulateThighs = value; }
         public bool UseWaistTrackerForYaw { get => _useWaistTrackerForYaw; set => _useWaistTrackerForYaw = value; }
         public RotationReferenceType YawReferenceTypeValue { get => _yawReferenceTypeValue; set => _yawReferenceTypeValue = value; }
+        public bool UsingWiimoteKnees { get => _usingWiimoteKnees; set => _usingWiimoteKnees = value; }
     }
 }

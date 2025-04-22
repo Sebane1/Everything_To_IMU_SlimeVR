@@ -39,24 +39,26 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             _sensorType = sensorType;
             Recalibrate();
             stopwatch.Start();
-            Task.Run(() => {
-                while (!disposed) {
-                    Update();
-                    Thread.Sleep(16);
-                }
-            });
+            if (_sensorType == SensorType.Bluetooth) {
+                Task.Run(() => {
+                    while (!disposed) {
+                        Update();
+                        Thread.Sleep(16);
+                    }
+                });
+            }
         }
 
-        private JSL.MOTION_STATE GetReleventMotionState(int index, SensorType sensorType) {
-            switch (sensorType) {
+        private JSL.MOTION_STATE GetReleventMotionState(int index) {
+            switch (_sensorType) {
                 case SensorType.Bluetooth:
                     return JSL.JslGetMotionState(index);
                 case SensorType.ThreeDs:
-                    return  Forwarded3DSDataManager.DeviceMap.ElementAt(index).Value;
+                    return Forwarded3DSDataManager.DeviceMap.ElementAt(index).Value;
                 case SensorType.Wiimote:
-                    break;
+                    return ForwardedWiimoteManager.Wiimotes.ElementAt(index).Value;
                 case SensorType.Nunchuck:
-                    break;
+                    return ForwardedWiimoteManager.Nunchucks.ElementAt(index).Value;
             }
             return new JSL.MOTION_STATE();
         }
@@ -67,7 +69,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             Nunchuck = 3
         }
         private void RefreshSensorData() {
-            var sensorData = GetReleventMotionState(_index, SensorOrientation.SensorType.ThreeDs);
+            var sensorData = GetReleventMotionState(_index);
             _accelerometer = new Vector3(sensorData.gravX, sensorData.gravY, sensorData.gravZ);
             _gyro = new Vector3(sensorData.accelX, sensorData.accelY, sensorData.accelZ);
         }

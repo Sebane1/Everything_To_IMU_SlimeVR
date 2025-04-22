@@ -1,13 +1,16 @@
 ﻿using Newtonsoft.Json;
 namespace PS5_Dualsense_To_IMU_SlimeVR {
     public class Configuration {
-        List<TrackerConfig> _trackerConfigs = new List<TrackerConfig>();
-        List<TrackerConfig> _trackerConfig3ds = new List<TrackerConfig>();
-        List<TrackerConfig> _trackerConfigWiimote = new List<TrackerConfig>();
+        private List<TrackerConfig> _trackerConfigs = new List<TrackerConfig>();
+        private List<TrackerConfig> _trackerConfig3ds = new List<TrackerConfig>();
+        private List<TrackerConfig> _trackerConfigWiimote = new List<TrackerConfig>();
+        private List<TrackerConfig> _trackerConfigNunchuck = new List<TrackerConfig>();
+
         private int _pollingRate = 8;
         public List<TrackerConfig> TrackerConfigs { get => _trackerConfigs; set => _trackerConfigs = value; }
         public List<TrackerConfig> TrackerConfigs3ds { get => _trackerConfig3ds; set => _trackerConfig3ds = value; }
         public List<TrackerConfig> TrackerConfigWiimote { get => _trackerConfigWiimote; set => _trackerConfigWiimote = value; }
+        public List<TrackerConfig> TrackerConfigNunchuck { get => _trackerConfigNunchuck; set => _trackerConfigNunchuck = value; }
         public int PollingRate { get => _pollingRate; set => _pollingRate = value; }
 
         public void SaveConfig() {
