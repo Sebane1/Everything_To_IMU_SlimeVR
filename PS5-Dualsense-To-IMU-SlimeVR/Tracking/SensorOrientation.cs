@@ -37,7 +37,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public SensorOrientation(int index, SensorType sensorType) {
             _index = index;
             _sensorType = sensorType;
-            Recalibrate();
             stopwatch.Start();
             if (_sensorType == SensorType.Bluetooth) {
                 Task.Run(() => {
@@ -76,8 +75,8 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
 
         public void Recalibrate() {
             RefreshSensorData();
-            _accellerometerVectorCalibration = -(_accelerometer);
-            _gyroVectorCalibration = -(_gyro);
+            //_accellerometerVectorCalibration = -(_accelerometer);
+            //_gyroVectorCalibration = -(_gyro);
         }
         // Update method to simulate gyroscope and accelerometer data fusion
         public void Update() {
