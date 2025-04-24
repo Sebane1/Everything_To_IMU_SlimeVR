@@ -1,4 +1,4 @@
-﻿namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
+﻿namespace Everything_To_IMU_SlimeVR.Tracking {
     public class GenericControllerTrackerManager {
         private List<GenericControllerTracker> _trackers = new List<GenericControllerTracker>();
         private List<ThreeDsControllerTracker> _trackers3ds = new List<ThreeDsControllerTracker>();

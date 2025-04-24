@@ -1,4 +1,4 @@
-﻿namespace PS5_Dualsense_To_IMU_SlimeVR {
+﻿namespace Everything_To_IMU_SlimeVR {
     partial class ConfigurationDisplay {
         /// <summary>
         ///  Required designer variable.
@@ -47,6 +47,7 @@
             label2 = new Label();
             label3 = new Label();
             label4 = new Label();
+            memoryResetTimer = new System.Windows.Forms.Timer(components);
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
@@ -91,7 +92,7 @@
             tabOptions.Location = new Point(443, -2);
             tabOptions.Name = "tabOptions";
             tabOptions.SelectedIndex = 0;
-            tabOptions.Size = new Size(535, 531);
+            tabOptions.Size = new Size(343, 531);
             tabOptions.TabIndex = 2;
             // 
             // settingsPage
@@ -103,7 +104,7 @@
             settingsPage.Location = new Point(4, 24);
             settingsPage.Name = "settingsPage";
             settingsPage.Padding = new Padding(3);
-            settingsPage.Size = new Size(527, 503);
+            settingsPage.Size = new Size(335, 503);
             settingsPage.TabIndex = 0;
             settingsPage.Text = "Settings";
             settingsPage.UseVisualStyleBackColor = true;
@@ -144,7 +145,7 @@
             debugPage.Location = new Point(4, 24);
             debugPage.Name = "debugPage";
             debugPage.Padding = new Padding(3);
-            debugPage.Size = new Size(527, 503);
+            debugPage.Size = new Size(335, 503);
             debugPage.TabIndex = 1;
             debugPage.Text = "Debug";
             debugPage.UseVisualStyleBackColor = true;
@@ -162,7 +163,7 @@
             errorLog.Controls.Add(errorLogText);
             errorLog.Location = new Point(4, 24);
             errorLog.Name = "errorLog";
-            errorLog.Size = new Size(527, 503);
+            errorLog.Size = new Size(335, 503);
             errorLog.TabIndex = 2;
             errorLog.Text = "Error Log";
             errorLog.UseVisualStyleBackColor = true;
@@ -178,7 +179,7 @@
             // trackerCalibrationButton
             // 
             trackerCalibrationButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            trackerCalibrationButton.Location = new Point(637, 530);
+            trackerCalibrationButton.Location = new Point(445, 530);
             trackerCalibrationButton.Name = "trackerCalibrationButton";
             trackerCalibrationButton.Size = new Size(216, 23);
             trackerCalibrationButton.TabIndex = 4;
@@ -192,7 +193,7 @@
             donateButton.BackColor = Color.RosyBrown;
             donateButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             donateButton.ForeColor = Color.Snow;
-            donateButton.Location = new Point(851, 530);
+            donateButton.Location = new Point(659, 530);
             donateButton.Name = "donateButton";
             donateButton.Size = new Size(127, 23);
             donateButton.TabIndex = 5;
@@ -207,7 +208,7 @@
             pollingRate.Maximum = 120;
             pollingRate.Minimum = 8;
             pollingRate.Name = "pollingRate";
-            pollingRate.Size = new Size(871, 45);
+            pollingRate.Size = new Size(679, 45);
             pollingRate.TabIndex = 6;
             pollingRate.Value = 8;
             pollingRate.Scroll += pollingRate_Scroll;
@@ -292,11 +293,17 @@
             label4.TabIndex = 14;
             label4.Text = "Remote Nunchuck";
             // 
+            // memoryResetTimer
+            // 
+            memoryResetTimer.Enabled = true;
+            memoryResetTimer.Interval = 3600000;
+            memoryResetTimer.Tick += memoryResetTimer_Tick;
+            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(978, 606);
+            ClientSize = new Size(786, 606);
             Controls.Add(label4);
             Controls.Add(label3);
             Controls.Add(label2);
@@ -351,5 +358,6 @@
         private Label label2;
         private Label label3;
         private Label label4;
+        private System.Windows.Forms.Timer memoryResetTimer;
     }
 }

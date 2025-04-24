@@ -1,11 +1,12 @@
-﻿using PS5_Dualsense_To_IMU_SlimeVR.SlimeVR;
+﻿using Everything_To_IMU_SlimeVR.SlimeVR;
+using Everything_To_IMU_SlimeVR.Utility;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows;
 
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
+namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class FalseThighTracker : IDisposable {
         private IBodyTracker _tracker;
         private string _macSpoof;

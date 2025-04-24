@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking
+namespace Everything_To_IMU_SlimeVR.Tracking
 {
     public static class CoordinateUtility
     {

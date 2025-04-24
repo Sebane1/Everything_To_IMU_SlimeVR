@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Collections.Concurrent;
 using System.Numerics;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
+namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class ForwardedWiimoteManager {
         private static ConcurrentDictionary<string, JSL.MOTION_STATE> _wiimotes = new ConcurrentDictionary<string, JSL.MOTION_STATE>();
         private static ConcurrentDictionary<string, JSL.MOTION_STATE> _nunchucks = new ConcurrentDictionary<string, JSL.MOTION_STATE>();

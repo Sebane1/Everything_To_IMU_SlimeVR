@@ -1,9 +1,9 @@
 ﻿using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
-using static PS5_Dualsense_To_IMU_SlimeVR.SlimeVR.FirmwareConstants;
+using static Everything_To_IMU_SlimeVR.SlimeVR.FirmwareConstants;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
+namespace Everything_To_IMU_SlimeVR.SlimeVR {
     public class UDPHandler {
         private byte[] _macAddress;
         private PacketBuilder packetBuilder;

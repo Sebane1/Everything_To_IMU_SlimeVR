@@ -5,7 +5,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Numerics;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
+namespace Everything_To_IMU_SlimeVR.Tracking {
     public class Forwarded3DSDataManager {
         const int listenPort = 9305;
         private static ConcurrentDictionary<string, JSL.MOTION_STATE> _deviceMap = new ConcurrentDictionary<string, JSL.MOTION_STATE>();

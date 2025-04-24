@@ -1,12 +1,12 @@
 ﻿using OVRSharp.Math;
-using PS5_Dualsense_To_IMU_SlimeVR.Utility;
+using Everything_To_IMU_SlimeVR.Utility;
 using System.Diagnostics;
 using System.Numerics;
 using System.Text;
 using Valve.VR;
 using static OVRSharp.Overlay;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
+namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class OpenVRReader {
         private static CVRSystem _vrSystem;
         public static Quaternion GetHMDRotation() {

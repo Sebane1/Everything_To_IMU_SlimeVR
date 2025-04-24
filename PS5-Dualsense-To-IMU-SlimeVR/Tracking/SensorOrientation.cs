@@ -1,8 +1,8 @@
-﻿using PS5_Dualsense_To_IMU_SlimeVR.Utility;
+﻿using Everything_To_IMU_SlimeVR.Utility;
 using System.Diagnostics;
 using System.Numerics;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
+namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class SensorOrientation : IDisposable {
         private Quaternion currentOrientation = Quaternion.Identity;
         private Vector3 accelerometerData = Vector3.Zero;

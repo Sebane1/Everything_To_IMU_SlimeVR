@@ -1,9 +1,9 @@
-﻿using PS5_Dualsense_To_IMU_SlimeVR.SlimeVR;
+﻿using Everything_To_IMU_SlimeVR.SlimeVR;
 using System.Diagnostics;
 using System.Numerics;
-using static PS5_Dualsense_To_IMU_SlimeVR.TrackerConfig;
+using static Everything_To_IMU_SlimeVR.TrackerConfig;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
+namespace Everything_To_IMU_SlimeVR.Tracking {
     public class GenericControllerTracker : IDisposable, IBodyTracker {
         private string _debug;
         private int _index;
@@ -156,7 +156,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             await Task.Delay(5000);
             JSL.JslResetContinuousCalibration(_index);
             _calibratedHeight = OpenVRReader.GetHMDHeight();
-            _rotationCalibration = -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
+            _rotationCalibration = GetCalibration();
             _falseThighTracker.Recalibrate();
             await udpHandler.SendButton();
             await _falseThighTracker.UdpHandler.SendButton();
@@ -172,6 +172,15 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
             _ready = false;
             _disconnected = true;
             _falseThighTracker?.Dispose();
+        }
+
+        public Vector3 GetCalibration() {
+            if (Configuration.Instance.TimeSinceLastConfig().TotalSeconds < 10) {
+                if (Configuration.Instance.CalibrationConfigurations.ContainsKey(macSpoof)) {
+                    return Configuration.Instance.CalibrationConfigurations[macSpoof];
+                }
+            }
+            return -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
         }
 
         public string Debug { get => _debug; set => _debug = value; }

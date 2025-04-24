@@ -1,4 +1,4 @@
-﻿namespace PS5_Dualsense_To_IMU_SlimeVR.Utility {
+﻿namespace Everything_To_IMU_SlimeVR.Utility {
     public class BigEndianBinaryWriter : BinaryWriter {
         public BigEndianBinaryWriter(Stream stream) : base(stream) { }
         public override void Write(float value) {

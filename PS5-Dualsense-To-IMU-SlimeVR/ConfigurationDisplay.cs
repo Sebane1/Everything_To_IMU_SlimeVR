@@ -1,9 +1,9 @@
-using PS5_Dualsense_To_IMU_SlimeVR.Tracking;
+using Everything_To_IMU_SlimeVR.Tracking;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using static PS5_Dualsense_To_IMU_SlimeVR.TrackerConfig;
+using static Everything_To_IMU_SlimeVR.TrackerConfig;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR {
+namespace Everything_To_IMU_SlimeVR {
     public partial class ConfigurationDisplay : Form {
         private GenericControllerTrackerManager _genericControllerTranslator;
         private Configuration _configuration = new Configuration();
@@ -19,13 +19,18 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             InitializeComponent();
             AutoScaleDimensions = new SizeF(96, 96);
             _configuration = Configuration.LoadConfig();
+            if (_configuration.SwitchingSessions) {
+                _configuration.LastCalibration = DateTime.UtcNow;
+            }
             _genericControllerTranslator = new GenericControllerTrackerManager(_configuration);
             _genericControllerTranslator.OnTrackerError += _genericControllerTranslator_OnTrackerError;
             _genericControllerTranslator.PollingRate = _configuration.PollingRate;
-            polllingRateLabel.Text = "Polling Rate: " + _configuration.PollingRate + "ms";
-            pollingRate.Value = _configuration.PollingRate;
             _forwardedWiimoteManager = new ForwardedWiimoteManager();
             _forwarded3DSDataManager = new Forwarded3DSDataManager();
+            _configuration.SwitchingSessions = false;
+            polllingRateLabel.Text = "Polling Rate: " + _configuration.PollingRate + "ms";
+            pollingRate.Value = _configuration.PollingRate;
+            _configuration.SaveConfig();
         }
 
         private void _genericControllerTranslator_OnTrackerError(object? sender, string e) {
@@ -205,6 +210,14 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
 
         private void label1_Click(object sender, EventArgs e) {
 
+        }
+
+        private void memoryResetTimer_Tick(object sender, EventArgs e) {
+            string resetPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            _configuration.SwitchingSessions = true;
+            _configuration.SaveConfig();
+            Process.Start(resetPath.Replace(".dll", ".exe"));
+            Application.Exit();
         }
     }
 }

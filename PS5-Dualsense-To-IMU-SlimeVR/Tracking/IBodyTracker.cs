@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
+namespace Everything_To_IMU_SlimeVR.Tracking {
     public interface IBodyTracker {
         int Id { get; set; }
         string MacSpoof { get; set; }
@@ -11,5 +11,6 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         string Debug { get; }
 
         void Rediscover();
+        Vector3 GetCalibration();
     }
 }

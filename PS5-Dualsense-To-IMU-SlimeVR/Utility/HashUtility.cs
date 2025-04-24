@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR {
+namespace Everything_To_IMU_SlimeVR.Utility {
     public class HashUtility {
         public static string CalculateMD5Hash(string input) {
             using (MD5 md5 = MD5.Create()) {

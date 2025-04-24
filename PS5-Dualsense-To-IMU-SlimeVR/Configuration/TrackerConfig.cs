@@ -1,4 +1,4 @@
-﻿namespace PS5_Dualsense_To_IMU_SlimeVR {
+﻿namespace Everything_To_IMU_SlimeVR {
     public class TrackerConfig {
         bool _simulatesThighs;
 

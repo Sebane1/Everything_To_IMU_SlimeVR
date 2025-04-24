@@ -1,4 +1,4 @@
-﻿namespace PS5_Dualsense_To_IMU_SlimeVR.Utility {
+﻿namespace Everything_To_IMU_SlimeVR.Utility {
     public static class BigEndianExtensions {
         public static int CorrectEndian(this int val) {
             if (BitConverter.IsLittleEndian) {
