@@ -29,7 +29,7 @@ typedef struct {
 
 #define BUFLEN 512
 #define MOTIONPLUS_DELAY_FRAMES 60
-
+static int persistent_sock = -1;
 static void* xfb = NULL;
 static GXRModeObj* rmode = NULL;
 
@@ -104,6 +104,7 @@ int main(int argc, char** argv) {
 
 			u32 pressed = WPAD_ButtonsDown(i);
 			if (pressed & WPAD_BUTTON_HOME) {
+				if (persistent_sock >= 0) net_close(persistent_sock);
 				exit(0);
 			}
 
@@ -176,8 +177,41 @@ Vector quaternion_to_euler(Quaternion q) {
 
 	return angles;
 }
+int initialize_socket() {
+	if (persistent_sock >= 0) {
+		net_close(persistent_sock);
+	}
+
+	persistent_sock = net_socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+	if (persistent_sock < 0) {
+		printf("Failed to create socket\n");
+		return -1;
+	}
+
+	struct sockaddr_in dest;
+	memset(&dest, 0, sizeof(dest));
+	dest.sin_family = AF_INET;
+	dest.sin_port = htons(SERVER_PORT);
+	inet_aton(SERVER_IP, &dest.sin_addr);
+
+	if (net_connect(persistent_sock, (struct sockaddr*)&dest, sizeof(dest)) < 0) {
+		printf("Failed to connect to server: errno=%d\n", errno);
+		net_close(persistent_sock);
+		persistent_sock = -1;
+		return -1;
+	}
+
+	return 0;
+}
 
 void send_http_post_binary(uint8_t* payload, int payload_len) {
+	if (persistent_sock < 0) {
+		if (initialize_socket() != 0) {
+			printf("Socket init failed\n");
+			return;
+		}
+	}
+
 	char request_header[256];
 	char ip_string[32];
 	snprintf(ip_string, sizeof(ip_string), "%s:%d", SERVER_IP, SERVER_PORT);
@@ -187,43 +221,26 @@ void send_http_post_binary(uint8_t* payload, int payload_len) {
 		"Host: %s\r\n"
 		"Content-Type: application/octet-stream\r\n"
 		"Content-Length: %d\r\n"
+		"Connection: keep-alive\r\n"
 		"\r\n",
 		PATH, ip_string, payload_len);
 
-	int sock = net_socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-	if (sock < 0) {
-		printf("Failed to create socket\n");
-		return;
-	}
+	int written = net_write(persistent_sock, request_header, header_len);
+	if (written < 0) goto socket_error;
 
-	struct sockaddr_in dest;
-	memset(&dest, 0, sizeof(dest));
-	dest.sin_family = AF_INET;
-	dest.sin_port = htons(SERVER_PORT);
-	inet_aton(SERVER_IP, &dest.sin_addr);
-
-	if (net_connect(sock, (struct sockaddr*)&dest, sizeof(dest)) < 0) {
-		printf("Failed to connect to server: errno=%d\n", errno);
-		net_close(sock);
-		return;
-	}
-
-	if (net_write(sock, request_header, header_len) < 0) {
-		printf("Failed to send header\n");
-		net_close(sock);
-		return;
-	}
-
-	if (net_write(sock, payload, payload_len) < 0) {
-		printf("Failed to send body\n");
-		net_close(sock);
-		return;
-	}
+	written = net_write(persistent_sock, payload, payload_len);
+	if (written < 0) goto socket_error;
 
 	char response[128];
-	net_read(sock, response, sizeof(response));
+	int read_bytes = net_read(persistent_sock, response, sizeof(response));
+	if (read_bytes <= 0) goto socket_error;
 
-	net_close(sock);
+	return;
+
+socket_error:
+	printf("Socket error, resetting connection\n");
+	net_close(persistent_sock);
+	persistent_sock = -1;
 }
 
 Vector normalize_vector(float x, float y, float z) {
