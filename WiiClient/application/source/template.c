@@ -86,97 +86,72 @@ int main(int argc, char** argv) {
 	s16 wiimote_offset = 512;
 	s16 nunchuck_offset = 512;
 	bool formatSet[4] = { false, false, false, false };
-	int frame_counter = 0;
 	bool debug = false;
+	uint8_t buffer[37 * 4]; // 4 controllers max, each 37 bytes
 	while (1) {
 		WPAD_ScanPads();
 		uint32_t connectedDevices = count_connected_wiimotes();
-		frame_counter++;
+		int buffer_len = 0;
+
 		for (uint32_t i = 0; i < connectedDevices; i++) {
 			WPADData* wpad_data = WPAD_Data(i);
-			if (wpad_data) {
-				if (!formatSet[i]) {
-					WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC);
-					formatSet[i] = true;
-				}
+			if (!wpad_data) continue;
 
-				u32 pressed = WPAD_ButtonsDown(i);
-				if (pressed & WPAD_BUTTON_HOME) {
-					exit(0);
-				}
-
-				s16 x = wpad_data->accel.x;
-				s16 y = wpad_data->accel.y;
-				s16 z = wpad_data->accel.z;
-				u8 nunchuk_connected = 0;
-				s16 nax = 0, nay = 0, naz = 0;
-
-				if (wpad_data->exp.type == WPAD_EXP_NUNCHUK) {
-					nunchuk_connected = 1;
-					nax = wpad_data->exp.nunchuk.accel.x;
-					nay = wpad_data->exp.nunchuk.accel.y;
-					naz = wpad_data->exp.nunchuk.accel.z;
-				}
-
-				if (debug) {
-					printf("\x1b[%d;0H", 7 + i * 6);
-					printf("Wiimote %u: X=%d Y=%d Z=%d   \n", i, x - wiimote_offset, y - wiimote_offset, z - wiimote_offset);
-					printf("\x1b[%d;0H", 8 + i * 6);
-					if (nunchuk_connected) {
-						printf("Nunchuk %u: X=%d Y=%d Z=%d   \n", i, nax - nunchuck_offset, nay - nunchuck_offset, naz - nunchuck_offset);
-					}
-					else {
-						printf("Nunchuk %u: Not connected       \n", i);
-					}
-				}
-
-				Quaternion wm_quat = quat_from_gravity((float)x, (float)y, (float)z, wiimote_offset, wiimote_offset, wiimote_offset, 200.0f);
-				Quaternion nc_quat = quat_from_gravity((float)nax, (float)nay, (float)naz, nunchuck_offset, nunchuck_offset, nunchuck_offset, 200.0f);
-				if (debug) {
-				    printf("WM %u Q: (%.3f, %.3f, %.3f, %.3f)\n", i, wm_quat.w, wm_quat.x, wm_quat.y, wm_quat.z);
-			    	printf("NC %u Q: (%.3f, %.3f, %.3f, %.3f)\n", i, nc_quat.w, nc_quat.x, nc_quat.y, nc_quat.z);
-
-					Vector wm_euler = quaternion_to_euler(wm_quat);
-					Vector nc_euler = quaternion_to_euler(nc_quat);
-
-					wm_euler.x *= (180.0f / M_PI);
-					wm_euler.y *= (180.0f / M_PI);
-					wm_euler.z *= (180.0f / M_PI);
-
-					nc_euler.x *= (180.0f / M_PI);
-					nc_euler.y *= (180.0f / M_PI);
-					nc_euler.z *= (180.0f / M_PI);
-
-					printf("Euler angles (deg): Roll=%.1f Pitch=%.1f Yaw=%.1f\n", wm_euler.x, wm_euler.y, wm_euler.z);
-					printf("Euler angles (deg): Roll=%.1f Pitch=%.1f Yaw=%.1f\n", nc_euler.x, nc_euler.y, nc_euler.z);
-				}
-				uint8_t buffer[37]; // 4 (id) + 16 (wm) + 16 (nc) + 1 (flag)
-				uint8_t* ptr = buffer;
-
-				uint32_t id_le = to_little_endian_u32(i);
-				memcpy(ptr, &id_le, 4); ptr += 4;
-
-				float_to_little_endian(wm_quat.w, ptr); ptr += 4;
-				float_to_little_endian(wm_quat.x, ptr); ptr += 4;
-				float_to_little_endian(wm_quat.y, ptr); ptr += 4;
-				float_to_little_endian(wm_quat.z, ptr); ptr += 4;
-
-				if (nunchuk_connected) {
-					float_to_little_endian(nc_quat.w, ptr); ptr += 4;
-					float_to_little_endian(nc_quat.x, ptr); ptr += 4;
-					float_to_little_endian(nc_quat.y, ptr); ptr += 4;
-					float_to_little_endian(nc_quat.z, ptr); ptr += 4;
-				}
-				else {
-					memset(ptr, 0, 16);
-					ptr += 16;
-				}
-
-				*ptr = nunchuk_connected;
-
-				send_http_post_binary(buffer, sizeof(buffer));
-
+			if (!formatSet[i]) {
+				WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC);
+				formatSet[i] = true;
 			}
+
+			u32 pressed = WPAD_ButtonsDown(i);
+			if (pressed & WPAD_BUTTON_HOME) {
+				exit(0);
+			}
+
+			s16 x = wpad_data->accel.x;
+			s16 y = wpad_data->accel.y;
+			s16 z = wpad_data->accel.z;
+			u8 nunchuk_connected = 0;
+			s16 nax = 0, nay = 0, naz = 0;
+
+			if (wpad_data->exp.type == WPAD_EXP_NUNCHUK) {
+				nunchuk_connected = 1;
+				nax = wpad_data->exp.nunchuk.accel.x;
+				nay = wpad_data->exp.nunchuk.accel.y;
+				naz = wpad_data->exp.nunchuk.accel.z;
+			}
+
+
+			uint8_t* ptr = buffer + buffer_len;
+
+			uint32_t id_le = to_little_endian_u32(i);
+			memcpy(ptr, &id_le, 4); ptr += 4;
+			Quaternion wm_quat = quat_from_gravity((float)x, (float)y, (float)z, wiimote_offset, wiimote_offset, wiimote_offset, 200.0f);
+			float_to_little_endian(wm_quat.w, ptr); ptr += 4;
+			float_to_little_endian(wm_quat.x, ptr); ptr += 4;
+			float_to_little_endian(wm_quat.y, ptr); ptr += 4;
+			float_to_little_endian(wm_quat.z, ptr); ptr += 4;
+
+			if (nunchuk_connected) {
+				Quaternion nc_quat = quat_from_gravity((float)nax, (float)nay, (float)naz, nunchuck_offset, nunchuck_offset, nunchuck_offset, 200.0f);
+				float_to_little_endian(nc_quat.w, ptr); ptr += 4;
+				float_to_little_endian(nc_quat.x, ptr); ptr += 4;
+				float_to_little_endian(nc_quat.y, ptr); ptr += 4;
+				float_to_little_endian(nc_quat.z, ptr); ptr += 4;
+			}
+			else {
+				memset(ptr, 0, 16);
+				ptr += 16;
+			}
+
+			*ptr = nunchuk_connected;
+			ptr += 1;
+
+			buffer_len += (ptr - (buffer + buffer_len));
+		}
+
+		// Send combined data once
+		if (buffer_len > 0) {
+			send_http_post_binary(buffer, buffer_len);
 		}
 		//VIDEO_WaitVSync();
 	}
@@ -249,7 +224,6 @@ void send_http_post_binary(uint8_t* payload, int payload_len) {
 	net_read(sock, response, sizeof(response));
 
 	net_close(sock);
-	printf("Sent HTTP POST");
 }
 
 Vector normalize_vector(float x, float y, float z) {

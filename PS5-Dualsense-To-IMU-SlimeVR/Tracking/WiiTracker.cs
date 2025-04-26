@@ -12,6 +12,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private int _index;
         private int _id;
         private string _firmwareId;
+        private bool _nunchuck;
         private ConcurrentDictionary<string, JSL.MOTION_STATE> _motionStateList;
         private string macSpoof;
         private SensorOrientation _sensorOrientation;
@@ -46,14 +47,15 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     _index = index;
                     _id = index + 1;
                     _firmwareId = "";
+                    _nunchuck = nunchuck;
                     if (nunchuck) {
-                        _rememberedStringId = ForwardedWiimoteManager.Nunchucks.Keys.ElementAt(index).ToString();
+                        _rememberedStringId = ForwardedWiimoteManager.NunchuchIds[index];
                         macSpoof = HashUtility.CalculateMD5Hash(_rememberedStringId + "Nunchuck_Tracker");
                         _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.Nunchuck);
                         _firmwareId = "Nunchuck_Tracker" + _rememberedStringId;
                         _motionStateList = ForwardedWiimoteManager.Nunchucks;
                     } else {
-                        _rememberedStringId = ForwardedWiimoteManager.Wiimotes.Keys.ElementAt(index).ToString();
+                        _rememberedStringId = ForwardedWiimoteManager.WiimoteIds[index];
                         macSpoof = HashUtility.CalculateMD5Hash(_rememberedStringId + "Wiimote_Tracker");
                         _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.Wiimote);
                         _firmwareId = "Wiimote_Tracker" + _rememberedStringId;
@@ -67,6 +69,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     udpHandler.Active = true;
                     Recalibrate();
                     _ready = true;
+                    ForwardedWiimoteManager.NewPacketReceived += delegate {
+                        Update();
+                    };
                 } catch (Exception e) {
                     OnTrackerError?.Invoke(this, e.Message);
                 }
@@ -123,12 +128,13 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         + _falseThighTracker.Debug;
                     }
                     //await udpHandler.SetSensorBattery(100);
+                    float finalX = !_nunchuck ? -_euler.X : _euler.X;
+                    float finalY = !_nunchuck ? _euler.Y : 0;
+                    float finalZ = 0;
                     if (!_simulateThighs) {
-                        await udpHandler.SetSensorRotation(new Vector3(-_euler.X , _euler.Y, _lastEulerPositon).ToQuaternion());
+                        await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion());
                     } else {
-                        float finalY = _euler.Y;
-                        float finalZ = 0;
-                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, finalZ + _lastEulerPositon)).ToQuaternion());
+                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, _lastEulerPositon)).ToQuaternion());
                         await _falseThighTracker.Update();
                     }
                     _falseThighTracker.IsActive = _simulateThighs;

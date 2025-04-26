@@ -1,5 +1,5 @@
 template.o: \
- C:/devkitPro/examples/wii/templates/makefile/application/source/template.c \
+ C:/Users/stel9/source/repos/PS5-Dualsense-To-IMU-SlimeVR/WiiClient/application/source/template.c \
  C:/devkitPro/libogc/include/ogcsys.h \
  C:/devkitPro/libogc/include/gccore.h \
  C:/devkitPro/libogc/include/ogc/dsp.h \
