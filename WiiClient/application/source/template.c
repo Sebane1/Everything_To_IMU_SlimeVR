@@ -23,24 +23,31 @@ typedef struct {
 	float z;
 } Quaternion;
 
-#define SERVER_IP "10.0.0.21"
-#define SERVER_PORT 9909
+// ----- CONFIG -----
 #define PATH "/"
-
 #define BUFLEN 512
 #define MOTIONPLUS_DELAY_FRAMES 60
+#define DEFAULT_SERVER_IP "10.0.0.21"
+#define DEFAULT_SERVER_PORT 9909
+
+static char server_ip[32] = DEFAULT_SERVER_IP;
+static int server_port = DEFAULT_SERVER_PORT;
+// -------------------
+
 static int persistent_sock = -1;
 static void* xfb = NULL;
 static GXRModeObj* rmode = NULL;
 
+// Function declarations
 uint32_t to_little_endian_u32(uint32_t val);
 uint32_t count_connected_wiimotes();
 void send_http_post_binary(uint8_t* payload, int payload_len);
 void float_to_little_endian(float val, uint8_t* out);
-
 Vector normalize_vector(float x, float y, float z);
 Quaternion quat_from_gravity(float x, float y, float z, float cx, float cy, float cz, float scale);
 Vector quaternion_to_euler(Quaternion q);
+void get_app_directory(char* out_path, size_t out_size, char* argv0);
+void load_config(const char* app_dir);
 
 int main(int argc, char** argv) {
 	VIDEO_Init();
@@ -63,7 +70,11 @@ int main(int argc, char** argv) {
 	}
 
 	printf("\x1b[2;0H");
-	printf("Hello World!\n");
+	printf("Wiimote IMU Forwarder!\n");
+
+	char app_dir[256];
+	get_app_directory(app_dir, sizeof(app_dir), argv[0]);
+	load_config(app_dir);
 
 	char localip[16] = { 0 };
 	char gateway[16] = { 0 };
@@ -86,8 +97,8 @@ int main(int argc, char** argv) {
 	s16 wiimote_offset = 512;
 	s16 nunchuck_offset = 512;
 	bool formatSet[4] = { false, false, false, false };
-	bool debug = false;
 	uint8_t buffer[37 * 4]; // 4 controllers max, each 37 bytes
+
 	while (1) {
 		WPAD_ScanPads();
 		uint32_t connectedDevices = count_connected_wiimotes();
@@ -121,7 +132,6 @@ int main(int argc, char** argv) {
 				naz = wpad_data->exp.nunchuk.accel.z;
 			}
 
-
 			uint8_t* ptr = buffer + buffer_len;
 
 			uint32_t id_le = to_little_endian_u32(i);
@@ -150,33 +160,55 @@ int main(int argc, char** argv) {
 			buffer_len += (ptr - (buffer + buffer_len));
 		}
 
-		// Send combined data once
 		if (buffer_len > 0) {
 			send_http_post_binary(buffer, buffer_len);
 		}
-		//VIDEO_WaitVSync();
 	}
 }
 
-Vector quaternion_to_euler(Quaternion q) {
-	Vector angles;
-
-	float sinr_cosp = 2.0f * (q.w * q.x + q.y * q.z);
-	float cosr_cosp = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
-	angles.x = atan2f(sinr_cosp, cosr_cosp); // roll
-
-	float sinp = 2.0f * (q.w * q.y - q.z * q.x);
-	if (fabsf(sinp) >= 1.0f)
-		angles.y = copysignf(M_PI / 2.0f, sinp);
-	else
-		angles.y = asinf(sinp); // pitch
-
-	float siny_cosp = 2.0f * (q.w * q.z + q.x * q.y);
-	float cosy_cosp = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
-	angles.z = atan2f(siny_cosp, cosy_cosp); // yaw
-
-	return angles;
+void get_app_directory(char* out_path, size_t out_size, char* argv0) {
+	if (!argv0 || argv0[0] == '\0') {
+		strncpy(out_path, "sd:/apps/WiiImuForwarder", out_size - 1); // fallback default
+		out_path[out_size - 1] = '\0';
+		return;
+	}
+	strncpy(out_path, argv0, out_size - 1);
+	out_path[out_size - 1] = '\0';
+	char* last_slash = strrchr(out_path, '/');
+	if (last_slash) {
+		*last_slash = '\0'; // truncate to directory
+	}
 }
+
+void load_config(const char* app_dir) {
+	char config_path[256];
+	snprintf(config_path, sizeof(config_path), "%s/config.txt", app_dir);
+
+	FILE* f = fopen(config_path, "r");
+	if (!f) {
+		printf("No config.txt found, using defaults (%s:%d)\n", server_ip, server_port);
+		return;
+	}
+
+	char line[128];
+	while (fgets(line, sizeof(line), f)) {
+		if (strncmp(line, "SERVER_IP=", 10) == 0) {
+			strncpy(server_ip, line + 10, sizeof(server_ip) - 1);
+			server_ip[sizeof(server_ip) - 1] = '\0'; // ensure null-terminated
+			server_ip[strcspn(server_ip, "\r\n")] = 0; // strip newline
+		}
+		else if (strncmp(line, "SERVER_PORT=", 12) == 0) {
+			server_port = atoi(line + 12);
+		}
+	}
+
+	fclose(f);
+
+	printf("Loaded config from: %s\n", config_path);
+	printf("Server IP: %s\n", server_ip);
+	printf("Server Port: %d\n", server_port);
+}
+
 int initialize_socket() {
 	if (persistent_sock >= 0) {
 		net_close(persistent_sock);
@@ -191,8 +223,8 @@ int initialize_socket() {
 	struct sockaddr_in dest;
 	memset(&dest, 0, sizeof(dest));
 	dest.sin_family = AF_INET;
-	dest.sin_port = htons(SERVER_PORT);
-	inet_aton(SERVER_IP, &dest.sin_addr);
+	dest.sin_port = htons(server_port);
+	inet_aton(server_ip, &dest.sin_addr);
 
 	if (net_connect(persistent_sock, (struct sockaddr*)&dest, sizeof(dest)) < 0) {
 		printf("Failed to connect to server: errno=%d\n", errno);
@@ -213,8 +245,8 @@ void send_http_post_binary(uint8_t* payload, int payload_len) {
 	}
 
 	char request_header[256];
-	char ip_string[32];
-	snprintf(ip_string, sizeof(ip_string), "%s:%d", SERVER_IP, SERVER_PORT);
+	char ip_string[64];
+	snprintf(ip_string, sizeof(ip_string), "%s:%d", server_ip, server_port);
 
 	int header_len = snprintf(request_header, sizeof(request_header),
 		"POST %s HTTP/1.1\r\n"
