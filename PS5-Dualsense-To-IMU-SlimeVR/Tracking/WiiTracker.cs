@@ -84,7 +84,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     case RotationReferenceType.HmdRotation:
                         return OpenVRReader.GetHMDRotation();
                     case RotationReferenceType.WaistRotation:
-                        return OpenVRReader.GetWaistTrackerRotation();
+                        return OpenVRReader.GetTrackerRotation("waist");
+                    case RotationReferenceType.ChestRotation:
+                        return OpenVRReader.GetTrackerRotation("chest");
                     case RotationReferenceType.TrackerRotation:
                         var value = _motionStateList.ElementAt(_index);
                         var motionQuaternion = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
@@ -100,11 +102,11 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 try {
                     var hmdHeight = OpenVRReader.GetHMDHeight();
                     bool isClamped = !_falseThighTracker.IsClamped;
-                    var trackerRotation = GetTrackerRotation(RotationReferenceType.WaistRotation);
+                    var trackerRotation = GetTrackerRotation(YawReferenceTypeValue);
                     float trackerEuler = trackerRotation.GetYawFromQuaternion();
-                    if (!isClamped || YawReferenceTypeValue != RotationReferenceType.HmdRotation) {
-                        _lastEulerPositon = YawReferenceTypeValue != RotationReferenceType.TrackerRotation ? -trackerEuler : trackerEuler;
-                    }
+
+                    _lastEulerPositon = YawReferenceTypeValue != RotationReferenceType.TrackerRotation ? -trackerEuler : trackerEuler;
+
                     var value = _motionStateList.ElementAt(_index);
                     _rotation = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
                     _eulerUncalibrated = _rotation.QuaternionToEuler();

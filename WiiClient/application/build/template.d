@@ -60,7 +60,14 @@ template.o: \
  C:/devkitPro/libogc/include/wiiuse/wpad.h \
  C:/devkitPro/libogc/include/wiiuse/wiiuse.h \
  C:/devkitPro/libogc/include/bte/bte.h \
- C:/devkitPro/libogc/include/bte/bd_addr.h
+ C:/devkitPro/libogc/include/bte/bd_addr.h \
+ C:/devkitPro/libogc/include/ogc/lwp.h \
+ C:/devkitPro/libogc/include/ogc/lwp_watchdog.h \
+ C:/devkitPro/libogc/include/ogc/lwp_queue.h \
+ C:/devkitPro/libogc/include/ogc/usbstorage.h \
+ C:/devkitPro/libogc/include/fat.h C:/devkitPro/libogc/include/dvm.h \
+ C:/devkitPro/libogc/include/sdcard/wiisd_io.h \
+ C:/devkitPro/libogc/include/ogc/card.h
 C:/devkitPro/libogc/include/ogcsys.h:
 C:/devkitPro/libogc/include/gccore.h:
 C:/devkitPro/libogc/include/ogc/dsp.h:
@@ -122,3 +129,11 @@ C:/devkitPro/libogc/include/wiiuse/wpad.h:
 C:/devkitPro/libogc/include/wiiuse/wiiuse.h:
 C:/devkitPro/libogc/include/bte/bte.h:
 C:/devkitPro/libogc/include/bte/bd_addr.h:
+C:/devkitPro/libogc/include/ogc/lwp.h:
+C:/devkitPro/libogc/include/ogc/lwp_watchdog.h:
+C:/devkitPro/libogc/include/ogc/lwp_queue.h:
+C:/devkitPro/libogc/include/ogc/usbstorage.h:
+C:/devkitPro/libogc/include/fat.h:
+C:/devkitPro/libogc/include/dvm.h:
+C:/devkitPro/libogc/include/sdcard/wiisd_io.h:
+C:/devkitPro/libogc/include/ogc/card.h:

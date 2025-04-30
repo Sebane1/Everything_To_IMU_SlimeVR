@@ -44,45 +44,12 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
 
         /// <summary>
-        /// Math isn't mathing with this implementation. Supposed to detect if the waist is in front of the HMD and report true if so.
-        /// </summary>
-        /// <returns></returns>
-        public static Tuple<bool, string> WaistIsInFrontOfHMDOld() {
-            string debug = "";
-            var waistRotation = GetWaistTrackerRotation().GetYawFromQuaternion() + 180;
-            var direction = waistRotation.AngleToForward();
-            var hmdPosition = GetHMDPosition();
-            var waistPosition = GetWaistTrackerPosition();
-
-            var yStrippedHMDPosition = new Vector3(hmdPosition.X, 0, hmdPosition.Z);
-            var yStrippedWaistPosition = new Vector3(waistPosition.X, 0, waistPosition.Z);
-
-            var targetForward = yStrippedHMDPosition + direction;
-
-
-            Vector3 delta = Vector3.Normalize((yStrippedHMDPosition - yStrippedWaistPosition));
-            Vector3 cross = Vector3.Cross(delta, targetForward);
-
-            debug += $"Waist Rotation: {waistRotation}\r\n";
-            debug += $"Waist Direction: {direction}\r\n";
-            debug += $"HMD Position: {hmdPosition}\r\n";
-            debug += $"Waist Position: {waistPosition}\r\n";
-            debug += $"Y Stripped HMD Position: {yStrippedHMDPosition}\r\n";
-            debug += $"Y Stripped Waist Position: {yStrippedWaistPosition}\r\n";
-
-            debug += $"Forward Target: {targetForward}\r\n";
-
-            return new Tuple<bool, string>(cross == Vector3.Zero, debug);
-        }
-
-
-        /// <summary>
         /// Detect if waist is in front of hmd.
         /// </summary>
         /// <returns></returns>
         public static Tuple<bool, string, float> WaistIsInFrontOfHMD() {
             string debug = "";
-            var waistRotation = GetWaistTrackerRotation().GetXAxisFromQuaternion();
+            var waistRotation = GetTrackerRotation("waist").GetXAxisFromQuaternion();
             if (GenericControllerTrackerManager.DebugOpen) {
                 debug += $"Waist X Rotation: {waistRotation}\r\n";
             }
@@ -128,7 +95,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         uint deviceIndex = deviceIndices[i];
 
                         // Check if the device is a waist tracker
-                        if (IsWaistTracker(deviceIndex)) {
+                        if (IsDesiredTracker(deviceIndex, "waist")) {
                             // Get the device pose (position and rotation)
                             TrackedDevicePose_t[] poseArray = new TrackedDevicePose_t[20];
                             OpenVR.System.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseStanding, 0, poseArray);
@@ -163,7 +130,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         uint deviceIndex = deviceIndices[i];
 
                         // Check if the device is a waist tracker
-                        if (IsWaistTracker(deviceIndex)) {
+                        if (IsDesiredTracker(deviceIndex, "waist")) {
                             // Get the device pose (position and rotation)
                             TrackedDevicePose_t[] poseArray = new TrackedDevicePose_t[20];
                             OpenVR.System.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseRawAndUncalibrated, 0, poseArray);
@@ -178,7 +145,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             }
             return new Vector3();
         }
-        public static Quaternion GetWaistTrackerRotation() {
+        public static Quaternion GetTrackerRotation(string trackerName) {
             try {
                 EVRInitError eError = EVRInitError.None;
                 if (_vrSystem == null && IsSteamVRRunning()) {
@@ -199,7 +166,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             uint deviceIndex = deviceIndices[i];
 
                             // Check if the device is a waist tracker
-                            if (IsWaistTracker(deviceIndex)) {
+                            if (IsDesiredTracker(deviceIndex, trackerName)) {
                                 // Get the device pose (position and rotation)
                                 TrackedDevicePose_t[] poseArray = new TrackedDevicePose_t[20];
                                 OpenVR.System.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseStanding, 0, poseArray);
@@ -219,7 +186,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             return Quaternion.Identity;
         }
 
-        private static bool IsWaistTracker(uint deviceIndex) {
+        private static bool IsDesiredTracker(uint deviceIndex, string trackerType) {
             // You can check the device properties or model number to identify the waist tracker
             // Prepare a buffer to hold the model name
             StringBuilder deviceName = new StringBuilder(64);
@@ -238,7 +205,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             Console.WriteLine($"Device {deviceIndex} Model Number: {deviceName.ToString()}");
 
             // Check if the device name matches the waist tracker (this is an example check)
-            return deviceName.ToString().ToLower().Contains("waist");
+            return deviceName.ToString().ToLower().Contains(trackerType.ToLower());
 
         }
         public static bool IsSteamVRRunning() {

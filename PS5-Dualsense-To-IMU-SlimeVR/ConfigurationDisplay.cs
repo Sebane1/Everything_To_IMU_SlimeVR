@@ -143,7 +143,7 @@ namespace Everything_To_IMU_SlimeVR {
         }
 
         private void falseThighSimulationCheckBox_CheckedChanged(object sender, EventArgs e) {
-            yawForSimulatedTracker.Enabled = falseThighSimulationCheckBox.Checked;
+            //yawForSimulatedTracker.Enabled = falseThighSimulationCheckBox.Checked;
             if (!_suppressCheckBoxEvent) {
                 _currentTracker.SimulateThighs = falseThighSimulationCheckBox.Checked;
                 _currentTrackerConfig.SimulatesThighs = falseThighSimulationCheckBox.Checked;

@@ -63,7 +63,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     case RotationReferenceType.HmdRotation:
                         return OpenVRReader.GetHMDRotation();
                     case RotationReferenceType.WaistRotation:
-                        return OpenVRReader.GetWaistTrackerRotation();
+                        return OpenVRReader.GetTrackerRotation("waist");
+                    case RotationReferenceType.ChestRotation:
+                        return OpenVRReader.GetTrackerRotation("chest");
                     case RotationReferenceType.TrackerRotation:
                         var value = Forwarded3DSDataManager.DeviceMap.ElementAt(_index);
                         var motionQuaternion = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);

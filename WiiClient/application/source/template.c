@@ -9,6 +9,48 @@
 #include <errno.h>
 #include <wiiuse/wpad.h>
 #include <math.h>
+#include <ogc/lwp.h>
+#include <ogc/lwp_watchdog.h>
+#include <ogc/usbstorage.h>
+#include <fat.h>         // for fatInitDefault()
+#include <sdcard/wiisd_io.h> // for __io_wiisd
+#include <ogc/disc_io.h>    // for DISC_INTERFACE
+#include <ogc/usbstorage.h> // for __io_usbstorage
+#include <ogc/card.h>       // if you also need memory card access
+#ifndef INADDR_NONE
+#define INADDR_NONE 0xFFFFFFFF
+#endif
+
+
+const DISC_INTERFACE* fat_get_sd_interface(void) { return &__io_wiisd; }
+const DISC_INTERFACE* fat_get_usb_interface(void) { return &__io_usbstorage; }
+static bool dummy_startup(void) { return false; }
+static bool dummy_isInserted(void) { return false; }
+static bool dummy_clearStatus(void) { return false; }
+static bool dummy_shutdown(void) { return false; }
+static bool dummy_readSectors(sec_t sector, sec_t numSectors, void* buffer) { return false; }
+static bool dummy_writeSectors(sec_t sector, sec_t numSectors, const void* buffer) { return false; }
+
+const DISC_INTERFACE __io_gcsda = {
+	.features = 0,
+	.startup = dummy_startup,
+	.isInserted = dummy_isInserted,
+	.readSectors = dummy_readSectors,
+	.writeSectors = dummy_writeSectors,
+	.clearStatus = dummy_clearStatus,
+	.shutdown = dummy_shutdown
+};
+
+const DISC_INTERFACE __io_gcsdb = {
+	.features = 0,
+	.startup = dummy_startup,
+	.isInserted = dummy_isInserted,
+	.readSectors = dummy_readSectors,
+	.writeSectors = dummy_writeSectors,
+	.clearStatus = dummy_clearStatus,
+	.shutdown = dummy_shutdown
+};
+
 
 typedef struct {
 	float x;
@@ -48,6 +90,7 @@ Quaternion quat_from_gravity(float x, float y, float z, float cx, float cy, floa
 Vector quaternion_to_euler(Quaternion q);
 void get_app_directory(char* out_path, size_t out_size, char* argv0);
 void load_config(const char* app_dir);
+bool try_load_config();
 
 int main(int argc, char** argv) {
 	VIDEO_Init();
@@ -65,16 +108,19 @@ int main(int argc, char** argv) {
 	VIDEO_WaitVSync();
 	if (rmode->viTVMode & VI_NON_INTERLACE) VIDEO_WaitVSync();
 
+
 	if (net_init() < 0) {
 		printf("net_init failed!\n");
 	}
-
+	if (fatInitDefault()) {
+		printf("Filesystem mounted.\n");
+		try_load_config();
+	}
+	else {
+		printf("Failed to mount filesystem (no SD/USB?).\n");
+	}
 	printf("\x1b[2;0H");
 	printf("Wiimote IMU Forwarder!\n");
-
-	char app_dir[256];
-	get_app_directory(app_dir, sizeof(app_dir), argv[0]);
-	load_config(app_dir);
 
 	char localip[16] = { 0 };
 	char gateway[16] = { 0 };
@@ -180,34 +226,60 @@ void get_app_directory(char* out_path, size_t out_size, char* argv0) {
 	}
 }
 
-void load_config(const char* app_dir) {
-	char config_path[256];
-	snprintf(config_path, sizeof(config_path), "%s/config.txt", app_dir);
+bool try_load_config() {
+	const char* paths[] = {
+		"usb:/apps/wiiimuforwarder/config.txt",
+		"usb2:/apps/wiiimuforwarder/config.txt",
+		"sd:/apps/wiiimuforwarder/config.txt"
+	};
 
-	FILE* f = fopen(config_path, "r");
-	if (!f) {
-		printf("No config.txt found, using defaults (%s:%d)\n", server_ip, server_port);
-		return;
+	for (int i = 0; i < sizeof(paths) / sizeof(paths[0]); i++) {
+		FILE* f = fopen(paths[i], "r");
+		if (!f) continue;
+
+		printf("Loaded config from %s\n", paths[i]);
+
+		char line[128];
+		while (fgets(line, sizeof(line), f)) {
+			char* p = line;
+			while (*p == ' ' || *p == '\t') p++;
+
+			if (*p == '\0' || *p == '#' || *p == ';') continue;
+
+			char* end = strpbrk(p, "\r\n");
+			if (end) *end = '\0';
+
+			if (strncasecmp(p, "server_ip=", 10) == 0) {
+				strncpy(server_ip, p + 10, sizeof(server_ip) - 1);
+				server_ip[sizeof(server_ip) - 1] = '\0';
+
+				if (inet_addr(server_ip) == INADDR_NONE) {
+					printf("Invalid SERVER_IP in config! Using default.\n");
+					strncpy(server_ip, DEFAULT_SERVER_IP, sizeof(server_ip) - 1);
+					server_ip[sizeof(server_ip) - 1] = '\0';
+				}
+			}
+			else if (strncasecmp(p, "server_port=", 12) == 0) {
+				int port = atoi(p + 12);
+				if (port > 0 && port < 65536) {
+					server_port = port;
+				}
+				else {
+					printf("Invalid SERVER_PORT in config! Using default.\n");
+					server_port = DEFAULT_SERVER_PORT;
+				}
+			}
+		}
+
+		fclose(f);
+		printf("Final server_ip: '%s', server_port: %d\n", server_ip, server_port);
+		return true;
 	}
 
-	char line[128];
-	while (fgets(line, sizeof(line), f)) {
-		if (strncmp(line, "SERVER_IP=", 10) == 0) {
-			strncpy(server_ip, line + 10, sizeof(server_ip) - 1);
-			server_ip[sizeof(server_ip) - 1] = '\0'; // ensure null-terminated
-			server_ip[strcspn(server_ip, "\r\n")] = 0; // strip newline
-		}
-		else if (strncmp(line, "SERVER_PORT=", 12) == 0) {
-			server_port = atoi(line + 12);
-		}
-	}
-
-	fclose(f);
-
-	printf("Loaded config from: %s\n", config_path);
-	printf("Server IP: %s\n", server_ip);
-	printf("Server Port: %d\n", server_port);
+	printf("No config file found! Using default settings.\n");
+	return false;
 }
+
 
 int initialize_socket() {
 	if (persistent_sock >= 0) {

@@ -1,6 +1,7 @@
 #---------------------------------------------------------------------------------
 # Clear the implicit built in rules
 #---------------------------------------------------------------------------------
+.DELETE_ON_ERROR:
 .SUFFIXES:
 #---------------------------------------------------------------------------------
 ifeq ($(strip $(DEVKITPPC)),)
@@ -17,7 +18,7 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source
+SOURCES     :=  source C:/devkitPro/libogc/include
 DATA		:=	data
 INCLUDES	:=
 
@@ -33,7 +34,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	-lwiiuse -lbte -logc -lm
+LIBS := -lwiiuse -lbte -logc -lfat -lm
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
