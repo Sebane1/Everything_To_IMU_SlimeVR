@@ -1,13 +1,13 @@
 ﻿namespace Everything_To_IMU_SlimeVR.Tracking {
     public class GenericControllerTrackerManager {
-        private List<GenericControllerTracker> _trackers = new List<GenericControllerTracker>();
-        private List<ThreeDsControllerTracker> _trackers3ds = new List<ThreeDsControllerTracker>();
-        private List<WiiTracker> _trackersWiimote = new List<WiiTracker>();
-        private List<WiiTracker> _trackersNunchuck = new List<WiiTracker>();
-        private Dictionary<int, KeyValuePair<int, bool>> _trackerInfo = new Dictionary<int, KeyValuePair<int, bool>>();
-        private Dictionary<int, KeyValuePair<int, bool>> _trackerInfo3ds = new Dictionary<int, KeyValuePair<int, bool>>();
-        private Dictionary<int, KeyValuePair<int, bool>> _trackerInfoWiimote = new Dictionary<int, KeyValuePair<int, bool>>();
-        private Dictionary<int, KeyValuePair<int, bool>> _trackerInfoNunchuck = new Dictionary<int, KeyValuePair<int, bool>>();
+        private static List<GenericControllerTracker> _trackers = new List<GenericControllerTracker>();
+        private static List<ThreeDsControllerTracker> _trackers3ds = new List<ThreeDsControllerTracker>();
+        private static List<WiiTracker> _trackersWiimote = new List<WiiTracker>();
+        private static List<WiiTracker> _trackersNunchuck = new List<WiiTracker>();
+        private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfo = new Dictionary<int, KeyValuePair<int, bool>>();
+        private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfo3ds = new Dictionary<int, KeyValuePair<int, bool>>();
+        private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfoWiimote = new Dictionary<int, KeyValuePair<int, bool>>();
+        private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfoNunchuck = new Dictionary<int, KeyValuePair<int, bool>>();
 
         private bool disposed = false;
         public event EventHandler<string> OnTrackerError;
@@ -216,14 +216,14 @@
             OnTrackerError.Invoke(sender, e);
         }
 
-        internal List<GenericControllerTracker> Trackers { get => _trackers; set => _trackers = value; }
+        internal static List<GenericControllerTracker> Trackers { get => _trackers; set => _trackers = value; }
         public static int ControllerCount { get => _controllerCount; set => _controllerCount = value; }
         public int PollingRate { get => pollingRate; set => pollingRate = value; }
         public static bool DebugOpen { get; set; }
-        public List<ThreeDsControllerTracker> Trackers3ds { get => _trackers3ds; set => _trackers3ds = value; }
+        public static List<ThreeDsControllerTracker> Trackers3ds { get => _trackers3ds; set => _trackers3ds = value; }
         public Dictionary<int, KeyValuePair<int, bool>> TrackerInfo3ds { get => _trackerInfo3ds; set => _trackerInfo3ds = value; }
-        public List<WiiTracker> TrackersWiimote { get => _trackersWiimote; set => _trackersWiimote = value; }
-        public List<WiiTracker> TrackersNunchuck { get => _trackersNunchuck; set => _trackersNunchuck = value; }
+        public static List<WiiTracker> TrackersWiimote { get => _trackersWiimote; set => _trackersWiimote = value; }
+        public static List<WiiTracker> TrackersNunchuck { get => _trackersNunchuck; set => _trackersNunchuck = value; }
         public Dictionary<int, KeyValuePair<int, bool>> TrackerInfoWiimote { get => _trackerInfoWiimote; set => _trackerInfoWiimote = value; }
         public Dictionary<int, KeyValuePair<int, bool>> TrackerInfoNunchuck { get => _trackerInfoNunchuck; set => _trackerInfoNunchuck = value; }
     }

@@ -35,7 +35,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private string _rememberedStringId;
         private RotationReferenceType _yawReferenceTypeValue = RotationReferenceType.WaistRotation;
         Stopwatch buttonPressTimer = new Stopwatch();
-
+        WiiTracker _connectedWiimote;
         public event EventHandler<string> OnTrackerError;
 
         public WiiTracker(int index, bool nunchuck) {
@@ -50,6 +50,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     _nunchuck = nunchuck;
                     if (nunchuck) {
                         _rememberedStringId = ForwardedWiimoteManager.NunchuchIds[index];
+                        _connectedWiimote = GenericControllerTrackerManager.TrackersWiimote[index];
                         macSpoof = HashUtility.CalculateMD5Hash(_rememberedStringId + "Nunchuck_Tracker");
                         _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.Nunchuck);
                         _firmwareId = "Nunchuck_Tracker" + _rememberedStringId;
@@ -131,7 +132,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     }
                     //await udpHandler.SetSensorBattery(100);
                     float finalX = !_nunchuck ? -_euler.X : _euler.X;
-                    float finalY = !_nunchuck ? _euler.Y : 0;
+                    float finalY = !_nunchuck ? _euler.Y : _connectedWiimote.Euler.Y;
                     float finalZ = 0;
                     if (!_simulateThighs) {
                         await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion());

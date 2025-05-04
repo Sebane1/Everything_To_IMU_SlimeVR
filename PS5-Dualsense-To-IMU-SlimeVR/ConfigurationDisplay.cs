@@ -55,16 +55,16 @@ namespace Everything_To_IMU_SlimeVR {
             threeDsDeviceList.Items.Clear();
             wiimoteDeviceList.Items.Clear();
             nunchuckDeviceList.Items.Clear();
-            foreach (var item in _genericControllerTranslator.Trackers) {
+            foreach (var item in GenericControllerTrackerManager.Trackers) {
                 controllerDeviceList.Items.Add("Tracker " + item.Id);
             }
-            foreach (var item in _genericControllerTranslator.Trackers3ds) {
+            foreach (var item in GenericControllerTrackerManager.Trackers3ds) {
                 threeDsDeviceList.Items.Add("Tracker " + item.Id);
             }
-            foreach (var item in _genericControllerTranslator.TrackersWiimote) {
+            foreach (var item in GenericControllerTrackerManager.TrackersWiimote) {
                 wiimoteDeviceList.Items.Add("Tracker " + item.Id);
             }
-            foreach (var item in _genericControllerTranslator.TrackersNunchuck) {
+            foreach (var item in GenericControllerTrackerManager.TrackersNunchuck) {
                 nunchuckDeviceList.Items.Add("Tracker " + item.Id);
             }
             if (_currentTracker != null) {
@@ -92,7 +92,7 @@ namespace Everything_To_IMU_SlimeVR {
             var currentIndex = controllerDeviceList.SelectedIndex;
             if (currentIndex >= 0) {
                 _currentTrackerConfig = _configuration.TrackerConfigs[currentIndex];
-                _currentTracker = _genericControllerTranslator.Trackers[currentIndex];
+                _currentTracker = GenericControllerTrackerManager.Trackers[currentIndex];
             }
             RefreshTracker();
         }
@@ -101,7 +101,7 @@ namespace Everything_To_IMU_SlimeVR {
             var currentIndex = threeDsDeviceList.SelectedIndex;
             if (currentIndex >= 0) {
                 _currentTrackerConfig = _configuration.TrackerConfigs3ds[currentIndex];
-                _currentTracker = _genericControllerTranslator.Trackers3ds[currentIndex];
+                _currentTracker = GenericControllerTrackerManager.Trackers3ds[currentIndex];
             }
             RefreshTracker();
         }
@@ -110,7 +110,7 @@ namespace Everything_To_IMU_SlimeVR {
             var currentIndex = wiimoteDeviceList.SelectedIndex;
             if (currentIndex >= 0) {
                 _currentTrackerConfig = _configuration.TrackerConfigWiimote[currentIndex];
-                _currentTracker = _genericControllerTranslator.TrackersWiimote[currentIndex];
+                _currentTracker = GenericControllerTrackerManager.TrackersWiimote[currentIndex];
             }
             RefreshTracker();
         }
@@ -120,7 +120,7 @@ namespace Everything_To_IMU_SlimeVR {
             var currentIndex = nunchuckDeviceList.SelectedIndex;
             if (currentIndex >= 0) {
                 _currentTrackerConfig = _configuration.TrackerConfigNunchuck[currentIndex];
-                _currentTracker = _genericControllerTranslator.TrackersNunchuck[currentIndex];
+                _currentTracker = GenericControllerTrackerManager.TrackersNunchuck[currentIndex];
             }
             RefreshTracker();
         }
@@ -156,16 +156,16 @@ namespace Everything_To_IMU_SlimeVR {
         }
 
         private void trackerCalibrationButton_Click(object sender, EventArgs e) {
-            foreach (var item in _genericControllerTranslator.Trackers) {
+            foreach (var item in GenericControllerTrackerManager.Trackers) {
                 item.Recalibrate();
             }
-            foreach (var item in _genericControllerTranslator.Trackers3ds) {
+            foreach (var item in GenericControllerTrackerManager.Trackers3ds) {
                 item.Recalibrate();
             }
-            foreach (var item in _genericControllerTranslator.TrackersWiimote) {
+            foreach (var item in GenericControllerTrackerManager.TrackersWiimote) {
                 item.Recalibrate();
             }
-            foreach (var item in _genericControllerTranslator.TrackersNunchuck) {
+            foreach (var item in GenericControllerTrackerManager.TrackersNunchuck) {
                 item.Recalibrate();
             }
         }

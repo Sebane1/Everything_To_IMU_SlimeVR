@@ -117,12 +117,12 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     }
                     udpHandler.SetSensorBattery(100);
                     if (!_simulateThighs && !_usingWiimoteKnees) {
+                        udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X, _sensorOrientation.AccelerometerData.Y, _sensorOrientation.AccelerometerData.Z));
                         udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion());
                     } else {
                         float finalY = _euler.Y;
                         float finalZ = _euler.Z;
-                        udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, (!_usingWiimoteKnees ? finalZ + _lastEulerPositon : _lastEulerPositon))).ToQuaternion());
-                        udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X, _sensorOrientation.AccelerometerData.Y, _sensorOrientation.AccelerometerData.Z));
+                        udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, _lastEulerPositon)).ToQuaternion());
                         if (_simulateThighs) {
                             _falseThighTracker.Update();
                         }
