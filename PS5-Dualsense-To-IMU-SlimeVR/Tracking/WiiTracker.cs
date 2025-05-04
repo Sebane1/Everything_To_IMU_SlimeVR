@@ -1,13 +1,19 @@
-﻿using Everything_To_IMU_SlimeVR.SlimeVR;
+﻿using Newtonsoft.Json.Linq;
+using Everything_To_IMU_SlimeVR.SlimeVR;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Numerics;
+using Everything_To_IMU_SlimeVR.Utility;
 using static Everything_To_IMU_SlimeVR.TrackerConfig;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
-    public class GenericControllerTracker : IDisposable, IBodyTracker {
+    public class WiiTracker : IDisposable, IBodyTracker {
         private string _debug;
         private int _index;
         private int _id;
+        private string _firmwareId;
+        private bool _nunchuck;
+        private ConcurrentDictionary<string, JSL.MOTION_STATE> _motionStateList;
         private string macSpoof;
         private SensorOrientation _sensorOrientation;
         private UDPHandler udpHandler;
@@ -18,55 +24,58 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private string _lastDualSenseId;
         private bool _simulateThighs = true;
         private bool _useWaistTrackerForYaw;
-        private bool _usingWiimoteKnees = true;
         private FalseThighTracker _falseThighTracker;
         private float _lastEulerPositon;
         private Quaternion _rotation;
+        private Vector3 _eulerUncalibrated;
         private Vector3 _euler;
         private Vector3 _gyro;
         private Vector3 _acceleration;
         private bool _waitForRelease;
         private string _rememberedStringId;
-        private RotationReferenceType _yawReferenceTypeValue;
+        private RotationReferenceType _yawReferenceTypeValue = RotationReferenceType.WaistRotation;
         Stopwatch buttonPressTimer = new Stopwatch();
 
         public event EventHandler<string> OnTrackerError;
 
-        public GenericControllerTracker(int index, Color colour) {
-            Initialize(index, colour);
+        public WiiTracker(int index, bool nunchuck) {
+            Initialize(index, nunchuck);
         }
-        public async void Initialize(int index, Color colour) {
+        public async void Initialize(int index, bool nunchuck) {
             Task.Run(async () => {
                 try {
                     _index = index;
                     _id = index + 1;
-                    var rememberedColour = colour;
-                    _rememberedStringId = index + " " + JSL.JslGetControllerType(index);
-                    JSL.JslSetLightColour(index, colour.ToArgb());
-                    macSpoof = _rememberedStringId + "GenericController";
-                    _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.Bluetooth);
+                    _firmwareId = "";
+                    _nunchuck = nunchuck;
+                    if (nunchuck) {
+                        _rememberedStringId = ForwardedWiimoteManager.NunchuchIds[index];
+                        macSpoof = HashUtility.CalculateMD5Hash(_rememberedStringId + "Nunchuck_Tracker");
+                        _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.Nunchuck);
+                        _firmwareId = "Nunchuck_Tracker" + _rememberedStringId;
+                        _motionStateList = ForwardedWiimoteManager.Nunchucks;
+                    } else {
+                        _rememberedStringId = ForwardedWiimoteManager.WiimoteIds[index];
+                        macSpoof = HashUtility.CalculateMD5Hash(_rememberedStringId + "Wiimote_Tracker");
+                        _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.Wiimote);
+                        _firmwareId = "Wiimote_Tracker" + _rememberedStringId;
+                        _motionStateList = ForwardedWiimoteManager.Wiimotes;
+                    }
                     if (_simulateThighs) {
                         _falseThighTracker = new FalseThighTracker(this);
                     }
-                    udpHandler = new UDPHandler("GenericController" + _rememberedStringId, _id,
+                    udpHandler = new UDPHandler(_firmwareId, _id,
                      new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] });
                     udpHandler.Active = true;
                     Recalibrate();
                     _ready = true;
+                    ForwardedWiimoteManager.NewPacketReceived += delegate {
+                        Update();
+                    };
                 } catch (Exception e) {
                     OnTrackerError?.Invoke(this, e.Message);
                 }
             });
-        }
-        public bool GetGlobalState(int code) {
-            int connections = GenericControllerTrackerManager.ControllerCount;
-            for (int i = 0; i < connections; i++) {
-                var buttons = JSL.JslGetSimpleState(i).buttons;
-                if ((buttons & code) != 0) {
-                    return true;
-                }
-            }
-            return false;
         }
 
         private Quaternion GetTrackerRotation(RotationReferenceType yawReferenceType) {
@@ -79,12 +88,11 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     case RotationReferenceType.ChestRotation:
                         return OpenVRReader.GetTrackerRotation("chest");
                     case RotationReferenceType.TrackerRotation:
-                        var motionState = JSL.JslGetMotionState(_index);
-                        var motionQuaternion = new Quaternion(motionState.quatX, motionState.quatY, motionState.quatZ, motionState.quatW);
+                        var value = _motionStateList.ElementAt(_index);
+                        var motionQuaternion = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
                         return motionQuaternion;
                 }
             } catch {
-
             }
             return Quaternion.Identity;
         }
@@ -94,18 +102,24 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 try {
                     var hmdHeight = OpenVRReader.GetHMDHeight();
                     bool isClamped = !_falseThighTracker.IsClamped;
-                    var trackerRotation = GetTrackerRotation(!_simulateThighs && !_usingWiimoteKnees ? RotationReferenceType.TrackerRotation : YawReferenceTypeValue);
+                    var trackerRotation = GetTrackerRotation(YawReferenceTypeValue);
                     float trackerEuler = trackerRotation.GetYawFromQuaternion();
+
                     _lastEulerPositon = YawReferenceTypeValue != RotationReferenceType.TrackerRotation ? -trackerEuler : trackerEuler;
-                    _rotation = !_simulateThighs && !_usingWiimoteKnees ? trackerRotation : (_sensorOrientation.CurrentOrientation);
-                    _euler = _rotation.QuaternionToEuler() + (!_simulateThighs ? new Vector3() : _rotationCalibration);
+
+                    var value = _motionStateList.ElementAt(_index);
+                    _rotation = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
+                    _eulerUncalibrated = _rotation.QuaternionToEuler();
+                    _euler = _eulerUncalibrated + _rotationCalibration;
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
 
                     if (GenericControllerTrackerManager.DebugOpen) {
                         _debug =
                         $"Device Id: {macSpoof}\r\n" +
-                        $"Euler Rotation:\r\n" +
+                        $"Euler Rotation Uncalibrated:\r\n" +
+                        $"X:{_eulerUncalibrated.X}, Y:{_eulerUncalibrated.Y}, Z:{_eulerUncalibrated.Z}" +
+                        $"\r\nEuler Rotation:\r\n" +
                         $"X:{_euler.X}, Y:{_euler.Y}, Z:{_rotation.Z}" +
                         $"\r\nGyro:\r\n" +
                         $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
@@ -115,17 +129,15 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         $"Y:{trackerEuler}\r\n"
                         + _falseThighTracker.Debug;
                     }
-                    udpHandler.SetSensorBattery(100);
-                    if (!_simulateThighs && !_usingWiimoteKnees) {
-                        udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion());
+                    //await udpHandler.SetSensorBattery(100);
+                    float finalX = !_nunchuck ? -_euler.X : _euler.X;
+                    float finalY = !_nunchuck ? _euler.Y : 0;
+                    float finalZ = 0;
+                    if (!_simulateThighs) {
+                        await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion());
                     } else {
-                        float finalY = _euler.Y;
-                        float finalZ = _euler.Z;
-                        udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, (!_usingWiimoteKnees ? finalZ + _lastEulerPositon : _lastEulerPositon))).ToQuaternion());
-                        udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X, _sensorOrientation.AccelerometerData.Y, _sensorOrientation.AccelerometerData.Z));
-                        if (_simulateThighs) {
-                            _falseThighTracker.Update();
-                        }
+                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, _lastEulerPositon)).ToQuaternion());
+                        await _falseThighTracker.Update();
                     }
                     _falseThighTracker.IsActive = _simulateThighs;
                 } catch (Exception e) {
@@ -135,10 +147,10 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             return _ready;
         }
         public async void Recalibrate() {
-            _sensorOrientation.Recalibrate();
             await Task.Delay(5000);
-            JSL.JslResetContinuousCalibration(_index);
             _calibratedHeight = OpenVRReader.GetHMDHeight();
+            var value = _motionStateList.ElementAt(_index);
+            _rotation = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
             _rotationCalibration = GetCalibration();
             _falseThighTracker.Recalibrate();
             await udpHandler.SendButton();
@@ -158,12 +170,12 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public Vector3 GetCalibration() {
-            if (Configuration.Instance.TimeSinceLastConfig().TotalSeconds < 10) {
+            if (Configuration.Instance.TimeSinceLastConfig().TotalSeconds < 20) {
                 if (Configuration.Instance.CalibrationConfigurations.ContainsKey(macSpoof)) {
                     return Configuration.Instance.CalibrationConfigurations[macSpoof];
                 }
             }
-            return -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
+            return -_rotation.QuaternionToEuler();
         }
 
         public string Debug { get => _debug; set => _debug = value; }
@@ -178,6 +190,5 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public bool SimulateThighs { get => _simulateThighs; set => _simulateThighs = value; }
         public bool UseWaistTrackerForYaw { get => _useWaistTrackerForYaw; set => _useWaistTrackerForYaw = value; }
         public RotationReferenceType YawReferenceTypeValue { get => _yawReferenceTypeValue; set => _yawReferenceTypeValue = value; }
-        public bool UsingWiimoteKnees { get => _usingWiimoteKnees; set => _usingWiimoteKnees = value; }
     }
 }

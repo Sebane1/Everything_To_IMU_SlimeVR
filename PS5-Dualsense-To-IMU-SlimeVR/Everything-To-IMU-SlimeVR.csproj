@@ -3,12 +3,12 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows7.0</TargetFramework>
-    <RootNamespace>PS5_Dualsense_To_IMU_SlimeVR</RootNamespace>
+    <RootNamespace>Everything_To_IMU_SlimeVR</RootNamespace>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
-    <Version>0.0.0.6</Version>
+    <Version>0.0.0.9</Version>
   </PropertyGroup>
 
   <ItemGroup>

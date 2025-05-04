@@ -1,8 +1,8 @@
-﻿using PS5_Dualsense_To_IMU_SlimeVR.Utility;
+﻿using Everything_To_IMU_SlimeVR.Utility;
 using System.Diagnostics;
 using System.Numerics;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
+namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class SensorOrientation : IDisposable {
         private Quaternion currentOrientation = Quaternion.Identity;
         private Vector3 accelerometerData = Vector3.Zero;
@@ -14,6 +14,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         private float alpha = 0.98f; // Weighting factor for blending
         private IBodyTracker _bodyTracker;
         private int _index;
+        private SensorType _sensorType;
         private Vector3 _accellerometerVectorCalibration;
         private Vector3 _gyroVectorCalibration;
         Stopwatch stopwatch = new Stopwatch();
@@ -33,25 +34,49 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.Tracking {
         public float YawRadians { get => yawRadians; set => yawRadians = value; }
         public float YawDegrees { get => yawDegrees; set => yawDegrees = value; }
 
-        public SensorOrientation(int index) {
+        public SensorOrientation(int index, SensorType sensorType) {
             _index = index;
-            RefreshSensorData();
-            _accellerometerVectorCalibration = -(_accelerometer);
-
-            _gyroVectorCalibration = -(_gyro);
+            _sensorType = sensorType;
             stopwatch.Start();
-            Task.Run(() => {
-                while (!disposed) {
-                    Update();
-                    Thread.Sleep(16);
-                }
-            });
+            if (_sensorType == SensorType.Bluetooth) {
+                Task.Run(() => {
+                    while (!disposed) {
+                        Update();
+                        Thread.Sleep(16);
+                    }
+                });
+            }
         }
 
+        private JSL.MOTION_STATE GetReleventMotionState() {
+            switch (_sensorType) {
+                case SensorType.Bluetooth:
+                    return JSL.JslGetMotionState(_index);
+                case SensorType.ThreeDs:
+                    return Forwarded3DSDataManager.DeviceMap.ElementAt(_index).Value;
+                case SensorType.Wiimote:
+                    return ForwardedWiimoteManager.Wiimotes.ElementAt(_index).Value;
+                case SensorType.Nunchuck:
+                    return ForwardedWiimoteManager.Nunchucks.ElementAt(_index).Value;
+            }
+            return new JSL.MOTION_STATE();
+        }
+        public enum SensorType {
+            Bluetooth = 0,
+            ThreeDs = 1,
+            Wiimote = 2,
+            Nunchuck = 3
+        }
         private void RefreshSensorData() {
-            var sensorData = JSL.JslGetMotionState(_index);
+            var sensorData = GetReleventMotionState();
             _accelerometer = new Vector3(sensorData.gravX, sensorData.gravY, sensorData.gravZ);
             _gyro = new Vector3(sensorData.accelX, sensorData.accelY, sensorData.accelZ);
+        }
+
+        public void Recalibrate() {
+            RefreshSensorData();
+            //_accellerometerVectorCalibration = -(_accelerometer);
+            //_gyroVectorCalibration = -(_gyro);
         }
         // Update method to simulate gyroscope and accelerometer data fusion
         public void Update() {

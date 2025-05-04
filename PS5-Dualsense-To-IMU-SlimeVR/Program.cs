@@ -1,6 +1,6 @@
 using AutoUpdaterDotNET;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR {
+namespace Everything_To_IMU_SlimeVR {
     internal static class Program {
         /// <summary>
         ///  The main entry point for the application.

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
+namespace Everything_To_IMU_SlimeVR.SlimeVR {
     public static class FirmwareConstants {
 
         public enum BoardType {

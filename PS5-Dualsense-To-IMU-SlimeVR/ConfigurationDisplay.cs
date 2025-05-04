@@ -1,27 +1,36 @@
-using PS5_Dualsense_To_IMU_SlimeVR.Tracking;
+using Everything_To_IMU_SlimeVR.Tracking;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using static PS5_Dualsense_To_IMU_SlimeVR.TrackerConfig;
+using static Everything_To_IMU_SlimeVR.TrackerConfig;
 
-namespace PS5_Dualsense_To_IMU_SlimeVR {
+namespace Everything_To_IMU_SlimeVR {
     public partial class ConfigurationDisplay : Form {
         private GenericControllerTrackerManager _genericControllerTranslator;
         private Configuration _configuration = new Configuration();
         Queue<string> errorQueue = new Queue<string>();
-        int _currentIndex = 0;
+        private TrackerConfig _currentTrackerConfig;
+        private IBodyTracker _currentTracker;
         private bool _suppressCheckBoxEvent;
         string _lastErrorLog = "";
-        public int CurrentIndex { get => _currentIndex; set => _currentIndex = value; }
+        private readonly ForwardedWiimoteManager _forwardedWiimoteManager;
+        private readonly Forwarded3DSDataManager _forwarded3DSDataManager;
 
         public ConfigurationDisplay() {
             InitializeComponent();
             AutoScaleDimensions = new SizeF(96, 96);
             _configuration = Configuration.LoadConfig();
+            if (_configuration.SwitchingSessions) {
+                _configuration.LastCalibration = DateTime.UtcNow;
+            }
             _genericControllerTranslator = new GenericControllerTrackerManager(_configuration);
             _genericControllerTranslator.OnTrackerError += _genericControllerTranslator_OnTrackerError;
             _genericControllerTranslator.PollingRate = _configuration.PollingRate;
+            _forwardedWiimoteManager = new ForwardedWiimoteManager();
+            _forwarded3DSDataManager = new Forwarded3DSDataManager();
+            _configuration.SwitchingSessions = false;
             polllingRateLabel.Text = "Polling Rate: " + _configuration.PollingRate + "ms";
             pollingRate.Value = _configuration.PollingRate;
+            _configuration.SaveConfig();
         }
 
         private void _genericControllerTranslator_OnTrackerError(object? sender, string e) {
@@ -32,7 +41,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
             if (tabOptions.SelectedIndex == 1) {
                 debugText.Text = "";
                 try {
-                    debugText.Text += _genericControllerTranslator.Trackers[_currentIndex].Debug;
+                    debugText.Text += _currentTracker.Debug;
                 } catch {
 
                 }
@@ -42,12 +51,23 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
                 GenericControllerTrackerManager.DebugOpen = false;
                 refreshTimer.Interval = 1000;
             }
-                deviceList.Items.Clear();
+            controllerDeviceList.Items.Clear();
+            threeDsDeviceList.Items.Clear();
+            wiimoteDeviceList.Items.Clear();
+            nunchuckDeviceList.Items.Clear();
             foreach (var item in _genericControllerTranslator.Trackers) {
-                deviceList.Items.Add("Tracker " + item.Id);
+                controllerDeviceList.Items.Add("Tracker " + item.Id);
             }
-            if (deviceList.Items.Count > 0) {
-                deviceList.SelectedIndex = _currentIndex;
+            foreach (var item in _genericControllerTranslator.Trackers3ds) {
+                threeDsDeviceList.Items.Add("Tracker " + item.Id);
+            }
+            foreach (var item in _genericControllerTranslator.TrackersWiimote) {
+                wiimoteDeviceList.Items.Add("Tracker " + item.Id);
+            }
+            foreach (var item in _genericControllerTranslator.TrackersNunchuck) {
+                nunchuckDeviceList.Items.Add("Tracker " + item.Id);
+            }
+            if (_currentTracker != null) {
                 rediscoverTrackerButton.Visible = true;
                 falseThighSimulationCheckBox.Visible = true;
             } else {
@@ -69,38 +89,83 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
 
         private void selectedDevice_SelectedIndexChanged(object sender, EventArgs e) {
             refreshTimer.Stop();
-            _currentIndex = deviceList.SelectedIndex;
-            _suppressCheckBoxEvent = true;
-            falseThighSimulationCheckBox.Checked = _configuration.TrackerConfigs[_currentIndex].SimulatesThighs;
-            _genericControllerTranslator.Trackers[_currentIndex].SimulateThighs = _configuration.TrackerConfigs[_currentIndex].SimulatesThighs;
-
-            yawForSimulatedTracker.SelectedIndex = (int)_configuration.TrackerConfigs[_currentIndex].YawReferenceTypeValue;
-            _genericControllerTranslator.Trackers[_currentIndex].YawReferenceTypeValue = _configuration.TrackerConfigs[_currentIndex].YawReferenceTypeValue;
-
-            trackerConfigLabel.Text = $"Tracker {_currentIndex + 1} Config";
-            _suppressCheckBoxEvent = false;
-            refreshTimer.Start();
+            var currentIndex = controllerDeviceList.SelectedIndex;
+            if (currentIndex >= 0) {
+                _currentTrackerConfig = _configuration.TrackerConfigs[currentIndex];
+                _currentTracker = _genericControllerTranslator.Trackers[currentIndex];
+            }
+            RefreshTracker();
+        }
+        private void threeDsDeviceList_SelectedIndexChanged(object sender, EventArgs e) {
+            refreshTimer.Stop();
+            var currentIndex = threeDsDeviceList.SelectedIndex;
+            if (currentIndex >= 0) {
+                _currentTrackerConfig = _configuration.TrackerConfigs3ds[currentIndex];
+                _currentTracker = _genericControllerTranslator.Trackers3ds[currentIndex];
+            }
+            RefreshTracker();
+        }
+        private void wiimoteDeviceList_SelectedIndexChanged(object sender, EventArgs e) {
+            refreshTimer.Stop();
+            var currentIndex = wiimoteDeviceList.SelectedIndex;
+            if (currentIndex >= 0) {
+                _currentTrackerConfig = _configuration.TrackerConfigWiimote[currentIndex];
+                _currentTracker = _genericControllerTranslator.TrackersWiimote[currentIndex];
+            }
+            RefreshTracker();
         }
 
+        private void nunchuckDeviceList_SelectedIndexChanged(object sender, EventArgs e) {
+            refreshTimer.Stop();
+            var currentIndex = nunchuckDeviceList.SelectedIndex;
+            if (currentIndex >= 0) {
+                _currentTrackerConfig = _configuration.TrackerConfigNunchuck[currentIndex];
+                _currentTracker = _genericControllerTranslator.TrackersNunchuck[currentIndex];
+            }
+            RefreshTracker();
+        }
+        void RefreshTracker() {
+            if (_currentTracker != null) {
+                _suppressCheckBoxEvent = true;
+                falseThighSimulationCheckBox.Checked = _currentTrackerConfig.SimulatesThighs;
+                _currentTracker.SimulateThighs = _currentTrackerConfig.SimulatesThighs;
+
+                yawForSimulatedTracker.SelectedIndex = (int)_currentTrackerConfig.YawReferenceTypeValue;
+                _currentTracker.YawReferenceTypeValue = _currentTrackerConfig.YawReferenceTypeValue;
+
+                trackerConfigLabel.Text = $"Tracker {_currentTracker.Id} Config";
+                _suppressCheckBoxEvent = false;
+                refreshTimer.Start();
+            }
+        }
         private void tabPage1_Click(object sender, EventArgs e) {
 
         }
 
         private void falseThighSimulationCheckBox_CheckedChanged(object sender, EventArgs e) {
-            yawForSimulatedTracker.Enabled = falseThighSimulationCheckBox.Checked;
+            //yawForSimulatedTracker.Enabled = falseThighSimulationCheckBox.Checked;
             if (!_suppressCheckBoxEvent) {
-                _genericControllerTranslator.Trackers[_currentIndex].SimulateThighs = falseThighSimulationCheckBox.Checked;
-                _configuration.TrackerConfigs[_currentIndex].SimulatesThighs = falseThighSimulationCheckBox.Checked;
+                _currentTracker.SimulateThighs = falseThighSimulationCheckBox.Checked;
+                _currentTrackerConfig.SimulatesThighs = falseThighSimulationCheckBox.Checked;
                 _configuration.SaveConfig();
             }
         }
 
         private void rediscoverTrackerButton_Clicked(object sender, EventArgs e) {
-            _genericControllerTranslator.Trackers[_currentIndex].Rediscover();
+            _currentTracker.Rediscover();
         }
 
         private void trackerCalibrationButton_Click(object sender, EventArgs e) {
             foreach (var item in _genericControllerTranslator.Trackers) {
+                item.Recalibrate();
+            }
+            foreach (var item in _genericControllerTranslator.Trackers3ds) {
+                item.Recalibrate();
+            }
+            foreach (var item in _genericControllerTranslator.TrackersWiimote) {
+                item.Recalibrate();
+            }
+            foreach (var item in _genericControllerTranslator.TrackersNunchuck) {
                 item.Recalibrate();
             }
         }
@@ -137,10 +202,22 @@ namespace PS5_Dualsense_To_IMU_SlimeVR {
 
         private void yawForSimulatedTracker_SelectedIndexChanged(object sender, EventArgs e) {
             if (!_suppressCheckBoxEvent) {
-                _genericControllerTranslator.Trackers[_currentIndex].YawReferenceTypeValue = (RotationReferenceType)yawForSimulatedTracker.SelectedIndex;
-                _configuration.TrackerConfigs[_currentIndex].YawReferenceTypeValue = (RotationReferenceType)yawForSimulatedTracker.SelectedIndex;
+                _currentTracker.YawReferenceTypeValue = (RotationReferenceType)yawForSimulatedTracker.SelectedIndex;
+                _currentTrackerConfig.YawReferenceTypeValue = (RotationReferenceType)yawForSimulatedTracker.SelectedIndex;
                 _configuration.SaveConfig();
             }
+        }
+
+        private void label1_Click(object sender, EventArgs e) {
+
+        }
+
+        private void memoryResetTimer_Tick(object sender, EventArgs e) {
+            string resetPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            _configuration.SwitchingSessions = true;
+            _configuration.SaveConfig();
+            Process.Start(resetPath.Replace(".dll", ".exe"));
+            Application.Exit();
         }
     }
 }

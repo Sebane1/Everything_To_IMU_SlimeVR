@@ -1,0 +1,8 @@
+<app>
+  <name>WiiImuForwarder</name>
+  <coder>Sebby</coder>
+  <version>rev1</version>
+  <releasedate>20250418000000</releasedate>
+  <shortdescription>Send wii remote and nunchuck accelerometer data to a slimevr data processor</shortdescription>
+  <longdescription>Send wii remote and nunchuck accelerometer data to a slimevr data processor</longdescription>
+</app>

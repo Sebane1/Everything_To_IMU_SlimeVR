@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35027.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PS5-Dualsense-To-IMU-SlimeVR", "PS5-Dualsense-To-IMU-SlimeVR\PS5-Dualsense-To-IMU-SlimeVR.csproj", "{CD0173D5-3E49-4FF2-B6AA-A01A46EC93B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Everything-To-IMU-SlimeVR", "PS5-Dualsense-To-IMU-SlimeVR\Everything-To-IMU-SlimeVR.csproj", "{CD0173D5-3E49-4FF2-B6AA-A01A46EC93B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

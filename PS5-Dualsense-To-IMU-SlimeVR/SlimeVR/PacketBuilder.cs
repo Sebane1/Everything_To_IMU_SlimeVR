@@ -5,12 +5,12 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using static PS5_Dualsense_To_IMU_SlimeVR.SlimeVR.FirmwareConstants;
+using static Everything_To_IMU_SlimeVR.SlimeVR.FirmwareConstants;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-using static PS5_Dualsense_To_IMU_SlimeVR.Utility.BigEndianExtensions;
-using PS5_Dualsense_To_IMU_SlimeVR.Utility;
+using static Everything_To_IMU_SlimeVR.Utility.BigEndianExtensions;
+using Everything_To_IMU_SlimeVR.Utility;
 using Microsoft.VisualBasic.Logging;
-namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
+namespace Everything_To_IMU_SlimeVR.SlimeVR {
     public class PacketBuilder {
         private string _identifierString = "Dualsense-IMU-Tracker";
         private int _protocolVersion = 19;
@@ -88,7 +88,7 @@ namespace PS5_Dualsense_To_IMU_SlimeVR.SlimeVR {
             writer.Write((byte)_trackerId); // Tracker Id
             writer.Write((byte)0); // Sensor status
             writer.Write((byte)imuType); // imu type
-            writer.Write((short)0); // Magnometer support
+            writer.Write((short)0); // Magnetometer support
             writer.Write((byte)trackerPosition); // Tracker Position
             writer.Write((byte)trackerDataType); // Tracker Data Type
             sensorInfoStream.Position = 0;
