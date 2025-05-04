@@ -5,10 +5,18 @@ using System.Numerics;
 using System.Text;
 using Valve.VR;
 using static OVRSharp.Overlay;
+using System.Collections.Concurrent;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class OpenVRReader {
+        static ConcurrentDictionary<string, uint> _foundTrackers = new ConcurrentDictionary<string, uint>();
+        static ConcurrentDictionary<uint, Matrix4x4> _trackerMatrixes = new ConcurrentDictionary<uint, Matrix4x4>();
         private static CVRSystem _vrSystem;
+        private static TrackedDevicePose_t[] _poseArray;
+        private static Stopwatch _stopwatch  = new Stopwatch();
+
+        public static Stopwatch Stopwatch { get => _stopwatch; set => _stopwatch = value; }
+
         public static Quaternion GetHMDRotation() {
             TrackedDevicePose_t[] trackedDevices = new TrackedDevicePose_t[1] { new TrackedDevicePose_t() };
             if (_vrSystem == null && IsSteamVRRunning()) {
@@ -110,41 +118,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             }
             return 0.0f;
         }
-        public static Vector3 GetWaistTrackerPosition() {
-            EVRInitError eError = EVRInitError.None;
-            if (_vrSystem == null && IsSteamVRRunning()) {
-                OpenVR.Init(ref eError, EVRApplicationType.VRApplication_Utility);
-            } else {
-                if (eError != EVRInitError.None) {
-                    Console.WriteLine("Error initializing OpenVR: " + eError.ToString());
-                }
-
-                // Initialize an array to hold the device indices
-                uint[] deviceIndices = new uint[20];
-
-                // Get sorted tracked device indices of class GenericTracker (trackers like waist trackers)
-                uint numDevices = OpenVR.System.GetSortedTrackedDeviceIndicesOfClass(ETrackedDeviceClass.GenericTracker, deviceIndices, 0);
-
-                if (numDevices > 0) {
-                    for (uint i = 0; i < numDevices; i++) {
-                        uint deviceIndex = deviceIndices[i];
-
-                        // Check if the device is a waist tracker
-                        if (IsDesiredTracker(deviceIndex, "waist")) {
-                            // Get the device pose (position and rotation)
-                            TrackedDevicePose_t[] poseArray = new TrackedDevicePose_t[20];
-                            OpenVR.System.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseRawAndUncalibrated, 0, poseArray);
-
-                            // Get position
-                            return poseArray[deviceIndex].mDeviceToAbsoluteTracking.ToMatrix4x4().Translation;
-                        }
-                    }
-                } else {
-                    Console.WriteLine("No trackers found.");
-                }
-            }
-            return new Vector3();
-        }
         public static Quaternion GetTrackerRotation(string trackerName) {
             try {
                 EVRInitError eError = EVRInitError.None;
@@ -161,19 +134,19 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     // Get sorted tracked device indices of class GenericTracker (trackers like waist trackers)
                     uint numDevices = OpenVR.System.GetSortedTrackedDeviceIndicesOfClass(ETrackedDeviceClass.GenericTracker, deviceIndices, 0);
 
+                    if (_foundTrackers.ContainsKey(trackerName)) {
+                        uint index = _foundTrackers[trackerName];
+                        if (index < numDevices && IsDesiredTracker(index, trackerName)) {
+                            return GetTrackingPose(index);
+                        }
+                    }
                     if (numDevices > 0) {
                         for (uint i = 0; i < numDevices; i++) {
                             uint deviceIndex = deviceIndices[i];
 
                             // Check if the device is a waist tracker
                             if (IsDesiredTracker(deviceIndex, trackerName)) {
-                                // Get the device pose (position and rotation)
-                                TrackedDevicePose_t[] poseArray = new TrackedDevicePose_t[20];
-                                OpenVR.System.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseStanding, 0, poseArray);
-
-                                // Process the pose data (position/rotation) for the waist tracker
-                                // Console.WriteLine($"Waist Tracker Position: {pose.mDeviceToAbsoluteTracking.m0}, {pose.mDeviceToAbsoluteTracking.m1}, {pose.mDeviceToAbsoluteTracking.m2}");
-                                return Quaternion.CreateFromRotationMatrix(poseArray[deviceIndex].mDeviceToAbsoluteTracking.ToMatrix4x4());
+                                return GetTrackingPose(deviceIndex);
                             }
                         }
                     } else {
@@ -184,6 +157,20 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
             }
             return Quaternion.Identity;
+        }
+
+        private static Quaternion GetTrackingPose(uint index) {
+            // Get the device pose (position and rotation)
+            if (_poseArray == null || _stopwatch.ElapsedMilliseconds > 4) {
+                var poseArray = new TrackedDevicePose_t[20];
+                OpenVR.System.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseStanding, 0, poseArray);
+                _trackerMatrixes[index] = poseArray[index].mDeviceToAbsoluteTracking.ToMatrix4x4();
+                _stopwatch.Restart();
+                _poseArray = poseArray;
+            }
+            // Process the pose data (position/rotation) for the waist tracker
+            // Console.WriteLine($"Waist Tracker Position: {pose.mDeviceToAbsoluteTracking.m0}, {pose.mDeviceToAbsoluteTracking.m1}, {pose.mDeviceToAbsoluteTracking.m2}");
+            return Quaternion.CreateFromRotationMatrix(_trackerMatrixes[index]);
         }
 
         private static bool IsDesiredTracker(uint deviceIndex, string trackerType) {

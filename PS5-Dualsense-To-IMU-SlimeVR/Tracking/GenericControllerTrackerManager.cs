@@ -162,7 +162,7 @@
                             tracker.Dispose();
                         } else {
                             // Update tracker.
-                            await tracker.Update();
+                           tracker.Update();
                         }
                     }
                     for (int i = 0; i < _trackers3ds.Count; i++) {
@@ -176,7 +176,7 @@
                             tracker.Dispose();
                         } else {
                             // Update tracker.
-                            await tracker.Update();
+                            tracker.Update();
                         }
                     }
                     for (int i = 0; i < _trackersWiimote.Count; i++) {
@@ -190,7 +190,7 @@
                             tracker.Dispose();
                         } else {
                             // Update tracker.
-                            await tracker.Update();
+                            tracker.Update();
                         }
                     }
                     for (int i = 0; i < _trackersNunchuck.Count; i++) {
@@ -204,7 +204,7 @@
                             tracker.Dispose();
                         } else {
                             // Update tracker.
-                            await tracker.Update();
+                            tracker.Update();
                         }
                     }
                     Thread.Sleep(pollingRate);

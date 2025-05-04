@@ -96,10 +96,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     bool isClamped = !_falseThighTracker.IsClamped;
                     var trackerRotation = GetTrackerRotation(!_simulateThighs && !_usingWiimoteKnees ? RotationReferenceType.TrackerRotation : YawReferenceTypeValue);
                     float trackerEuler = trackerRotation.GetYawFromQuaternion();
-                    if (!isClamped || GetGlobalState(0x08000) || YawReferenceTypeValue != RotationReferenceType.HmdRotation) {
-                        _lastEulerPositon = YawReferenceTypeValue != RotationReferenceType.TrackerRotation ? -trackerEuler : trackerEuler;
-                    }
-
+                    _lastEulerPositon = YawReferenceTypeValue != RotationReferenceType.TrackerRotation ? -trackerEuler : trackerEuler;
                     _rotation = !_simulateThighs && !_usingWiimoteKnees ? trackerRotation : (_sensorOrientation.CurrentOrientation);
                     _euler = _rotation.QuaternionToEuler() + (!_simulateThighs ? new Vector3() : _rotationCalibration);
                     _gyro = _sensorOrientation.GyroData;
@@ -118,32 +115,16 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         $"Y:{trackerEuler}\r\n"
                         + _falseThighTracker.Debug;
                     }
-
-                    var buttons = JSL.JslGetSimpleState(_index).buttons;
-                    if ((buttons & 0x20000) != 0) {
-                        if (!_waitForRelease) {
-                            if (!buttonPressTimer.IsRunning) {
-                                buttonPressTimer.Start();
-                            } else if (buttonPressTimer.ElapsedMilliseconds < 250) {
-                                _waitForRelease = true;
-                                Recalibrate();
-                                buttonPressTimer.Reset();
-                            } else {
-                                buttonPressTimer.Reset();
-                            }
-                        }
-                    } else {
-                        _waitForRelease = false;
-                    }
-                    await udpHandler.SetSensorBattery(100);
+                    udpHandler.SetSensorBattery(100);
                     if (!_simulateThighs && !_usingWiimoteKnees) {
-                        await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, -GetTrackerRotation(RotationReferenceType.WaistRotation).GetYawFromQuaternion()).ToQuaternion());
+                        udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion());
                     } else {
                         float finalY = _euler.Y;
                         float finalZ = _euler.Z;
-                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, (!_usingWiimoteKnees ? finalZ + _lastEulerPositon : -GetTrackerRotation(RotationReferenceType.WaistRotation).GetYawFromQuaternion()))).ToQuaternion());
-                        if (!_simulateThighs) {
-                            await _falseThighTracker.Update();
+                        udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, (!_usingWiimoteKnees ? finalZ + _lastEulerPositon : _lastEulerPositon))).ToQuaternion());
+                        udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X, _sensorOrientation.AccelerometerData.Y, _sensorOrientation.AccelerometerData.Z));
+                        if (_simulateThighs) {
+                            _falseThighTracker.Update();
                         }
                     }
                     _falseThighTracker.IsActive = _simulateThighs;

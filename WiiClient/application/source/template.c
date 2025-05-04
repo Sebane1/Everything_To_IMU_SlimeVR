@@ -30,6 +30,7 @@ static bool dummy_clearStatus(void) { return false; }
 static bool dummy_shutdown(void) { return false; }
 static bool dummy_readSectors(sec_t sector, sec_t numSectors, void* buffer) { return false; }
 static bool dummy_writeSectors(sec_t sector, sec_t numSectors, const void* buffer) { return false; }
+void WPAD_SetLedState(s32 chan, u8 led);
 
 const DISC_INTERFACE __io_gcsda = {
 	.features = 0,
@@ -77,6 +78,10 @@ static int server_port = DEFAULT_SERVER_PORT;
 // -------------------
 
 static int persistent_sock = -1;
+#define MAX_WIIMOTES 4
+int player_map[MAX_WIIMOTES] = { -1, -1, -1, -1 };
+bool formatSet[MAX_WIIMOTES] = { false, false, false, false };
+
 static void* xfb = NULL;
 static GXRModeObj* rmode = NULL;
 
@@ -91,6 +96,62 @@ Vector quaternion_to_euler(Quaternion q);
 void get_app_directory(char* out_path, size_t out_size, char* argv0);
 void load_config(const char* app_dir);
 bool try_load_config();
+void update_player_map();
+
+void update_player_map() {
+	u32 type;
+	bool connected[MAX_WIIMOTES] = { false };
+
+	for (int i = 0; i < MAX_WIIMOTES; ++i) {
+		s32 status = WPAD_Probe(i, &type);
+		if (status == WPAD_ERR_NONE) {
+			connected[i] = true;  // Mark controller as connected
+
+			if (player_map[i] == -1) {  // If no player is assigned
+				// Find the next available player number
+				for (int next_player = 0; next_player < MAX_WIIMOTES; ++next_player) {
+					bool taken = false;
+					for (int j = 0; j < MAX_WIIMOTES; ++j) {
+						if (player_map[j] == next_player) {
+							taken = true;
+							break;
+						}
+					}
+					if (!taken) {
+						player_map[i] = next_player;
+						break;
+					}
+				}
+			}
+		}
+		else {
+			// Mark the controller as disconnected and reset player assignment
+			player_map[i] = -1;
+		}
+	}
+
+	// Ensure previously connected controllers remain correctly assigned
+	for (int i = 0; i < MAX_WIIMOTES; ++i) {
+		if (connected[i] && player_map[i] == -1) {
+			// Assign player number if no player number was assigned
+			for (int next_player = 0; next_player < MAX_WIIMOTES; ++next_player) {
+				bool taken = false;
+				for (int j = 0; j < MAX_WIIMOTES; ++j) {
+					if (player_map[j] == next_player) {
+						taken = true;
+						break;
+					}
+				}
+				if (!taken) {
+					player_map[i] = next_player;
+					break;
+				}
+			}
+		}
+	}
+}
+
+
 
 int main(int argc, char** argv) {
 	VIDEO_Init();
@@ -147,10 +208,13 @@ int main(int argc, char** argv) {
 
 	while (1) {
 		WPAD_ScanPads();
-		uint32_t connectedDevices = count_connected_wiimotes();
+		update_player_map();
+
 		int buffer_len = 0;
 
-		for (uint32_t i = 0; i < connectedDevices; i++) {
+		for (uint32_t i = 0; i < MAX_WIIMOTES; i++) {
+			if (player_map[i] == -1) continue;
+
 			WPADData* wpad_data = WPAD_Data(i);
 			if (!wpad_data) continue;
 
@@ -180,7 +244,7 @@ int main(int argc, char** argv) {
 
 			uint8_t* ptr = buffer + buffer_len;
 
-			uint32_t id_le = to_little_endian_u32(i);
+			uint32_t id_le = to_little_endian_u32(player_map[i]);
 			memcpy(ptr, &id_le, 4); ptr += 4;
 			Quaternion wm_quat = quat_from_gravity((float)x, (float)y, (float)z, wiimote_offset, wiimote_offset, wiimote_offset, 200.0f);
 			float_to_little_endian(wm_quat.w, ptr); ptr += 4;
@@ -354,9 +418,20 @@ Vector normalize_vector(float x, float y, float z) {
 }
 
 Quaternion quat_from_gravity(float x, float y, float z, float cx, float cy, float cz, float scale) {
+	// Scale raw values
 	float sx = (x - cx) / scale;
 	float sy = (y - cy) / scale;
 	float sz = (z - cz) / scale;
+
+	// Clamp scaled acceleration to avoid spikes
+	const float clamp_max = 1.5f;
+	const float clamp_min = -1.5f;
+	if (sx > clamp_max) sx = clamp_max;
+	if (sx < clamp_min) sx = clamp_min;
+	if (sy > clamp_max) sy = clamp_max;
+	if (sy < clamp_min) sy = clamp_min;
+	if (sz > clamp_max) sz = clamp_max;
+	if (sz < clamp_min) sz = clamp_min;
 
 	Vector gravity = normalize_vector(sx, sy, sz);
 	Vector reference = { 0.0f, 0.0f, -1.0f };
@@ -380,6 +455,7 @@ Quaternion quat_from_gravity(float x, float y, float z, float cx, float cy, floa
 	q.y = axis.y * sin_half;
 	q.z = axis.z * sin_half;
 
+	// Handle edge cases
 	if (fabsf(dot - 1.0f) < 1e-5f) {
 		q = (Quaternion){ 1.0f, 0.0f, 0.0f, 0.0f };
 	}
@@ -389,6 +465,7 @@ Quaternion quat_from_gravity(float x, float y, float z, float cx, float cy, floa
 
 	return q;
 }
+
 
 uint32_t count_connected_wiimotes() {
 	uint32_t count = 0;
