@@ -96,7 +96,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         _debug =
                         $"Device Id: {macSpoof}\r\n" +
                         $"Euler Rotation:\r\n" +
-                        $"X:{_euler.X}, Y:{_euler.Y}, Z:{_rotation.Z}" +
+                        $"X:{_euler.X}, Y:{_euler.Y}, Z:{_euler.Z}" +
                         $"\r\nGyro:\r\n" +
                         $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
                         $"\r\nAcceleration:\r\n" +
@@ -107,11 +107,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     }
                     //await udpHandler.SetSensorBattery(100);
                     if (!_simulateThighs) {
-                        await udpHandler.SetSensorRotation(new Vector3(-_euler.Y, _euler.Z, _euler.X + _lastEulerPositon).ToQuaternion());
+                        await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion());
                     } else {
-                        float finalY = _euler.Y;
-                        float finalZ = isClamped ? _euler.Z : _euler.Z;
-                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, finalZ + _lastEulerPositon)).ToQuaternion());
+                        await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion());
                         await _falseThighTracker.Update();
                     }
                     _falseThighTracker.IsActive = _simulateThighs;
