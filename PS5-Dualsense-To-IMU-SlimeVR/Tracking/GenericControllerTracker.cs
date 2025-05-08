@@ -115,17 +115,11 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         $"Y:{trackerEuler}\r\n"
                         + _falseThighTracker.Debug;
                     }
-                    udpHandler.SetSensorBattery(100);
-                    if (!_simulateThighs && !_usingWiimoteKnees) {
-                        udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X, _sensorOrientation.AccelerometerData.Y, _sensorOrientation.AccelerometerData.Z));
-                        udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion());
-                    } else {
-                        float finalY = _euler.Y;
-                        float finalZ = _euler.Z;
-                        udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, _lastEulerPositon)).ToQuaternion());
-                        if (_simulateThighs) {
-                            _falseThighTracker.Update();
-                        }
+                    await udpHandler.SetSensorBattery(100);
+                    await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X, _sensorOrientation.AccelerometerData.Y, _sensorOrientation.AccelerometerData.Z));
+                    await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion());
+                    if (_simulateThighs) {
+                        _falseThighTracker.Update();
                     }
                     _falseThighTracker.IsActive = _simulateThighs;
                 } catch (Exception e) {

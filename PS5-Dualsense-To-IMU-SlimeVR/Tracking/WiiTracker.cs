@@ -65,7 +65,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     if (_simulateThighs) {
                         _falseThighTracker = new FalseThighTracker(this);
                     }
-                    udpHandler = new UDPHandler(_firmwareId, _id,
+                    udpHandler = new UDPHandler(_firmwareId, _id + 600,
                      new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] });
                     udpHandler.Active = true;
                     Recalibrate();
@@ -137,7 +137,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     if (!_simulateThighs) {
                         await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion());
                     } else {
-                        await udpHandler.SetSensorRotation((new Vector3(-_euler.X, finalY, _lastEulerPositon)).ToQuaternion());
+                        await udpHandler.SetSensorRotation((new Vector3(finalX, finalY, _lastEulerPositon)).ToQuaternion());
                         await _falseThighTracker.Update();
                     }
                     _falseThighTracker.IsActive = _simulateThighs;

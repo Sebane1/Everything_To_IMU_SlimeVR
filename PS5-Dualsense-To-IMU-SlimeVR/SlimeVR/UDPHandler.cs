@@ -11,8 +11,10 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
         UdpClient udpClient;
         int handshakeCount = 1000;
         bool _active = false;
+        private bool _shouldSendHeartbeat = true;
 
         public bool Active { get => _active; set => _active = value; }
+        public bool ShouldSendHeartbeat { get => _shouldSendHeartbeat; set => _shouldSendHeartbeat = value; }
 
         public UDPHandler(string trackerLabel, int trackerId, byte[] macAddress) {
             _macAddress = macAddress;
@@ -22,8 +24,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             Task.Run(() => {
                 while (true) {
                     if (_active) {
-                        Handshake(BoardType.WRANGLER, ImuType.UNKNOWN, McuType.WRANGLER, macAddress);
-                        AddImu(ImuType.UNKNOWN, TrackerPosition.NONE, TrackerDataType.ROTATION);
+                        Initialize();
                         Thread.Sleep(1000);
                         handshakeCount += 1;
                         if (handshakeCount > 10) {
@@ -37,17 +38,17 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
         }
 
         public void Initialize() {
-            Handshake(BoardType.WRANGLER, ImuType.UNKNOWN, McuType.WRANGLER, _macAddress);
+            Handshake(BoardType.UNKNOWN, ImuType.UNKNOWN, McuType.UNKNOWN, _macAddress);
             AddImu(ImuType.UNKNOWN, TrackerPosition.NONE, TrackerDataType.ROTATION);
         }
 
         public void Heartbeat() {
             Task.Run(async () => {
-                while (true) {
+                while (_shouldSendHeartbeat) {
                     if (_active) {
                         await udpClient.SendAsync(packetBuilder.HeartBeat);
                     }
-                    await Task.Delay(800); // At least 1 time per second (<1000ms)
+                    await Task.Delay(900); // At least 1 time per second (<1000ms)
                 }
             });
         }
@@ -57,9 +58,6 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
         }
 
         public async void Handshake(BoardType boardType, ImuType imuType, McuType mcuType, byte[] macAddress) {
-            Task.Run(() => {
-                ListenForHandshake();
-            });
             await udpClient.SendAsync(packetBuilder.BuildHandshakePacket(boardType, imuType, mcuType, macAddress));
             await Task.Delay(500);
             Heartbeat();
@@ -67,28 +65,34 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
 
         public async Task<bool> SetSensorRotation(Quaternion rotation) {
             await udpClient.SendAsync(packetBuilder.BuildRotationPacket(rotation));
+            _shouldSendHeartbeat = false;
             return true;
         }
         public async Task<bool> SetSensorAcceleration(Vector3 acceleration) {
             await udpClient.SendAsync(packetBuilder.BuildAccelerationPacket(acceleration));
+            _shouldSendHeartbeat = false;
             return true;
         }
         public async Task<bool> SetSensorGyro(Vector3 gyro) {
             await udpClient.SendAsync(packetBuilder.BuildGyroPacket(gyro));
+            _shouldSendHeartbeat = false;
             return true;
         }
         public async Task<bool> SetSensorFlexData(float flexResistance) {
             await udpClient.SendAsync(packetBuilder.BuildFlexDataPacket(flexResistance));
+            _shouldSendHeartbeat = false;
             return true;
         }
 
         public async Task<bool> SendButton() {
             await udpClient.SendAsync(packetBuilder.BuildButtonPushedPacket());
+            _shouldSendHeartbeat = false;
             return true;
         }
 
         public async Task<bool> SendPacket(byte[] packet) {
             await udpClient.SendAsync(packet);
+            _shouldSendHeartbeat = false;
             return true;
         }
 
@@ -105,6 +109,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
         }
 
         public async Task<bool> SetSensorBattery(byte battery) {
+            _shouldSendHeartbeat = false;
             await udpClient.SendAsync(packetBuilder.BuildBatteryLevelPacket(battery));
             return true;
         }

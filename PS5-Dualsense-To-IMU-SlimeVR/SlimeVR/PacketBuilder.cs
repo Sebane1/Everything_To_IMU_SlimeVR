@@ -53,6 +53,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             writer.Write((byte)_trackerId); // Tracker Id
             heartbeatStream.Position = 0;
             var data = heartbeatStream.ToArray();
+            heartbeatStream?.Dispose();
             return data;
         }
 
@@ -169,7 +170,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             writer.Write(UDPPackets.BATTERY_LEVEL); // Header
             writer.Write(_packetId++); // Packet counter
             writer.Write((byte)_trackerId); // Tracker id
-            writer.Write((byte)battery); // Battery data
+            writer.Write(battery); // Battery data
             batteryLevelPacketStream.Position = 0;
             var data = batteryLevelPacketStream.ToArray();
             return data;

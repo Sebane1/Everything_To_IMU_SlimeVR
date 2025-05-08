@@ -46,7 +46,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     if (_simulateThighs) {
                         _falseThighTracker = new FalseThighTracker(this);
                     }
-                    udpHandler = new UDPHandler("3DS_Tracker" + _rememberedStringId, _id,
+                    udpHandler = new UDPHandler("3DS_Tracker" + _rememberedStringId, _id + 200,
                      new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] });
                     udpHandler.Active = true;
                     Recalibrate();
