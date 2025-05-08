@@ -72,13 +72,16 @@ typedef struct {
 #define MOTIONPLUS_DELAY_FRAMES 60
 #define DEFAULT_SERVER_IP "10.0.0.21"
 #define DEFAULT_SERVER_PORT 9909
+#define DATA_PER_CONTROLLER 38
 
 static char server_ip[32] = DEFAULT_SERVER_IP;
 static int server_port = DEFAULT_SERVER_PORT;
 // -------------------
 
 static int persistent_sock = -1;
+#define MAX_PLAYERS 4
 #define MAX_WIIMOTES 4
+
 int player_map[MAX_WIIMOTES] = { -1, -1, -1, -1 };
 bool formatSet[MAX_WIIMOTES] = { false, false, false, false };
 
@@ -153,9 +156,12 @@ void update_player_map() {
 
 
 
+
+
 int main(int argc, char** argv) {
 	VIDEO_Init();
 	WPAD_Init();
+	WPAD_SetIdleTimeout(0);
 
 	rmode = VIDEO_GetPreferredMode(NULL);
 	xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
@@ -203,18 +209,23 @@ int main(int argc, char** argv) {
 
 	s16 wiimote_offset = 512;
 	s16 nunchuck_offset = 512;
-	bool formatSet[4] = { false, false, false, false };
-	uint8_t buffer[37 * 4]; // 4 controllers max, each 37 bytes
+	static u32 frame_counter = 0;
+	frame_counter++;
 
 	while (1) {
 		WPAD_ScanPads();
 		update_player_map();
 
-		int buffer_len = 0;
+		uint8_t full_buffer[MAX_WIIMOTES * DATA_PER_CONTROLLER];
+		uint8_t* ptr = full_buffer;
+
+		if (frame_counter >= 300) { // ~5 seconds at 60fps
+			WPAD_GetStatus();
+			frame_counter = 0;
+		}
 
 		for (uint32_t i = 0; i < MAX_WIIMOTES; i++) {
-			if (player_map[i] == -1) continue;
-
+			if (player_map[i] < 0) continue;
 			WPADData* wpad_data = WPAD_Data(i);
 			if (!wpad_data) continue;
 
@@ -225,16 +236,15 @@ int main(int argc, char** argv) {
 
 			u32 pressed = WPAD_ButtonsDown(i);
 			if (pressed & WPAD_BUTTON_HOME) {
-				if (persistent_sock >= 0) net_close(persistent_sock);
 				exit(0);
 			}
 
 			s16 x = wpad_data->accel.x;
 			s16 y = wpad_data->accel.y;
 			s16 z = wpad_data->accel.z;
+
 			u8 nunchuk_connected = 0;
 			s16 nax = 0, nay = 0, naz = 0;
-
 			if (wpad_data->exp.type == WPAD_EXP_NUNCHUK) {
 				nunchuk_connected = 1;
 				nax = wpad_data->exp.nunchuk.accel.x;
@@ -242,18 +252,18 @@ int main(int argc, char** argv) {
 				naz = wpad_data->exp.nunchuk.accel.z;
 			}
 
-			uint8_t* ptr = buffer + buffer_len;
+			Quaternion wm_quat = quat_from_gravity((float)x, (float)y, (float)z, wiimote_offset, wiimote_offset, wiimote_offset, 200.0f);
+			Quaternion nc_quat = quat_from_gravity((float)nax, (float)nay, (float)naz, nunchuck_offset, nunchuck_offset, nunchuck_offset, 200.0f);
 
 			uint32_t id_le = to_little_endian_u32(player_map[i]);
 			memcpy(ptr, &id_le, 4); ptr += 4;
-			Quaternion wm_quat = quat_from_gravity((float)x, (float)y, (float)z, wiimote_offset, wiimote_offset, wiimote_offset, 200.0f);
+
 			float_to_little_endian(wm_quat.w, ptr); ptr += 4;
 			float_to_little_endian(wm_quat.x, ptr); ptr += 4;
 			float_to_little_endian(wm_quat.y, ptr); ptr += 4;
 			float_to_little_endian(wm_quat.z, ptr); ptr += 4;
 
 			if (nunchuk_connected) {
-				Quaternion nc_quat = quat_from_gravity((float)nax, (float)nay, (float)naz, nunchuck_offset, nunchuck_offset, nunchuck_offset, 200.0f);
 				float_to_little_endian(nc_quat.w, ptr); ptr += 4;
 				float_to_little_endian(nc_quat.x, ptr); ptr += 4;
 				float_to_little_endian(nc_quat.y, ptr); ptr += 4;
@@ -265,13 +275,17 @@ int main(int argc, char** argv) {
 			}
 
 			*ptr = nunchuk_connected;
-			ptr += 1;
+			ptr++;
 
-			buffer_len += (ptr - (buffer + buffer_len));
+			u8 battery = WPAD_BatteryLevel(i);
+			*ptr = battery;
+			ptr++;
 		}
 
-		if (buffer_len > 0) {
-			send_http_post_binary(buffer, buffer_len);
+		// Send once per frame
+		int total_len = (ptr - full_buffer);
+		if (total_len > 0) {
+			send_http_post_binary(full_buffer, total_len);
 		}
 	}
 }

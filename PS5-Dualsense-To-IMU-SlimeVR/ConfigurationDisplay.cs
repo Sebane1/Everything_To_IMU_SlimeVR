@@ -55,14 +55,18 @@ namespace Everything_To_IMU_SlimeVR {
             controllerDeviceList.Items.Clear();
             threeDsDeviceList.Items.Clear();
             wiimoteDeviceList.Items.Clear();
-            foreach (var item in GenericControllerTrackerManager.Trackers) {
-                controllerDeviceList.Items.Add("Tracker " + item.Id);
-            }
-            foreach (var item in GenericControllerTrackerManager.Trackers3ds) {
-                threeDsDeviceList.Items.Add("Tracker " + item.Id);
-            }
-            foreach (var item in GenericControllerTrackerManager.TrackersWiimote) {
-                wiimoteDeviceList.Items.Add("Tracker " + item.Id);
+            try {
+                foreach (var item in GenericControllerTrackerManager.Trackers) {
+                    controllerDeviceList.Items.Add("Tracker " + item.Id);
+                }
+                foreach (var item in GenericControllerTrackerManager.Trackers3ds) {
+                    threeDsDeviceList.Items.Add("Tracker " + item.Id);
+                }
+                foreach (var item in GenericControllerTrackerManager.TrackersWiimote) {
+                    wiimoteDeviceList.Items.Add("Tracker " + item.Id);
+                }
+            } catch {
+
             }
             if (_currentTracker != null) {
                 rediscoverTrackerButton.Visible = true;
