@@ -66,19 +66,12 @@ typedef struct {
 	float z;
 } Quaternion;
 
-typedef struct {
-	u8 mac[6];
-	u8 player;
-} MacPlayerMap;
-
 // ----- CONFIG -----
 #define PATH "/"
 #define BUFLEN 512
 #define MOTIONPLUS_DELAY_FRAMES 60
 #define DEFAULT_SERVER_IP "10.0.0.21"
 #define DEFAULT_SERVER_PORT 9909
-#define MAX_CONTROLLERS 4
-#define INVALID_PLAYER 255
 
 static char server_ip[32] = DEFAULT_SERVER_IP;
 static int server_port = DEFAULT_SERVER_PORT;
@@ -104,10 +97,6 @@ void get_app_directory(char* out_path, size_t out_size, char* argv0);
 void load_config(const char* app_dir);
 bool try_load_config();
 void update_player_map();
-bool mac_equal(u8* a, u8* b);
-static bool get_bt_mac_address(int index, u8* mac_out);
-u8 get_or_assign_player(u8* mac);
-
 
 void update_player_map() {
 	u32 type;
@@ -162,57 +151,7 @@ void update_player_map() {
 	}
 }
 
-bool mac_equal(u8* a, u8* b) {
-	for (int i = 0; i < 6; i++) {
-		if (a[i] != b[i]) return false;
-	}
-	return true;
-}
 
-static bool get_bt_mac_address(int index, u8* mac_out) {
-	struct wiimote* wm = WPAD_GetDeviceData(index);
-	if (!wm || wm->state == WIIMOTE_DISCONNECTED) return false;
-
-	// BT address is stored in wm->bdaddr (in reverse order)
-	for (int i = 0; i < 6; i++) {
-		mac_out[i] = wm->bdaddr[5 - i]; // reverse byte order to get normal MAC
-	}
-	return true;
-}
-
-
-u8 get_or_assign_player(u8* mac) {
-	// First: check if MAC is already mapped
-	for (int i = 0; i < MAX_CONTROLLERS; i++) {
-		if (mac_player_map[i].player != INVALID_PLAYER &&
-			mac_equal(mac, mac_player_map[i].mac)) {
-			return mac_player_map[i].player;
-		}
-	}
-
-	// Assign new player ID
-	for (int i = 0; i < MAX_CONTROLLERS; i++) {
-		bool slot_used = false;
-		for (int j = 0; j < MAX_CONTROLLERS; j++) {
-			if (mac_player_map[j].player == i) {
-				slot_used = true;
-				break;
-			}
-		}
-		if (!slot_used) {
-			// Save MAC mapping
-			for (int j = 0; j < MAX_CONTROLLERS; j++) {
-				if (mac_player_map[j].player == INVALID_PLAYER) {
-					memcpy(mac_player_map[j].mac, mac, 6);
-					mac_player_map[j].player = i;
-					return i;
-				}
-			}
-		}
-	}
-
-	return INVALID_PLAYER; // No available slots
-}
 
 int main(int argc, char** argv) {
 	VIDEO_Init();
@@ -262,10 +201,6 @@ int main(int argc, char** argv) {
 	printf("Gateway: %s\n", gateway);
 	printf("Netmask: %s\n", netmask);
 
-	for (int i = 0; i < MAX_CONTROLLERS; i++) {
-		mac_player_map[i].player = INVALID_PLAYER;
-	}
-
 	s16 wiimote_offset = 512;
 	s16 nunchuck_offset = 512;
 	bool formatSet[4] = { false, false, false, false };
@@ -309,15 +244,8 @@ int main(int argc, char** argv) {
 
 			uint8_t* ptr = buffer + buffer_len;
 
-			u8 mac[6];
-			if (!get_bt_mac_address(i, mac)) continue;
-
-			u8 player_id = get_or_assign_player(mac);
-			if (player_id == INVALID_PLAYER) continue;
-
-			uint32_t id_le = to_little_endian_u32(player_id);
+			uint32_t id_le = to_little_endian_u32(player_map[i]);
 			memcpy(ptr, &id_le, 4); ptr += 4;
-
 			Quaternion wm_quat = quat_from_gravity((float)x, (float)y, (float)z, wiimote_offset, wiimote_offset, wiimote_offset, 200.0f);
 			float_to_little_endian(wm_quat.w, ptr); ptr += 4;
 			float_to_little_endian(wm_quat.x, ptr); ptr += 4;
