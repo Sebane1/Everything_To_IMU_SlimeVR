@@ -27,6 +27,15 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
         private MemoryStream flexdataPacketStream;
         private MemoryStream buttonPushPacketStream;
         private MemoryStream batteryLevelPacketStream;
+        private BigEndianBinaryWriter _handshakeWriter;
+        private BigEndianBinaryWriter _sensorInfoWriter;
+        private BigEndianBinaryWriter _sensorRotationPacketWriter;
+        private BigEndianBinaryWriter _rotationPacketWriter;
+        private BigEndianBinaryWriter _accelerationPacketWriter;
+        private BigEndianBinaryWriter _gyroPacketWriter;
+        private BigEndianBinaryWriter _flexDataPacketWriter;
+        private BigEndianBinaryWriter _buttonPushPacketWriter;
+        private BigEndianBinaryWriter _batteryLevelPacketWriter;
 
         public byte[] HeartBeat { get => _heartBeat; set => _heartBeat = value; }
 
@@ -42,6 +51,17 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             flexdataPacketStream = new MemoryStream(new byte[128]);
             buttonPushPacketStream = new MemoryStream(new byte[128]);
             batteryLevelPacketStream = new MemoryStream(new byte[128]);
+
+
+            _handshakeWriter = new BigEndianBinaryWriter(handshakeStream);
+            _sensorInfoWriter = new BigEndianBinaryWriter(sensorInfoStream);
+            _rotationPacketWriter = new BigEndianBinaryWriter(rotationPacketStream);
+            _accelerationPacketWriter = new BigEndianBinaryWriter(accellerationPacketStream);
+            _gyroPacketWriter = new BigEndianBinaryWriter(gyroPacketStream);
+            _flexDataPacketWriter = new BigEndianBinaryWriter(flexdataPacketStream);
+            _buttonPushPacketWriter = new BigEndianBinaryWriter(buttonPushPacketStream);
+            _batteryLevelPacketWriter = new BigEndianBinaryWriter(batteryLevelPacketStream);
+
             _heartBeat = CreateHeartBeat();
         }
 
@@ -82,7 +102,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
 
 
         public byte[] BuildSensorInfoPacket(ImuType imuType, TrackerPosition trackerPosition, TrackerDataType trackerDataType) {
-            BigEndianBinaryWriter writer = new BigEndianBinaryWriter(sensorInfoStream);
+            BigEndianBinaryWriter writer = _sensorInfoWriter;
             sensorInfoStream.Position = 0;
             writer.Write((int)UDPPackets.SENSOR_INFO); // Packet header
             writer.Write((long)_packetId++); // Packet counter
@@ -98,7 +118,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
         }
 
         public byte[] BuildRotationPacket(Quaternion rotation) {
-            BigEndianBinaryWriter writer = new BigEndianBinaryWriter(rotationPacketStream);
+            BigEndianBinaryWriter writer = _rotationPacketWriter;
             rotationPacketStream.Position = 0;
             writer.Write(UDPPackets.ROTATION_DATA); // Header
             writer.Write(_packetId++); // Packet counter
@@ -114,7 +134,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             return data;
         }
         public byte[] BuildAccelerationPacket(Vector3 acceleration) {
-            BigEndianBinaryWriter writer = new BigEndianBinaryWriter(accellerationPacketStream);
+            BigEndianBinaryWriter writer = _accelerationPacketWriter;
             accellerationPacketStream.Position = 0;
             writer.Write(UDPPackets.ACCELERATION); // Header
             writer.Write(_packetId++); // Packet counter
@@ -129,7 +149,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             return data;
         }
         public byte[] BuildGyroPacket(Vector3 gyro) {
-            BigEndianBinaryWriter writer = new BigEndianBinaryWriter(gyroPacketStream);
+            BigEndianBinaryWriter writer = _gyroPacketWriter;
             gyroPacketStream.Position = 0;
             writer.Write(UDPPackets.GYRO); // Header
             writer.Write(_packetId++); // Packet counter
@@ -144,7 +164,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             return data;
         }
         public byte[] BuildFlexDataPacket(float flexData) {
-            BigEndianBinaryWriter writer = new BigEndianBinaryWriter(flexdataPacketStream);
+            BigEndianBinaryWriter writer = _flexDataPacketWriter;
             flexdataPacketStream.Position = 0;
             writer.Write(UDPPackets.FLEX_DATA_PACKET); // Header
             writer.Write(_packetId++); // Packet counter
@@ -155,7 +175,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             return data;
         }
         public byte[] BuildButtonPushedPacket() {
-            BigEndianBinaryWriter writer = new BigEndianBinaryWriter(buttonPushPacketStream);
+            BigEndianBinaryWriter writer = _buttonPushPacketWriter;
             buttonPushPacketStream.Position = 0;
             writer.Write(UDPPackets.BUTTON_PUSHED); // Header
             writer.Write(_packetId++); // Packet counter
@@ -164,8 +184,8 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             var data = buttonPushPacketStream.ToArray();
             return data;
         }
-        public byte[] BuildBatteryLevelPacket(byte battery) {
-            BigEndianBinaryWriter writer = new BigEndianBinaryWriter(batteryLevelPacketStream);
+        public byte[] BuildBatteryLevelPacket(float battery) {
+            BigEndianBinaryWriter writer = _batteryLevelPacketWriter;
             batteryLevelPacketStream.Position = 0;
             writer.Write(UDPPackets.BATTERY_LEVEL); // Header
             writer.Write(_packetId++); // Packet counter

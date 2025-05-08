@@ -108,7 +108,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             }
         }
 
-        public async Task<bool> SetSensorBattery(byte battery) {
+        public async Task<bool> SetSensorBattery(float battery) {
             _shouldSendHeartbeat = false;
             await udpClient.SendAsync(packetBuilder.BuildBatteryLevelPacket(battery));
             return true;
