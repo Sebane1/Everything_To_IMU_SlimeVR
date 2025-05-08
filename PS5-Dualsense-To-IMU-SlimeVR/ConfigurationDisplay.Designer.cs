@@ -42,11 +42,9 @@
             polllingRateLabel = new Label();
             threeDsDeviceList = new ListBox();
             wiimoteDeviceList = new ListBox();
-            nunchuckDeviceList = new ListBox();
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
-            label4 = new Label();
             memoryResetTimer = new System.Windows.Forms.Timer(components);
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
@@ -89,10 +87,10 @@
             tabOptions.Controls.Add(settingsPage);
             tabOptions.Controls.Add(debugPage);
             tabOptions.Controls.Add(errorLog);
-            tabOptions.Location = new Point(443, -2);
+            tabOptions.Location = new Point(327, -2);
             tabOptions.Name = "tabOptions";
             tabOptions.SelectedIndex = 0;
-            tabOptions.Size = new Size(343, 531);
+            tabOptions.Size = new Size(459, 531);
             tabOptions.TabIndex = 2;
             // 
             // settingsPage
@@ -104,7 +102,7 @@
             settingsPage.Location = new Point(4, 24);
             settingsPage.Name = "settingsPage";
             settingsPage.Padding = new Padding(3);
-            settingsPage.Size = new Size(335, 503);
+            settingsPage.Size = new Size(451, 503);
             settingsPage.TabIndex = 0;
             settingsPage.Text = "Settings";
             settingsPage.UseVisualStyleBackColor = true;
@@ -179,7 +177,7 @@
             // trackerCalibrationButton
             // 
             trackerCalibrationButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            trackerCalibrationButton.Location = new Point(445, 530);
+            trackerCalibrationButton.Location = new Point(329, 530);
             trackerCalibrationButton.Name = "trackerCalibrationButton";
             trackerCalibrationButton.Size = new Size(216, 23);
             trackerCalibrationButton.TabIndex = 4;
@@ -193,7 +191,7 @@
             donateButton.BackColor = Color.RosyBrown;
             donateButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             donateButton.ForeColor = Color.Snow;
-            donateButton.Location = new Point(659, 530);
+            donateButton.Location = new Point(543, 530);
             donateButton.Name = "donateButton";
             donateButton.Size = new Size(127, 23);
             donateButton.TabIndex = 5;
@@ -208,7 +206,7 @@
             pollingRate.Maximum = 120;
             pollingRate.Minimum = 8;
             pollingRate.Name = "pollingRate";
-            pollingRate.Size = new Size(679, 45);
+            pollingRate.Size = new Size(683, 45);
             pollingRate.TabIndex = 6;
             pollingRate.Value = 8;
             pollingRate.Scroll += pollingRate_Scroll;
@@ -245,17 +243,6 @@
             wiimoteDeviceList.TabIndex = 9;
             wiimoteDeviceList.SelectedIndexChanged += wiimoteDeviceList_SelectedIndexChanged;
             // 
-            // nunchuckDeviceList
-            // 
-            nunchuckDeviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
-            nunchuckDeviceList.FormattingEnabled = true;
-            nunchuckDeviceList.ItemHeight = 15;
-            nunchuckDeviceList.Location = new Point(333, 22);
-            nunchuckDeviceList.Name = "nunchuckDeviceList";
-            nunchuckDeviceList.Size = new Size(104, 499);
-            nunchuckDeviceList.TabIndex = 10;
-            nunchuckDeviceList.SelectedIndexChanged += nunchuckDeviceList_SelectedIndexChanged;
-            // 
             // label1
             // 
             label1.AutoSize = true;
@@ -284,15 +271,6 @@
             label3.TabIndex = 13;
             label3.Text = "Remote Wiimote";
             // 
-            // label4
-            // 
-            label4.AutoSize = true;
-            label4.Location = new Point(333, 2);
-            label4.Name = "label4";
-            label4.Size = new Size(106, 15);
-            label4.TabIndex = 14;
-            label4.Text = "Remote Nunchuck";
-            // 
             // memoryResetTimer
             // 
             memoryResetTimer.Enabled = true;
@@ -303,12 +281,10 @@
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(786, 606);
-            Controls.Add(label4);
+            ClientSize = new Size(790, 606);
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
-            Controls.Add(nunchuckDeviceList);
             Controls.Add(wiimoteDeviceList);
             Controls.Add(threeDsDeviceList);
             Controls.Add(polllingRateLabel);

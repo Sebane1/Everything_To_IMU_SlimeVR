@@ -48,8 +48,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     if (_simulateThighs) {
                         _falseThighTracker = new FalseThighTracker(this);
                     }
-                    udpHandler = new UDPHandler("GenericController" + _rememberedStringId, _id,
-                     new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] });
+                    udpHandler = new UDPHandler("GenericController" + _rememberedStringId,
+                     new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] }, 0);
                     udpHandler.Active = true;
                     Recalibrate();
                     _ready = true;
@@ -78,10 +78,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         return OpenVRReader.GetTrackerRotation("waist");
                     case RotationReferenceType.ChestRotation:
                         return OpenVRReader.GetTrackerRotation("chest");
-                    case RotationReferenceType.TrackerRotation:
-                        var motionState = JSL.JslGetMotionState(_index);
-                        var motionQuaternion = new Quaternion(motionState.quatX, motionState.quatY, motionState.quatZ, motionState.quatW);
-                        return motionQuaternion;
                 }
             } catch {
 
@@ -94,9 +90,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 try {
                     var hmdHeight = OpenVRReader.GetHMDHeight();
                     bool isClamped = !_falseThighTracker.IsClamped;
-                    var trackerRotation = GetTrackerRotation(!_simulateThighs && !_usingWiimoteKnees ? RotationReferenceType.TrackerRotation : YawReferenceTypeValue);
+                    var trackerRotation = GetTrackerRotation(YawReferenceTypeValue);
                     float trackerEuler = trackerRotation.GetYawFromQuaternion();
-                    _lastEulerPositon = YawReferenceTypeValue != RotationReferenceType.TrackerRotation ? -trackerEuler : trackerEuler;
+                    _lastEulerPositon = -trackerEuler;
                     _rotation = !_simulateThighs && !_usingWiimoteKnees ? trackerRotation : (_sensorOrientation.CurrentOrientation);
                     _euler = _rotation.QuaternionToEuler() + (!_simulateThighs ? new Vector3() : _rotationCalibration);
                     _gyro = _sensorOrientation.GyroData;
@@ -115,9 +111,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         $"Y:{trackerEuler}\r\n"
                         + _falseThighTracker.Debug;
                     }
-                    await udpHandler.SetSensorBattery(100);
-                    await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X, _sensorOrientation.AccelerometerData.Y, _sensorOrientation.AccelerometerData.Z));
-                    await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion());
+                    await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X / 1000f, _sensorOrientation.AccelerometerData.Y / 1000f, _sensorOrientation.AccelerometerData.Z / 1000f), 0);
+                    await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion(), 0);
                     if (_simulateThighs) {
                         _falseThighTracker.Update();
                     }

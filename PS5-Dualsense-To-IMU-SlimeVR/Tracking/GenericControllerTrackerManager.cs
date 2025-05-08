@@ -100,7 +100,7 @@
                             // Have we dealt with setting up this controller tracker yet?
                             if (!info.Value) {
                                 // Set up the controller tracker.
-                                var newTracker = new WiiTracker(info.Key, false);
+                                var newTracker = new WiiTracker(info.Key);
                                 while (!newTracker.Ready) {
                                     Thread.Sleep(100);
                                 }
@@ -112,33 +112,6 @@
                                 newTracker.YawReferenceTypeValue = _configuration.TrackerConfigWiimote[i].YawReferenceTypeValue;
                                 _trackersWiimote.Add(newTracker);
                                 _trackerInfoWiimote[i] = new KeyValuePair<int, bool>(info.Key, true);
-                            }
-                            Thread.Sleep(handshakeDelay);
-                        }
-                        for (int i = 0; i < ForwardedWiimoteManager.Nunchucks.Count; i++) {
-                            // Track whether or not we've seen this controller before this session.
-                            if (!_trackerInfoNunchuck.ContainsKey(i)) {
-                                _trackerInfoNunchuck[i] = new KeyValuePair<int, bool>(_trackerInfoNunchuck.Count, false);
-                            }
-
-                            // Get this controllers information.
-                            var info = _trackerInfoNunchuck[i];
-
-                            // Have we dealt with setting up this controller tracker yet?
-                            if (!info.Value) {
-                                // Set up the controller tracker.
-                                var newTracker = new WiiTracker(info.Key, true);
-                                while (!newTracker.Ready) {
-                                    Thread.Sleep(100);
-                                }
-                                newTracker.OnTrackerError += NewTracker_OnTrackerError;
-                                if (i > _configuration.TrackerConfigNunchuck.Count - 1) {
-                                    _configuration.TrackerConfigNunchuck.Add(new TrackerConfig());
-                                }
-                                newTracker.SimulateThighs = _configuration.TrackerConfigNunchuck[i].SimulatesThighs;
-                                newTracker.YawReferenceTypeValue = _configuration.TrackerConfigNunchuck[i].YawReferenceTypeValue;
-                                _trackersNunchuck.Add(newTracker);
-                                _trackerInfoNunchuck[i] = new KeyValuePair<int, bool>(info.Key, true);
                             }
                             Thread.Sleep(handshakeDelay);
                         }

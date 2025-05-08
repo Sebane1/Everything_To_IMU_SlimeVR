@@ -12,6 +12,7 @@ namespace Everything_To_IMU_SlimeVR {
         private IBodyTracker _currentTracker;
         private bool _suppressCheckBoxEvent;
         string _lastErrorLog = "";
+        private bool _legacyWiiClientDetected;
         private readonly ForwardedWiimoteManager _forwardedWiimoteManager;
         private readonly Forwarded3DSDataManager _forwarded3DSDataManager;
 
@@ -54,7 +55,6 @@ namespace Everything_To_IMU_SlimeVR {
             controllerDeviceList.Items.Clear();
             threeDsDeviceList.Items.Clear();
             wiimoteDeviceList.Items.Clear();
-            nunchuckDeviceList.Items.Clear();
             foreach (var item in GenericControllerTrackerManager.Trackers) {
                 controllerDeviceList.Items.Add("Tracker " + item.Id);
             }
@@ -63,9 +63,6 @@ namespace Everything_To_IMU_SlimeVR {
             }
             foreach (var item in GenericControllerTrackerManager.TrackersWiimote) {
                 wiimoteDeviceList.Items.Add("Tracker " + item.Id);
-            }
-            foreach (var item in GenericControllerTrackerManager.TrackersNunchuck) {
-                nunchuckDeviceList.Items.Add("Tracker " + item.Id);
             }
             if (_currentTracker != null) {
                 rediscoverTrackerButton.Visible = true;
@@ -190,7 +187,28 @@ namespace Everything_To_IMU_SlimeVR {
         }
 
         private void ConfigurationDisplay_Load(object sender, EventArgs e) {
+            ForwardedWiimoteManager.LegacyClientDetected += delegate {
+                if (!_legacyWiiClientDetected) {
+                    _legacyWiiClientDetected = true;
+                    //if (this.InvokeRequired) {
+                    //    this.Invoke(new Action(() => this.SendToBack()));
+                    //} else {
+                    //    this.SendToBack();
+                    //}
+                    if (MessageBox.Show("Your Wii client is outdated! Please consider updating to the latest version.", "Outdated Wii Client", MessageBoxButtons.OK, MessageBoxIcon.Warning) == DialogResult.OK) {
+                        string url = "https://github.com/Sebane1/Everything_To_IMU_SlimeVR/releases";
 
+                        try {
+                            Process.Start(new ProcessStartInfo {
+                                FileName = url,
+                                UseShellExecute = true // Required for opening URLs in default browser
+                            });
+                        } catch (Exception ex) {
+                            Console.WriteLine("Failed to open URL: " + ex.Message);
+                        }
+                    }
+                }
+            };
         }
 
         private void pollingRate_Scroll(object sender, EventArgs e) {
@@ -213,11 +231,11 @@ namespace Everything_To_IMU_SlimeVR {
         }
 
         private void memoryResetTimer_Tick(object sender, EventArgs e) {
-            string resetPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            _configuration.SwitchingSessions = true;
-            _configuration.SaveConfig();
-            Process.Start(resetPath.Replace(".dll", ".exe"));
-            Application.Exit();
+            //string resetPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            //_configuration.SwitchingSessions = true;
+            //_configuration.SaveConfig();
+            //Process.Start(resetPath.Replace(".dll", ".exe"));
+            //Application.Exit();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System.Collections.Concurrent;
+using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
 using static Everything_To_IMU_SlimeVR.SlimeVR.FirmwareConstants;
@@ -6,6 +7,7 @@ using static Everything_To_IMU_SlimeVR.SlimeVR.FirmwareConstants;
 namespace Everything_To_IMU_SlimeVR.SlimeVR {
     public class UDPHandler {
         private byte[] _macAddress;
+        private int _supportedSensorCount;
         private PacketBuilder packetBuilder;
         private int slimevrPort = 6969;
         UdpClient udpClient;
@@ -16,9 +18,10 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
         public bool Active { get => _active; set => _active = value; }
         public bool ShouldSendHeartbeat { get => _shouldSendHeartbeat; set => _shouldSendHeartbeat = value; }
 
-        public UDPHandler(string trackerLabel, int trackerId, byte[] macAddress) {
+        public UDPHandler(string trackerLabel, byte[] macAddress, int supportedSensorCount) {
             _macAddress = macAddress;
-            packetBuilder = new PacketBuilder(trackerLabel, trackerId);
+            _supportedSensorCount = supportedSensorCount;
+            packetBuilder = new PacketBuilder(trackerLabel);
             udpClient = new UdpClient();
             udpClient.Connect("localhost", 6969);
             Task.Run(() => {
@@ -39,9 +42,10 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
 
         public void Initialize() {
             Handshake(BoardType.UNKNOWN, ImuType.UNKNOWN, McuType.UNKNOWN, _macAddress);
-            AddImu(ImuType.UNKNOWN, TrackerPosition.NONE, TrackerDataType.ROTATION);
+            for (int i = 0; i < _supportedSensorCount; i++) {
+                AddImu(ImuType.UNKNOWN, TrackerPosition.NONE, TrackerDataType.ROTATION, (byte)i);
+            }
         }
-
         public void Heartbeat() {
             Task.Run(async () => {
                 while (_shouldSendHeartbeat) {
@@ -53,8 +57,8 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             });
         }
 
-        public async void AddImu(ImuType imuType, TrackerPosition trackerPosition, TrackerDataType trackerDataType) {
-            await udpClient.SendAsync(packetBuilder.BuildSensorInfoPacket(imuType, trackerPosition, trackerDataType));
+        public async void AddImu(ImuType imuType, TrackerPosition trackerPosition, TrackerDataType trackerDataType, byte trackerId) {
+            await udpClient.SendAsync(packetBuilder.BuildSensorInfoPacket(imuType, trackerPosition, trackerDataType, trackerId));
         }
 
         public async void Handshake(BoardType boardType, ImuType imuType, McuType mcuType, byte[] macAddress) {
@@ -63,23 +67,23 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             Heartbeat();
         }
 
-        public async Task<bool> SetSensorRotation(Quaternion rotation) {
-            await udpClient.SendAsync(packetBuilder.BuildRotationPacket(rotation));
+        public async Task<bool> SetSensorRotation(Quaternion rotation, byte trackerId) {
+            await udpClient.SendAsync(packetBuilder.BuildRotationPacket(rotation, trackerId));
             _shouldSendHeartbeat = false;
             return true;
         }
-        public async Task<bool> SetSensorAcceleration(Vector3 acceleration) {
-            await udpClient.SendAsync(packetBuilder.BuildAccelerationPacket(acceleration));
+        public async Task<bool> SetSensorAcceleration(Vector3 acceleration, byte trackerId) {
+            await udpClient.SendAsync(packetBuilder.BuildAccelerationPacket(acceleration, trackerId));
             _shouldSendHeartbeat = false;
             return true;
         }
-        public async Task<bool> SetSensorGyro(Vector3 gyro) {
-            await udpClient.SendAsync(packetBuilder.BuildGyroPacket(gyro));
+        public async Task<bool> SetSensorGyro(Vector3 gyro, byte trackerId) {
+            await udpClient.SendAsync(packetBuilder.BuildGyroPacket(gyro, trackerId));
             _shouldSendHeartbeat = false;
             return true;
         }
-        public async Task<bool> SetSensorFlexData(float flexResistance) {
-            await udpClient.SendAsync(packetBuilder.BuildFlexDataPacket(flexResistance));
+        public async Task<bool> SetSensorFlexData(float flexResistance, byte trackerId) {
+            await udpClient.SendAsync(packetBuilder.BuildFlexDataPacket(flexResistance, trackerId));
             _shouldSendHeartbeat = false;
             return true;
         }

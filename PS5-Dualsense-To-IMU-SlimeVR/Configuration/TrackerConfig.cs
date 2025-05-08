@@ -10,8 +10,7 @@
         public enum RotationReferenceType {
             HmdRotation = 0,
             WaistRotation = 1,
-            TrackerRotation = 2,
-            ChestRotation = 3
+            ChestRotation = 2
         }
     }
 }

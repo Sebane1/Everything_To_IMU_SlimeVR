@@ -67,6 +67,7 @@ public static class JSL
         public float gravX;
         public float gravY;
         public float gravZ;
+        public byte battery;
     }
 
 

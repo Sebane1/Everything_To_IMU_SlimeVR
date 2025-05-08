@@ -37,9 +37,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             Task.Run(async () => {
                 _tracker = tracker;
                 _macSpoof = HashUtility.CalculateMD5Hash(tracker.MacSpoof);
-                _udpHandler = new UDPHandler("FalseTracker", tracker.Id + 500,
+                _udpHandler = new UDPHandler("FalseTracker",
                  new byte[] { (byte)_macSpoof[0], (byte)_macSpoof[1], (byte)_macSpoof[2],
-                     (byte) _macSpoof[3], (byte) _macSpoof[4], (byte) _macSpoof[5] });
+                     (byte) _macSpoof[3], (byte) _macSpoof[4], (byte) _macSpoof[5] }, 1);
                 _ready = true;
                 Recalibrate();
             });
@@ -77,7 +77,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     _debug += $"Is Leaning Forward: {directionalData.Item1.ToString()} \r\n";
                     _debug += directionalData.Item2;
                 }
-                float bendPercentage = Math.Clamp((legHmdHeight / legCalibratedHmdHeight), 0,1);
+                float bendPercentage = Math.Clamp((legHmdHeight / legCalibratedHmdHeight), 0, 1);
                 float upperLegBend = sitting || directionalData.Item3 > 30 || hmdHeight < legDifferenceToSubtract - (_calibratedHeight * 0.025f) ? 0 : -float.Lerp(0, 90, 1 - bendPercentage);
                 _smoothedLegBend = float.Lerp(_smoothedLegBend, upperLegBend, 0.1f);
                 float newX = sitting && directionalData.Item1 ? SpecialClamp(-euler.X, -120, -270) : SpecialClamp(-euler.X, -180, _smoothedLegBend, _smoothedLegBend);
@@ -85,7 +85,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 float finalX = sitting && -euler.X > -94 ? -newX + 180 : newX;
                 float finalY = euler.Y;
                 float finalZ = !_isClamped ? -euler.Z : euler.Z;
-                await _udpHandler.SetSensorRotation(new Vector3(finalX, finalY, finalZ + _tracker.LastHmdPositon).ToQuaternion());
+                await _udpHandler.SetSensorRotation(new Vector3(finalX, finalY, finalZ + _tracker.LastHmdPositon).ToQuaternion(), 0);
             }
             return _ready;
         }

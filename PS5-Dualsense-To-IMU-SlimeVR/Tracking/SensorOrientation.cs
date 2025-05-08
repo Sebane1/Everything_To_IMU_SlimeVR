@@ -54,10 +54,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     return JSL.JslGetMotionState(_index);
                 case SensorType.ThreeDs:
                     return Forwarded3DSDataManager.DeviceMap.ElementAt(_index).Value;
-                case SensorType.Wiimote:
-                    return ForwardedWiimoteManager.Wiimotes.ElementAt(_index).Value;
-                case SensorType.Nunchuck:
-                    return ForwardedWiimoteManager.Nunchucks.ElementAt(_index).Value;
             }
             return new JSL.MOTION_STATE();
         }

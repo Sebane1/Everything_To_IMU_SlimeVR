@@ -46,8 +46,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     if (_simulateThighs) {
                         _falseThighTracker = new FalseThighTracker(this);
                     }
-                    udpHandler = new UDPHandler("3DS_Tracker" + _rememberedStringId, _id + 200,
-                     new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] });
+                    udpHandler = new UDPHandler("3DS_Tracker" + _rememberedStringId,
+                     new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] }, 1);
                     udpHandler.Active = true;
                     Recalibrate();
                     _ready = true;
@@ -66,10 +66,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         return OpenVRReader.GetTrackerRotation("waist");
                     case RotationReferenceType.ChestRotation:
                         return OpenVRReader.GetTrackerRotation("chest");
-                    case RotationReferenceType.TrackerRotation:
-                        var value = Forwarded3DSDataManager.DeviceMap.ElementAt(_index);
-                        var motionQuaternion = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
-                        return motionQuaternion;
                 }
             } catch {
             }
@@ -84,7 +80,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     var trackerRotation = GetTrackerRotation(RotationReferenceType.WaistRotation);
                     float trackerEuler = trackerRotation.GetYawFromQuaternion();
                     if (!isClamped || YawReferenceTypeValue != RotationReferenceType.HmdRotation) {
-                        _lastEulerPositon = YawReferenceTypeValue != RotationReferenceType.TrackerRotation ? -trackerEuler : trackerEuler;
+                        _lastEulerPositon = -trackerEuler;
                     }
                     var value = Forwarded3DSDataManager.DeviceMap.ElementAt(_index);
                     _rotation = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
@@ -107,9 +103,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     }
                     //await udpHandler.SetSensorBattery(100);
                     if (!_simulateThighs) {
-                        await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion());
+                        await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion(), 0);
                     } else {
-                        await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion());
+                        await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion(), 0);
                         await _falseThighTracker.Update();
                     }
                     _falseThighTracker.IsActive = _simulateThighs;

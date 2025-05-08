@@ -6,11 +6,10 @@ using System.Linq;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class ForwardedWiimoteManager {
-        private static ConcurrentDictionary<string, JSL.MOTION_STATE> _wiimotes = new ConcurrentDictionary<string, JSL.MOTION_STATE>();
-        private static ConcurrentDictionary<string, JSL.MOTION_STATE> _nunchucks = new ConcurrentDictionary<string, JSL.MOTION_STATE>();
+        private static ConcurrentDictionary<string, WiimotePacket> _wiimotes = new ConcurrentDictionary<string, WiimotePacket>();
         private static List<string> _wiimoteIds = new List<string>();
-        private static List<string> _nunchuchIds = new List<string>();
         public static EventHandler NewPacketReceived;
+        public static EventHandler LegacyClientDetected;
         // Calibration tracking
         private const int CalibrationSamples = 100;
         private ConcurrentDictionary<string, List<Vector3>> _calibrationSamples = new();
@@ -20,10 +19,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             Task.Run(() => Initialize());
         }
 
-        public static ConcurrentDictionary<string, JSL.MOTION_STATE> Wiimotes { get => _wiimotes; set => _wiimotes = value; }
-        public static ConcurrentDictionary<string, JSL.MOTION_STATE> Nunchucks { get => _nunchucks; set => _nunchucks = value; }
+        public static ConcurrentDictionary<string, WiimotePacket> Wiimotes { get => _wiimotes; set => _wiimotes = value; }
         public static List<string> WiimoteIds { get => _wiimoteIds; set => _wiimoteIds = value; }
-        public static List<string> NunchuchIds { get => _nunchuchIds; set => _nunchuchIds = value; }
 
         async void Initialize() {
             HttpListener listener = new HttpListener();
@@ -47,45 +44,38 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     await bodyStream.CopyToAsync(ms);
                     byte[] data = ms.ToArray();
 
-                    if (data.Length % 37 != 0) {
+                    int numPackets = 0;
+                    int packetLength = 0;
+                    if (data.Length % 38 == 0) {
+                        // Current correct format
+                        numPackets = data.Length / 38;
+                        packetLength = 38;
+                        // proceed normally...
+                    } else if (data.Length % 37 == 0) {
+                        // Old format detected
+                        Console.WriteLine("⚠️  Legacy client detected: using old 37-byte packet format.");
+                        numPackets = data.Length / 37;
+                        packetLength = 37;
+                        LegacyClientDetected?.Invoke(this, EventArgs.Empty);
+                    } else {
+                        // Invalid or corrupted data
                         context.Response.StatusCode = 400;
                         context.Response.Close();
                         continue;
                     }
 
-                    int numPackets = data.Length / 37;
                     string clientIp = context.Request.RemoteEndPoint?.Address.ToString() ?? "Unknown";
 
                     for (int i = 0; i < numPackets; i++) {
-                        byte[] packetBytes = new byte[37];
-                        Buffer.BlockCopy(data, i * 37, packetBytes, 0, 37);
+                        byte[] packetBytes = new byte[packetLength];
+                        Buffer.BlockCopy(data, i * packetLength, packetBytes, 0, packetLength);
 
                         WiimotePacket packet = ParsePacket(packetBytes);
                         string key = $"{clientIp}:{packet.Id}";
 
-                        Quaternion wiimoteQuat = new Quaternion(packet.WiimoteQuatX, packet.WiimoteQuatY, packet.WiimoteQuatZ, packet.WiimoteQuatW);
-
-                        _wiimotes[key] = new JSL.MOTION_STATE {
-                            quatW = wiimoteQuat.W,
-                            quatX = wiimoteQuat.X,
-                            quatY = wiimoteQuat.Y,
-                            quatZ = wiimoteQuat.Z
-                        };
+                        _wiimotes[key] = packet;
                         if (!_wiimoteIds.Contains(key)) {
                             _wiimoteIds.Add(key);
-                        }
-                        if (packet.NunchukConnected == 1) {
-                            Quaternion nunchukQuat = new Quaternion(packet.NunchukQuatX, packet.NunchukQuatY, packet.NunchukQuatZ, packet.NunchukQuatW);
-
-                            _nunchucks[key] = new JSL.MOTION_STATE {
-                                quatW = nunchukQuat.W,
-                                quatX = nunchukQuat.X,
-                                quatY = nunchukQuat.Y,
-                                quatZ = nunchukQuat.Z
-                            };
-                        }
-                        if (!_nunchuchIds.Contains(key)) {
-                            _nunchuchIds.Add(key);
                         }
                     }
 
@@ -120,6 +110,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             public float NunchukQuatY;
             public float NunchukQuatZ;
             public byte NunchukConnected;
+            public byte BatteryLevel;
         }
 
     }
