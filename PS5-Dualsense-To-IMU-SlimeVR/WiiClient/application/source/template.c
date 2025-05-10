@@ -24,7 +24,8 @@
 #ifndef INADDR_NONE
 #define INADDR_NONE 0xFFFFFFFF
 #endif
-
+volatile u32 targetSendInterval = 16;
+#define AVG_WINDOW 8
 
 const DISC_INTERFACE* fat_get_sd_interface(void) { return &__io_wiisd; }
 const DISC_INTERFACE* fat_get_usb_interface(void) { return &__io_usbstorage; }
@@ -91,6 +92,12 @@ bool formatSet[MAX_WIIMOTES] = { false, false, false, false };
 
 static void* xfb = NULL;
 static GXRModeObj* rmode = NULL;
+#define HEADER_STUB \
+    "POST /endpoint HTTP/1.1\r\n" \
+    "Host: %s\r\n" \
+    "Content-Length: %d\r\n" \
+    "Connection: keep-alive\r\n" \
+    "\r\n"
 
 // Function declarations
 uint32_t to_little_endian_u32(uint32_t val);
@@ -163,6 +170,7 @@ void update_player_map() {
 
 
 int main(int argc, char** argv) {
+	SYS_Init();
 	VIDEO_Init();
 	WPAD_Init();
 	rmode = VIDEO_GetPreferredMode(NULL);
@@ -212,11 +220,10 @@ int main(int argc, char** argv) {
 	s16 wiimote_offset = 512;
 	s16 nunchuck_offset = 512;
 	WPAD_SetIdleTimeout(36000);
-
 	while (1) {
+		u64 start = gettime();
 		WPAD_ScanPads();
 		update_player_map();
-
 		uint8_t full_buffer[MAX_WIIMOTES * DATA_PER_CONTROLLER];
 		uint8_t* ptr = full_buffer;
 
@@ -282,7 +289,15 @@ int main(int argc, char** argv) {
 		int total_len = (ptr - full_buffer);
 		if (total_len > 0) {
 			send_http_post_binary(full_buffer, total_len);
-			usleep(5000);
+		}
+		u64 end = gettime();
+		u32 elapsed_ms = (u32)ticks_to_millisecs(end - start);
+		u32 finalTargetFrameMs = 32;
+		if (elapsed_ms < finalTargetFrameMs) {
+			u32 sleep_ms = finalTargetFrameMs - elapsed_ms;
+			if (sleep_ms >= 1) {
+				usleep(sleep_ms * 1000); // sleep expects microseconds
+			}
 		}
 	}
 }
@@ -385,6 +400,7 @@ int initialize_socket() {
 	return 0;
 }
 
+
 void send_http_post_binary(uint8_t* payload, int payload_len) {
 	if (persistent_sock < 0) {
 		if (initialize_socket() != 0) {
@@ -392,35 +408,39 @@ void send_http_post_binary(uint8_t* payload, int payload_len) {
 			return;
 		}
 	}
-	char http_header[256];
-	char request_buffer[512];
 
-	int header_len = snprintf(http_header, sizeof(http_header),
-		"POST /endpoint HTTP/1.1\r\n"
-		"Host: %s\r\n"
-		"Content-Length: %d\r\n"
-		"Connection: keep-alive\r\n"
-		"\r\n", server_ip, payload_len);
+	char header[256];
+	int header_len = snprintf(header, sizeof(header), HEADER_STUB, server_ip, payload_len);
+	if (header_len <= 0 || header_len >= sizeof(header)) {
+		printf("Error formatting HTTP header\n");
+		return;
+	}
 
-	memcpy(request_buffer, http_header, header_len);
-	memcpy(request_buffer + header_len, payload, payload_len);
 	int total_len = header_len + payload_len;
+	char request_buffer[header_len + payload_len]; // VLA (if supported) or malloc if not
+	memcpy(request_buffer, header, header_len);
+	memcpy(request_buffer + header_len, payload, payload_len);
 
 	if (net_write(persistent_sock, request_buffer, total_len) < 0) {
-			printf("Write failed, retrying socket...\n");
-			net_close(persistent_sock);
-			persistent_sock = -1;
-			return;
-	}
-	char response[128];
-	int read_bytes = net_read(persistent_sock, response, sizeof(response));
-	if (read_bytes <= 0) {
 		printf("Write failed, retrying socket...\n");
 		net_close(persistent_sock);
 		persistent_sock = -1;
 		return;
 	}
+
+	// Optional: discard response
+	char response[128];
+	int read_bytes = net_read(persistent_sock, response, sizeof(response));
+	if (read_bytes <= 0) {
+		printf("Read failed, closing socket...\n");
+		net_close(persistent_sock);
+		persistent_sock = -1;
+		return;
+	}
 }
+
+
+
 
 Vector normalize_vector(float x, float y, float z) {
 	float length = sqrtf(x * x + y * y + z * z);

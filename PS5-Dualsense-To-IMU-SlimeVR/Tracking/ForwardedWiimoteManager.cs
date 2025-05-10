@@ -11,6 +11,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private static List<string> _wiimoteIds = new();
         public static EventHandler NewPacketReceived;
         public static EventHandler LegacyClientDetected;
+        Stopwatch _timeBetweenRequests = new Stopwatch();
 
         private const int CalibrationSamples = 100;
         private ConcurrentDictionary<string, List<Vector3>> _calibrationSamples = new();
@@ -21,6 +22,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public ForwardedWiimoteManager() {
             Task.Run(() => StartListener());
             Task.Run(() => ProcessQueue());
+            _timeBetweenRequests.Restart();
         }
 
         public static ConcurrentDictionary<string, WiimotePacket> Wiimotes => _wiimotes;
@@ -50,7 +52,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         async Task HandleRequest(HttpListenerContext context) {
             var clientIp = context.Request.RemoteEndPoint?.Address.ToString() ?? "Unknown";
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
+            Debug.WriteLine("Message received, last message received " + _timeBetweenRequests.ElapsedMilliseconds + "ms ago.");
+            _timeBetweenRequests.Restart();
             try {
                 var request = context.Request;
                 if (request.HttpMethod != "POST") {
