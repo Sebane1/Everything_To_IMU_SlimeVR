@@ -17,6 +17,10 @@
 #include <ogc/disc_io.h>    // for DISC_INTERFACE
 #include <ogc/usbstorage.h> // for __io_usbstorage
 #include <ogc/card.h>       // if you also need memory card access
+#include <ogcsys.h>
+#include <unistd.h> 
+
+
 #ifndef INADDR_NONE
 #define INADDR_NONE 0xFFFFFFFF
 #endif
@@ -278,6 +282,7 @@ int main(int argc, char** argv) {
 		int total_len = (ptr - full_buffer);
 		if (total_len > 0) {
 			send_http_post_binary(full_buffer, total_len);
+			usleep(5000);
 		}
 	}
 }
