@@ -358,7 +358,7 @@ int initialize_socket() {
 
 	persistent_sock = net_socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 	int flag = 1;
-	setsockopt(persistent_sock, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
+	net_setsockopt(persistent_sock, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
 	if (persistent_sock < 0) {
 		printf("Failed to create socket\n");
 		return -1;
