@@ -49,7 +49,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     _index = index;
                     _id = index + 1;
                     _firmwareId = "";
-                    _rememberedStringId = ForwardedWiimoteManager.WiimoteIds[index];
+                    _rememberedStringId = index.ToString();
                     macSpoof = HashUtility.CalculateMD5Hash(_rememberedStringId + "Wiimote_Tracker");
                     _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.Wiimote);
                     _firmwareId = "Wiimote_Tracker" + _rememberedStringId;
@@ -123,7 +123,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     float finalY = !_nunchuck ? _euler.Y : _connectedWiimote.Euler.Y;
                     float finalZ = 0;
 
-                    await udpHandler.SetSensorBattery(value.Value.BatteryLevel / 255f);
+                    await udpHandler.SetSensorBattery(Math.Clamp(value.Value.BatteryLevel / 128f,0f,100f));
                     await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion(), 0);
 
                     if (value.Value.NunchukConnected != 0) {

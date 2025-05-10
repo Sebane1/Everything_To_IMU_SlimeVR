@@ -13,10 +13,8 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
         UdpClient udpClient;
         int handshakeCount = 1000;
         bool _active = false;
-        private bool _shouldSendHeartbeat = true;
 
         public bool Active { get => _active; set => _active = value; }
-        public bool ShouldSendHeartbeat { get => _shouldSendHeartbeat; set => _shouldSendHeartbeat = value; }
 
         public UDPHandler(string trackerLabel, byte[] macAddress, int supportedSensorCount) {
             _macAddress = macAddress;
@@ -48,7 +46,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
         }
         public void Heartbeat() {
             Task.Run(async () => {
-                while (_shouldSendHeartbeat) {
+                while (true) {
                     if (_active) {
                         await udpClient.SendAsync(packetBuilder.HeartBeat);
                     }
@@ -69,34 +67,28 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
 
         public async Task<bool> SetSensorRotation(Quaternion rotation, byte trackerId) {
             await udpClient.SendAsync(packetBuilder.BuildRotationPacket(rotation, trackerId));
-            _shouldSendHeartbeat = false;
             return true;
         }
         public async Task<bool> SetSensorAcceleration(Vector3 acceleration, byte trackerId) {
             await udpClient.SendAsync(packetBuilder.BuildAccelerationPacket(acceleration, trackerId));
-            _shouldSendHeartbeat = false;
             return true;
         }
         public async Task<bool> SetSensorGyro(Vector3 gyro, byte trackerId) {
             await udpClient.SendAsync(packetBuilder.BuildGyroPacket(gyro, trackerId));
-            _shouldSendHeartbeat = false;
             return true;
         }
         public async Task<bool> SetSensorFlexData(float flexResistance, byte trackerId) {
             await udpClient.SendAsync(packetBuilder.BuildFlexDataPacket(flexResistance, trackerId));
-            _shouldSendHeartbeat = false;
             return true;
         }
 
         public async Task<bool> SendButton() {
             await udpClient.SendAsync(packetBuilder.BuildButtonPushedPacket());
-            _shouldSendHeartbeat = false;
             return true;
         }
 
         public async Task<bool> SendPacket(byte[] packet) {
             await udpClient.SendAsync(packet);
-            _shouldSendHeartbeat = false;
             return true;
         }
 
@@ -113,7 +105,6 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
         }
 
         public async Task<bool> SetSensorBattery(float battery) {
-            _shouldSendHeartbeat = false;
             await udpClient.SendAsync(packetBuilder.BuildBatteryLevelPacket(battery));
             return true;
         }

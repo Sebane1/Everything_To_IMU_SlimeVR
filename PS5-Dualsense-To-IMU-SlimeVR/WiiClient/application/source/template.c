@@ -161,8 +161,6 @@ void update_player_map() {
 int main(int argc, char** argv) {
 	VIDEO_Init();
 	WPAD_Init();
-	WPAD_SetIdleTimeout(0);
-
 	rmode = VIDEO_GetPreferredMode(NULL);
 	xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
 
@@ -209,8 +207,7 @@ int main(int argc, char** argv) {
 
 	s16 wiimote_offset = 512;
 	s16 nunchuck_offset = 512;
-	static u32 frame_counter = 0;
-	frame_counter++;
+	WPAD_SetIdleTimeout(36000);
 
 	while (1) {
 		WPAD_ScanPads();
@@ -218,11 +215,6 @@ int main(int argc, char** argv) {
 
 		uint8_t full_buffer[MAX_WIIMOTES * DATA_PER_CONTROLLER];
 		uint8_t* ptr = full_buffer;
-
-		if (frame_counter >= 300) { // ~5 seconds at 60fps
-			WPAD_GetStatus();
-			frame_counter = 0;
-		}
 
 		for (uint32_t i = 0; i < MAX_WIIMOTES; i++) {
 			if (player_map[i] < 0) continue;

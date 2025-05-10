@@ -20,7 +20,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public static ConcurrentDictionary<string, WiimotePacket> Wiimotes { get => _wiimotes; set => _wiimotes = value; }
-        public static List<string> WiimoteIds { get => _wiimoteIds; set => _wiimoteIds = value; }
 
         async void Initialize() {
             HttpListener listener = new HttpListener();
@@ -61,6 +60,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         // Invalid or corrupted data
                         context.Response.StatusCode = 400;
                         context.Response.Close();
+                        LegacyClientDetected?.Invoke(this, EventArgs.Empty);
                         continue;
                     }
 
@@ -74,9 +74,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         string key = $"{clientIp}:{packet.Id}";
 
                         _wiimotes[key] = packet;
-                        if (!_wiimoteIds.Contains(key)) {
-                            _wiimoteIds.Add(key);
-                        }
                     }
 
                     context.Response.StatusCode = 200;
