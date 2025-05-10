@@ -2,87 +2,113 @@
 using System.Runtime.InteropServices;
 using System.Collections.Concurrent;
 using System.Numerics;
-using System.Linq;
+using System.Threading.Channels;
+using System.Diagnostics;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class ForwardedWiimoteManager {
-        private static ConcurrentDictionary<string, WiimotePacket> _wiimotes = new ConcurrentDictionary<string, WiimotePacket>();
-        private static List<string> _wiimoteIds = new List<string>();
+        private static ConcurrentDictionary<string, WiimotePacket> _wiimotes = new();
+        private static List<string> _wiimoteIds = new();
         public static EventHandler NewPacketReceived;
         public static EventHandler LegacyClientDetected;
-        // Calibration tracking
+
         private const int CalibrationSamples = 100;
         private ConcurrentDictionary<string, List<Vector3>> _calibrationSamples = new();
         private ConcurrentDictionary<string, (Vector3 center, float scale)> _calibrationData = new();
 
+        private readonly Channel<HttpListenerContext> _contextQueue = Channel.CreateUnbounded<HttpListenerContext>();
+
         public ForwardedWiimoteManager() {
-            Task.Run(() => Initialize());
+            Task.Run(() => StartListener());
+            Task.Run(() => ProcessQueue());
         }
 
-        public static ConcurrentDictionary<string, WiimotePacket> Wiimotes { get => _wiimotes; set => _wiimotes = value; }
+        public static ConcurrentDictionary<string, WiimotePacket> Wiimotes => _wiimotes;
 
-        async void Initialize() {
-            HttpListener listener = new HttpListener();
+        async Task StartListener() {
+            HttpListener listener = new();
             listener.Prefixes.Add("http://+:9909/");
             listener.Start();
             Console.WriteLine("HTTP Listener started on port 9909...");
 
             while (true) {
                 try {
-                    HttpListenerContext context = await listener.GetContextAsync();
-                    HttpListenerRequest request = context.Request;
-
-                    if (request.HttpMethod != "POST") {
-                        context.Response.StatusCode = 405;
-                        context.Response.Close();
-                        continue;
-                    }
-
-                    using var bodyStream = request.InputStream;
-                    using var ms = new MemoryStream();
-                    await bodyStream.CopyToAsync(ms);
-                    byte[] data = ms.ToArray();
-
-                    int numPackets = 0;
-                    int packetLength = 0;
-                    if (data.Length % 38 == 0) {
-                        // Current correct format
-                        numPackets = data.Length / 38;
-                        packetLength = 38;
-                        // proceed normally...
-                    } else if (data.Length % 37 == 0) {
-                        // Old format detected
-                        Console.WriteLine("⚠️  Legacy client detected: using old 37-byte packet format.");
-                        numPackets = data.Length / 37;
-                        packetLength = 37;
-                        LegacyClientDetected?.Invoke(this, EventArgs.Empty);
-                    } else {
-                        // Invalid or corrupted data
-                        context.Response.StatusCode = 400;
-                        context.Response.Close();
-                        LegacyClientDetected?.Invoke(this, EventArgs.Empty);
-                        continue;
-                    }
-
-                    string clientIp = context.Request.RemoteEndPoint?.Address.ToString() ?? "Unknown";
-
-                    for (int i = 0; i < numPackets; i++) {
-                        byte[] packetBytes = new byte[packetLength];
-                        Buffer.BlockCopy(data, i * packetLength, packetBytes, 0, packetLength);
-
-                        WiimotePacket packet = ParsePacket(packetBytes);
-                        string key = $"{clientIp}:{packet.Id}";
-
-                        _wiimotes[key] = packet;
-                    }
-
-                    context.Response.StatusCode = 200;
-                    context.Response.OutputStream.Write(new byte[] { }, 0, 0);
-                    context.Response.Close();
-                    NewPacketReceived?.Invoke(this, EventArgs.Empty);
+                    var context = await listener.GetContextAsync();
+                    await _contextQueue.Writer.WriteAsync(context);
                 } catch (Exception ex) {
                     Console.WriteLine($"Listener error: {ex.Message}");
                 }
+            }
+        }
+
+        async Task ProcessQueue() {
+            await foreach (var context in _contextQueue.Reader.ReadAllAsync()) {
+                _ = Task.Run(() => HandleRequest(context));
+            }
+        }
+
+        async Task HandleRequest(HttpListenerContext context) {
+            var clientIp = context.Request.RemoteEndPoint?.Address.ToString() ?? "Unknown";
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+            try {
+                var request = context.Request;
+                if (request.HttpMethod != "POST") {
+                    context.Response.StatusCode = 405;
+                    context.Response.Close();
+                    return;
+                }
+
+                if (request.ContentLength64 <= 0 || request.ContentLength64 > 4096) {
+                    context.Response.StatusCode = 411;
+                    context.Response.Close();
+                    return;
+                }
+
+                byte[] data = new byte[request.ContentLength64];
+                int bytesRead = 0;
+                while (bytesRead < data.Length) {
+                    int read = await request.InputStream.ReadAsync(data, bytesRead, data.Length - bytesRead);
+                    if (read == 0) break;
+                    bytesRead += read;
+                }
+
+                stopwatch.Stop();
+                int packetLength = 0;
+                int numPackets = 0;
+                if (data.Length % 38 == 0) {
+                    numPackets = data.Length / 38;
+                    packetLength = 38;
+                } else if (data.Length % 37 == 0) {
+                    numPackets = data.Length / 37;
+                    packetLength = 37;
+                    Console.WriteLine("⚠️  Legacy client detected.");
+                    LegacyClientDetected?.Invoke(this, EventArgs.Empty);
+                } else {
+                    context.Response.StatusCode = 400;
+                    context.Response.Close();
+                    LegacyClientDetected?.Invoke(this, EventArgs.Empty);
+                    return;
+                }
+
+                for (int i = 0; i < numPackets; i++) {
+                    byte[] packetBytes = new byte[packetLength];
+                    Buffer.BlockCopy(data, i * packetLength, packetBytes, 0, packetLength);
+                    WiimotePacket packet = ParsePacket(packetBytes);
+                    string key = $"{clientIp}:{packet.Id}";
+                    _wiimotes[key] = packet;
+                }
+
+                context.Response.StatusCode = 200;
+                await context.Response.OutputStream.FlushAsync(); // Just to be safe
+                context.Response.Close();
+                NewPacketReceived?.Invoke(this, EventArgs.Empty);
+            } catch (Exception ex) {
+                Console.WriteLine($"❌ Handler error from {clientIp}: {ex.Message}");
+                try {
+                    context.Response.StatusCode = 500;
+                    context.Response.Close();
+                } catch { /* ignored */ }
             }
         }
 
@@ -109,6 +135,5 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             public byte NunchukConnected;
             public byte BatteryLevel;
         }
-
     }
 }

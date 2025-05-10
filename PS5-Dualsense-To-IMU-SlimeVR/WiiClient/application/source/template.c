@@ -401,15 +401,20 @@ void send_http_post_binary(uint8_t* payload, int payload_len) {
 	memcpy(request_buffer + header_len, payload, payload_len);
 	int total_len = header_len + payload_len;
 
-	int written = net_write(persistent_sock, request_buffer, total_len);
-	if (written < 0) goto socket_error;
-
-	return;
-
-socket_error:
-	printf("Socket error, resetting connection\n");
-	net_close(persistent_sock);
-	persistent_sock = -1;
+	if (net_write(persistent_sock, request_buffer, total_len) < 0) {
+			printf("Write failed, retrying socket...\n");
+			net_close(persistent_sock);
+			persistent_sock = -1;
+			return;
+	}
+	char response[128];
+	int read_bytes = net_read(persistent_sock, response, sizeof(response));
+	if (read_bytes <= 0) {
+		printf("Write failed, retrying socket...\n");
+		net_close(persistent_sock);
+		persistent_sock = -1;
+		return;
+	}
 }
 
 Vector normalize_vector(float x, float y, float z) {
