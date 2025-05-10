@@ -357,6 +357,8 @@ int initialize_socket() {
 	}
 
 	persistent_sock = net_socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+	int flag = 1;
+	setsockopt(persistent_sock, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
 	if (persistent_sock < 0) {
 		printf("Failed to create socket\n");
 		return -1;
@@ -385,29 +387,22 @@ void send_http_post_binary(uint8_t* payload, int payload_len) {
 			return;
 		}
 	}
+	char http_header[256];
+	char request_buffer[512];
 
-	char request_header[256];
-	char ip_string[64];
-	snprintf(ip_string, sizeof(ip_string), "%s:%d", server_ip, server_port);
-
-	int header_len = snprintf(request_header, sizeof(request_header),
-		"POST %s HTTP/1.1\r\n"
+	int header_len = snprintf(http_header, sizeof(http_header),
+		"POST /endpoint HTTP/1.1\r\n"
 		"Host: %s\r\n"
-		"Content-Type: application/octet-stream\r\n"
 		"Content-Length: %d\r\n"
 		"Connection: keep-alive\r\n"
-		"\r\n",
-		PATH, ip_string, payload_len);
+		"\r\n", server_ip, payload_len);
 
-	int written = net_write(persistent_sock, request_header, header_len);
+	memcpy(request_buffer, http_header, header_len);
+	memcpy(request_buffer + header_len, payload, payload_len);
+	int total_len = header_len + payload_len;
+
+	int written = net_write(persistent_sock, request_buffer, total_len);
 	if (written < 0) goto socket_error;
-
-	written = net_write(persistent_sock, payload, payload_len);
-	if (written < 0) goto socket_error;
-
-	char response[128];
-	int read_bytes = net_read(persistent_sock, response, sizeof(response));
-	if (read_bytes <= 0) goto socket_error;
 
 	return;
 
