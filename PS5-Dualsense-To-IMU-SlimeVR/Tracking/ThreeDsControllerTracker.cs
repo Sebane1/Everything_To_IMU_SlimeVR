@@ -147,6 +147,10 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             return -_rotation.QuaternionToEuler();
         }
 
+        public void Identify() {
+            //throw new NotImplementedException();
+        }
+
         public string Debug { get => _debug; set => _debug = value; }
         public bool Ready { get => _ready; set => _ready = value; }
         public bool Disconnected { get => _disconnected; set => _disconnected = value; }

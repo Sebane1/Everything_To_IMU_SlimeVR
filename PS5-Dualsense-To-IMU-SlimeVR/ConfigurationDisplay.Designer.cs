@@ -46,6 +46,7 @@
             label2 = new Label();
             label3 = new Label();
             memoryResetTimer = new System.Windows.Forms.Timer(components);
+            indentifyButton = new Button();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
@@ -95,6 +96,7 @@
             // 
             // settingsPage
             // 
+            settingsPage.Controls.Add(indentifyButton);
             settingsPage.Controls.Add(yawForSimulatedTracker);
             settingsPage.Controls.Add(rediscoverTrackerButton);
             settingsPage.Controls.Add(trackerConfigLabel);
@@ -111,7 +113,7 @@
             // yawForSimulatedTracker
             // 
             yawForSimulatedTracker.FormattingEnabled = true;
-            yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw For Simulated Thighs (No Drift)", "Waist Yaw For Simulated Thighs (Waist Tracker Drift)", "Tracker Yaw For Simulated Thighs (Can Drift)" });
+            yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)" });
             yawForSimulatedTracker.Location = new Point(10, 57);
             yawForSimulatedTracker.Name = "yawForSimulatedTracker";
             yawForSimulatedTracker.Size = new Size(319, 23);
@@ -143,7 +145,7 @@
             debugPage.Location = new Point(4, 24);
             debugPage.Name = "debugPage";
             debugPage.Padding = new Padding(3);
-            debugPage.Size = new Size(335, 503);
+            debugPage.Size = new Size(451, 503);
             debugPage.TabIndex = 1;
             debugPage.Text = "Debug";
             debugPage.UseVisualStyleBackColor = true;
@@ -161,7 +163,7 @@
             errorLog.Controls.Add(errorLogText);
             errorLog.Location = new Point(4, 24);
             errorLog.Name = "errorLog";
-            errorLog.Size = new Size(335, 503);
+            errorLog.Size = new Size(451, 503);
             errorLog.TabIndex = 2;
             errorLog.Text = "Error Log";
             errorLog.UseVisualStyleBackColor = true;
@@ -277,6 +279,16 @@
             memoryResetTimer.Interval = 3600000;
             memoryResetTimer.Tick += memoryResetTimer_Tick;
             // 
+            // indentifyButton
+            // 
+            indentifyButton.Location = new Point(133, 92);
+            indentifyButton.Name = "indentifyButton";
+            indentifyButton.Size = new Size(141, 23);
+            indentifyButton.TabIndex = 6;
+            indentifyButton.Text = "Rumble Identication";
+            indentifyButton.UseVisualStyleBackColor = true;
+            indentifyButton.Click += identifyButton_Click;
+            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
@@ -335,5 +347,6 @@
         private Label label3;
         private Label label4;
         private System.Windows.Forms.Timer memoryResetTimer;
+        private Button indentifyButton;
     }
 }

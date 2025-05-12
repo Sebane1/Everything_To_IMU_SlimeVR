@@ -35,7 +35,6 @@ static bool dummy_clearStatus(void) { return false; }
 static bool dummy_shutdown(void) { return false; }
 static bool dummy_readSectors(sec_t sector, sec_t numSectors, void* buffer) { return false; }
 static bool dummy_writeSectors(sec_t sector, sec_t numSectors, const void* buffer) { return false; }
-void WPAD_SetLedState(s32 chan, u8 led);
 
 const DISC_INTERFACE __io_gcsda = {
 	.features = 0,
@@ -84,11 +83,10 @@ static int server_port = DEFAULT_SERVER_PORT;
 // -------------------
 
 static int persistent_sock = -1;
-#define MAX_PLAYERS 4
 #define MAX_WIIMOTES 4
-
-int player_map[MAX_WIIMOTES] = { -1, -1, -1, -1 };
 bool formatSet[MAX_WIIMOTES] = { false, false, false, false };
+bool wasVibrating[MAX_WIIMOTES] = { false, false, false, false };
+char vib_response[128] = { 0, 0, 0, 0 };
 
 static void* xfb = NULL;
 static GXRModeObj* rmode = NULL;
@@ -110,64 +108,6 @@ Vector quaternion_to_euler(Quaternion q);
 void get_app_directory(char* out_path, size_t out_size, char* argv0);
 void load_config(const char* app_dir);
 bool try_load_config();
-void update_player_map();
-
-void update_player_map() {
-	u32 type;
-	bool connected[MAX_WIIMOTES] = { false };
-
-	for (int i = 0; i < MAX_WIIMOTES; ++i) {
-		s32 status = WPAD_Probe(i, &type);
-		if (status == WPAD_ERR_NONE) {
-			connected[i] = true;  // Mark controller as connected
-
-			if (player_map[i] == -1) {  // If no player is assigned
-				// Find the next available player number
-				for (int next_player = 0; next_player < MAX_WIIMOTES; ++next_player) {
-					bool taken = false;
-					for (int j = 0; j < MAX_WIIMOTES; ++j) {
-						if (player_map[j] == next_player) {
-							taken = true;
-							break;
-						}
-					}
-					if (!taken) {
-						player_map[i] = next_player;
-						break;
-					}
-				}
-			}
-		}
-		else {
-			// Mark the controller as disconnected and reset player assignment
-			player_map[i] = -1;
-		}
-	}
-
-	// Ensure previously connected controllers remain correctly assigned
-	for (int i = 0; i < MAX_WIIMOTES; ++i) {
-		if (connected[i] && player_map[i] == -1) {
-			// Assign player number if no player number was assigned
-			for (int next_player = 0; next_player < MAX_WIIMOTES; ++next_player) {
-				bool taken = false;
-				for (int j = 0; j < MAX_WIIMOTES; ++j) {
-					if (player_map[j] == next_player) {
-						taken = true;
-						break;
-					}
-				}
-				if (!taken) {
-					player_map[i] = next_player;
-					break;
-				}
-			}
-		}
-	}
-}
-
-
-
-
 
 int main(int argc, char** argv) {
 	SYS_Init();
@@ -220,69 +160,70 @@ int main(int argc, char** argv) {
 	s16 wiimote_offset = 512;
 	s16 nunchuck_offset = 512;
 	WPAD_SetIdleTimeout(36000);
+	uint8_t full_buffer[MAX_WIIMOTES * DATA_PER_CONTROLLER];
+	uint8_t* ptr;
 	while (1) {
 		u64 start = gettime();
 		WPAD_ScanPads();
-		update_player_map();
-		uint8_t full_buffer[MAX_WIIMOTES * DATA_PER_CONTROLLER];
-		uint8_t* ptr = full_buffer;
-
+		ptr = full_buffer;
 		for (uint32_t i = 0; i < MAX_WIIMOTES; i++) {
-			if (player_map[i] < 0) continue;
-			WPADData* wpad_data = WPAD_Data(i);
-			if (!wpad_data) continue;
+			u32 type;
+			if (WPAD_Probe(i, &type) == WPAD_ERR_NONE) {
+				WPADData* wpad_data = WPAD_Data(i);
+				if (!wpad_data) continue;
 
-			if (!formatSet[i]) {
-				WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC);
-				formatSet[i] = true;
+				if (!formatSet[i]) {
+					WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC);
+					formatSet[i] = true;
+				}
+
+				u32 pressed = WPAD_ButtonsDown(i);
+				if (pressed & WPAD_BUTTON_HOME) {
+					exit(0);
+				}
+
+				s16 x = wpad_data->accel.x;
+				s16 y = wpad_data->accel.y;
+				s16 z = wpad_data->accel.z;
+
+				u8 nunchuk_connected = 0;
+				s16 nax = 0, nay = 0, naz = 0;
+				if (wpad_data->exp.type == WPAD_EXP_NUNCHUK) {
+					nunchuk_connected = 1;
+					nax = wpad_data->exp.nunchuk.accel.x;
+					nay = wpad_data->exp.nunchuk.accel.y;
+					naz = wpad_data->exp.nunchuk.accel.z;
+				}
+
+				Quaternion wm_quat = quat_from_gravity((float)x, (float)y, (float)z, wiimote_offset, wiimote_offset, wiimote_offset, 200.0f);
+				Quaternion nc_quat = quat_from_gravity((float)nax, (float)nay, (float)naz, nunchuck_offset, nunchuck_offset, nunchuck_offset, 200.0f);
+
+				uint32_t id_le = to_little_endian_u32(i);
+				memcpy(ptr, &id_le, 4); ptr += 4;
+
+				float_to_little_endian(wm_quat.w, ptr); ptr += 4;
+				float_to_little_endian(wm_quat.x, ptr); ptr += 4;
+				float_to_little_endian(wm_quat.y, ptr); ptr += 4;
+				float_to_little_endian(wm_quat.z, ptr); ptr += 4;
+
+				if (nunchuk_connected) {
+					float_to_little_endian(nc_quat.w, ptr); ptr += 4;
+					float_to_little_endian(nc_quat.x, ptr); ptr += 4;
+					float_to_little_endian(nc_quat.y, ptr); ptr += 4;
+					float_to_little_endian(nc_quat.z, ptr); ptr += 4;
+				}
+				else {
+					memset(ptr, 0, 16);
+					ptr += 16;
+				}
+
+				*ptr = nunchuk_connected;
+				ptr++;
+
+				u8 battery = WPAD_BatteryLevel(i);
+				*ptr = battery;
+				ptr++;
 			}
-
-			u32 pressed = WPAD_ButtonsDown(i);
-			if (pressed & WPAD_BUTTON_HOME) {
-				exit(0);
-			}
-
-			s16 x = wpad_data->accel.x;
-			s16 y = wpad_data->accel.y;
-			s16 z = wpad_data->accel.z;
-
-			u8 nunchuk_connected = 0;
-			s16 nax = 0, nay = 0, naz = 0;
-			if (wpad_data->exp.type == WPAD_EXP_NUNCHUK) {
-				nunchuk_connected = 1;
-				nax = wpad_data->exp.nunchuk.accel.x;
-				nay = wpad_data->exp.nunchuk.accel.y;
-				naz = wpad_data->exp.nunchuk.accel.z;
-			}
-
-			Quaternion wm_quat = quat_from_gravity((float)x, (float)y, (float)z, wiimote_offset, wiimote_offset, wiimote_offset, 200.0f);
-			Quaternion nc_quat = quat_from_gravity((float)nax, (float)nay, (float)naz, nunchuck_offset, nunchuck_offset, nunchuck_offset, 200.0f);
-
-			uint32_t id_le = to_little_endian_u32(player_map[i]);
-			memcpy(ptr, &id_le, 4); ptr += 4;
-
-			float_to_little_endian(wm_quat.w, ptr); ptr += 4;
-			float_to_little_endian(wm_quat.x, ptr); ptr += 4;
-			float_to_little_endian(wm_quat.y, ptr); ptr += 4;
-			float_to_little_endian(wm_quat.z, ptr); ptr += 4;
-
-			if (nunchuk_connected) {
-				float_to_little_endian(nc_quat.w, ptr); ptr += 4;
-				float_to_little_endian(nc_quat.x, ptr); ptr += 4;
-				float_to_little_endian(nc_quat.y, ptr); ptr += 4;
-				float_to_little_endian(nc_quat.z, ptr); ptr += 4;
-			}
-			else {
-				memset(ptr, 0, 16);
-				ptr += 16;
-			}
-
-			*ptr = nunchuk_connected;
-			ptr++;
-
-			u8 battery = WPAD_BatteryLevel(i);
-			*ptr = battery;
-			ptr++;
 		}
 
 		// Send once per frame
@@ -428,14 +369,58 @@ void send_http_post_binary(uint8_t* payload, int payload_len) {
 		return;
 	}
 
-	// Optional: discard response
-	char response[128];
-	int read_bytes = net_read(persistent_sock, response, sizeof(response));
-	if (read_bytes <= 0) {
+	char header_buf[1024];
+	int response_header_len = 0;
+
+	// Read until we find the double CRLF that marks the end of headers
+	while (response_header_len < sizeof(header_buf) - 1) {
+		int r = net_read(persistent_sock, &header_buf[response_header_len], 1);
+		if (r <= 0) {
+			printf("Failed to read HTTP headers.\n");
+			net_close(persistent_sock);
+			persistent_sock = -1;
+			return;
+		}
+
+		response_header_len += r;
+		header_buf[response_header_len] = '\0'; // Null-terminate so strstr works
+
+		// End of headers found?
+		if (strstr(header_buf, "\r\n\r\n")) {
+			break;
+		}
+	}
+
+	// Now read exactly 4 bytes of vibration data
+	int total_read = 0;
+	while (total_read < 4) {
+		int r = net_read(persistent_sock, &vib_response[total_read], 4 - total_read);
+		if (r <= 0) {
+			printf("Failed to read vibration data.\n");
+			net_close(persistent_sock);
+			persistent_sock = -1;
+			return;
+		}
+		total_read += r;
+	}
+
+	if (total_read <= 0) {
 		printf("Read failed, closing socket...\n");
 		net_close(persistent_sock);
 		persistent_sock = -1;
 		return;
+	}
+	else {
+		for (int i = 0; i < 4; i++) {
+			u32 type;
+			if (WPAD_Probe(i, &type) == WPAD_ERR_NONE) {
+				bool vibrationState = vib_response[i] == 1;
+				if (vibrationState || wasVibrating[i]) {
+					WPAD_Rumble(i, vibrationState);
+					wasVibrating[i] = vibrationState;
+				}
+			}
+		}
 	}
 }
 

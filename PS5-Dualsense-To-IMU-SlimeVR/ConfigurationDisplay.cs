@@ -241,5 +241,11 @@ namespace Everything_To_IMU_SlimeVR {
             //Process.Start(resetPath.Replace(".dll", ".exe"));
             //Application.Exit();
         }
+
+        private void identifyButton_Click(object sender, EventArgs e) {
+            if (_currentTracker != null) {
+                _currentTracker.Identify();
+            }
+        }
     }
 }

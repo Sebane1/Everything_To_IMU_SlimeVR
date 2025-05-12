@@ -12,5 +12,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         void Rediscover();
         Vector3 GetCalibration();
+
+        void Identify();
     }
 }

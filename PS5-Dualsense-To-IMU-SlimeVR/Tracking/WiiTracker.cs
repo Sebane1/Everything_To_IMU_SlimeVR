@@ -123,7 +123,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     float finalY = !_nunchuck ? _euler.Y : _connectedWiimote.Euler.Y;
                     float finalZ = 0;
 
-                    await udpHandler.SetSensorBattery(Math.Clamp(value.Value.BatteryLevel / 128f,0f,100f));
+                    await udpHandler.SetSensorBattery(value.Value.BatteryLevel / 255);
                     await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion(), 0);
 
                     if (value.Value.NunchukConnected != 0) {
@@ -191,6 +191,14 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         public Vector3 GetCalibration() {
             throw new NotImplementedException();
+        }
+
+        public void Identify() {
+            Task.Run(() => {
+                ForwardedWiimoteManager.RumbleState[_index] = 1;
+                Thread.Sleep(300);
+                ForwardedWiimoteManager.RumbleState[_index] = 0;
+            });
         }
 
         public string Debug { get => _debug; set => _debug = value; }

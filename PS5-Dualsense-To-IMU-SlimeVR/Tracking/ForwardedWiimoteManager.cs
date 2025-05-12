@@ -8,6 +8,8 @@ using System.Diagnostics;
 namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class ForwardedWiimoteManager {
         private static ConcurrentDictionary<string, WiimotePacket> _wiimotes = new();
+        private static byte[] _rumbleState = new byte[4] { 0, 0, 0, 0 };
+
         private static List<string> _wiimoteIds = new();
         public static EventHandler NewPacketReceived;
         public static EventHandler LegacyClientDetected;
@@ -26,6 +28,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public static ConcurrentDictionary<string, WiimotePacket> Wiimotes => _wiimotes;
+
+        public static byte[] RumbleState { get => _rumbleState; set => _rumbleState = value; }
 
         async Task StartListener() {
             HttpListener listener = new();
@@ -52,7 +56,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         async Task HandleRequest(HttpListenerContext context) {
             var clientIp = context.Request.RemoteEndPoint?.Address.ToString() ?? "Unknown";
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            Debug.WriteLine("Message received, last message received " + _timeBetweenRequests.ElapsedMilliseconds + "ms ago.");
             _timeBetweenRequests.Restart();
             try {
                 var request = context.Request;
@@ -89,6 +92,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     LegacyClientDetected?.Invoke(this, EventArgs.Empty);
                 } else {
                     context.Response.StatusCode = 400;
+                    await context.Response.OutputStream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
+                    await context.Response.OutputStream.FlushAsync(); // Just to be safe
                     context.Response.Close();
                     LegacyClientDetected?.Invoke(this, EventArgs.Empty);
                     return;
@@ -101,8 +106,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     string key = $"{clientIp}:{packet.Id}";
                     _wiimotes[key] = packet;
                 }
-
                 context.Response.StatusCode = 200;
+                context.Response.ContentLength64 = 4;
+                await context.Response.OutputStream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
                 await context.Response.OutputStream.FlushAsync(); // Just to be safe
                 context.Response.Close();
                 NewPacketReceived?.Invoke(this, EventArgs.Empty);
@@ -110,6 +116,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 Console.WriteLine($"❌ Handler error from {clientIp}: {ex.Message}");
                 try {
                     context.Response.StatusCode = 500;
+                    await context.Response.OutputStream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
+                    await context.Response.OutputStream.FlushAsync(); // Just to be safe
                     context.Response.Close();
                 } catch { /* ignored */ }
             }
