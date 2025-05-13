@@ -126,7 +126,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     float finalY = !_nunchuck ? _euler.Y : _connectedWiimote.Euler.Y;
                     float finalZ = 0;
 
-                    await udpHandler.SetSensorBattery(value.Value.BatteryLevel / 255f);
+                    await udpHandler.SetSensorBattery(value.Value.BatteryLevel / 200f);
                     await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion(), 0);
 
                     if (value.Value.NunchukConnected != 0) {

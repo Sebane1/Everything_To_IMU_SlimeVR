@@ -11,16 +11,14 @@ namespace AxSlime.Osc {
             {
                 { "VestFront", [HapticNodeBinding.Chest, HapticNodeBinding.Hips] },
                 { "VestBack", [HapticNodeBinding.Chest, HapticNodeBinding.Hips] },
-                { "ArmLeft", [HapticNodeBinding.LeftUpperArm, HapticNodeBinding.LeftForeArm] },
-                { "ArmRight", [HapticNodeBinding.RightUpperArm, HapticNodeBinding.RightForeArm] },
-                {
-                    "FootL",
-                    [HapticNodeBinding.LeftFoot, HapticNodeBinding.LeftCalf, HapticNodeBinding.LeftThigh]
-                },
-                {
-                    "FootR",
-                    [HapticNodeBinding.RightFoot, HapticNodeBinding.RightCalf, HapticNodeBinding.RightThigh]
-                },
+                { "ArmL", [HapticNodeBinding.LeftUpperArm, HapticNodeBinding.LeftForeArm] },
+                { "ArmR", [HapticNodeBinding.RightUpperArm, HapticNodeBinding.RightForeArm] },
+                { "FootL", [HapticNodeBinding.LeftFoot] },
+                { "CalfL", [HapticNodeBinding.LeftCalf]},
+                { "ThighL", [HapticNodeBinding.LeftThigh]},
+                { "FootR",  [HapticNodeBinding.RightFoot]},
+                { "CalfR",[HapticNodeBinding.RightCalf]},
+                { "ThighR", [HapticNodeBinding.RightThigh] },
                 { "HandLeft", [HapticNodeBinding.LeftHand] },
                 { "HandRight", [HapticNodeBinding.RightHand] },
                 { "Head", [HapticNodeBinding.Head] },
