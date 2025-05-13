@@ -1,6 +1,9 @@
-﻿namespace Everything_To_IMU_SlimeVR.Tracking {
+﻿using AxSlime.Osc;
+
+namespace Everything_To_IMU_SlimeVR.Tracking {
     public class GenericControllerTrackerManager {
-        private static List<GenericControllerTracker> _trackers = new List<GenericControllerTracker>();
+        private static List<IBodyTracker> _allTrackers = new List<IBodyTracker>();
+        private static List<GenericControllerTracker> _trackersBluetooth = new List<GenericControllerTracker>();
         private static List<ThreeDsControllerTracker> _trackers3ds = new List<ThreeDsControllerTracker>();
         private static List<WiiTracker> _trackersWiimote = new List<WiiTracker>();
         private static List<WiiTracker> _trackersNunchuck = new List<WiiTracker>();
@@ -24,10 +27,12 @@
             };
         private static int _controllerCount;
         private Configuration _configuration;
+        private OscHandler _oscHandler;
         private int _pollingRatePerTracker;
 
         public GenericControllerTrackerManager(Configuration configuration) {
             _configuration = configuration;
+            _oscHandler = new OscHandler();
             int handshakeDelay = _configuration.SwitchingSessions ? 10 : 100;
             Task.Run(async () => {
                 while (!disposed) {
@@ -37,7 +42,7 @@
                         for (int i = 0; i < _controllerCount; i++) {
                             // Track whether or not we've seen this controller before this session.
                             if (!_trackerInfo.ContainsKey(i)) {
-                                _trackerInfo[i] = new KeyValuePair<int, bool>(_trackers.Count, false);
+                                _trackerInfo[i] = new KeyValuePair<int, bool>(_trackersBluetooth.Count, false);
                             }
 
                             // Get this controllers information.
@@ -56,7 +61,8 @@
                                 }
                                 newTracker.SimulateThighs = _configuration.TrackerConfigs[i].SimulatesThighs;
                                 newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
-                                _trackers.Add(newTracker);
+                                _trackersBluetooth.Add(newTracker);
+                                _allTrackers.Add(newTracker);
                                 _trackerInfo[i] = new KeyValuePair<int, bool>(info.Key, true);
                             }
                             Thread.Sleep(handshakeDelay);
@@ -84,6 +90,7 @@
                                 newTracker.SimulateThighs = _configuration.TrackerConfigs3ds[i].SimulatesThighs;
                                 newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs3ds[i].YawReferenceTypeValue;
                                 _trackers3ds.Add(newTracker);
+                                _allTrackers.Add(newTracker);
                                 _trackerInfo3ds[i] = new KeyValuePair<int, bool>(info.Key, true);
                             }
                             Thread.Sleep(handshakeDelay);
@@ -111,6 +118,7 @@
                                 newTracker.SimulateThighs = _configuration.TrackerConfigWiimote[i].SimulatesThighs;
                                 newTracker.YawReferenceTypeValue = _configuration.TrackerConfigWiimote[i].YawReferenceTypeValue;
                                 _trackersWiimote.Add(newTracker);
+                                _allTrackers.Add(newTracker);
                                 _trackerInfoWiimote[i] = new KeyValuePair<int, bool>(info.Key, true);
                             }
                             Thread.Sleep(handshakeDelay);
@@ -124,13 +132,13 @@
             Task.Run(async () => {
                 while (true) {
                     // Loop through all the controller based trackers.
-                    for (int i = 0; i < _trackers.Count; i++) {
-                        var tracker = _trackers[i];
+                    for (int i = 0; i < _trackersBluetooth.Count; i++) {
+                        var tracker = _trackersBluetooth[i];
                         // Remove tracker if its been disconnected.
                         if (tracker.Disconnected) {
                             var info = _trackerInfo[i];
                             _trackerInfo[i] = new KeyValuePair<int, bool>(info.Key, false);
-                            _trackers.RemoveAt(i);
+                            _trackersBluetooth.RemoveAt(i);
                             i = 0;
                             tracker.Dispose();
                         } else {
@@ -189,7 +197,7 @@
             OnTrackerError.Invoke(sender, e);
         }
 
-        internal static List<GenericControllerTracker> Trackers { get => _trackers; set => _trackers = value; }
+        internal static List<GenericControllerTracker> TrackersBluetooth { get => _trackersBluetooth; set => _trackersBluetooth = value; }
         public static int ControllerCount { get => _controllerCount; set => _controllerCount = value; }
         public int PollingRate { get => pollingRate; set => pollingRate = value; }
         public static bool DebugOpen { get; set; }
@@ -199,5 +207,6 @@
         public static List<WiiTracker> TrackersNunchuck { get => _trackersNunchuck; set => _trackersNunchuck = value; }
         public Dictionary<int, KeyValuePair<int, bool>> TrackerInfoWiimote { get => _trackerInfoWiimote; set => _trackerInfoWiimote = value; }
         public Dictionary<int, KeyValuePair<int, bool>> TrackerInfoNunchuck { get => _trackerInfoNunchuck; set => _trackerInfoNunchuck = value; }
+        public static List<IBodyTracker> AllTrackers { get => _allTrackers; set => _allTrackers = value; }
     }
 }

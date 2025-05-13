@@ -56,7 +56,7 @@ namespace Everything_To_IMU_SlimeVR {
             threeDsDeviceList.Items.Clear();
             wiimoteDeviceList.Items.Clear();
             try {
-                foreach (var item in GenericControllerTrackerManager.Trackers) {
+                foreach (var item in GenericControllerTrackerManager.TrackersBluetooth) {
                     controllerDeviceList.Items.Add("Tracker " + item.Id);
                 }
                 foreach (var item in GenericControllerTrackerManager.Trackers3ds) {
@@ -93,7 +93,7 @@ namespace Everything_To_IMU_SlimeVR {
             var currentIndex = controllerDeviceList.SelectedIndex;
             if (currentIndex >= 0) {
                 _currentTrackerConfig = _configuration.TrackerConfigs[currentIndex];
-                _currentTracker = GenericControllerTrackerManager.Trackers[currentIndex];
+                _currentTracker = GenericControllerTrackerManager.TrackersBluetooth[currentIndex];
             }
             RefreshTracker();
         }
@@ -134,6 +134,9 @@ namespace Everything_To_IMU_SlimeVR {
                 yawForSimulatedTracker.SelectedIndex = (int)_currentTrackerConfig.YawReferenceTypeValue;
                 _currentTracker.YawReferenceTypeValue = _currentTrackerConfig.YawReferenceTypeValue;
 
+                hapticJointAssignment.SelectedIndex = (int)_currentTracker.HapticNodeBinding;
+                _currentTracker.HapticNodeBinding = _currentTrackerConfig.HapticNodeBinding;
+
                 trackerConfigLabel.Text = $"Tracker {_currentTracker.Id} Config";
                 _suppressCheckBoxEvent = false;
                 refreshTimer.Start();
@@ -157,7 +160,7 @@ namespace Everything_To_IMU_SlimeVR {
         }
 
         private void trackerCalibrationButton_Click(object sender, EventArgs e) {
-            foreach (var item in GenericControllerTrackerManager.Trackers) {
+            foreach (var item in GenericControllerTrackerManager.TrackersBluetooth) {
                 item.Recalibrate();
             }
             foreach (var item in GenericControllerTrackerManager.Trackers3ds) {
@@ -245,6 +248,14 @@ namespace Everything_To_IMU_SlimeVR {
         private void identifyButton_Click(object sender, EventArgs e) {
             if (_currentTracker != null) {
                 _currentTracker.Identify();
+            }
+        }
+
+        private void hapticJointAssignment_SelectedIndexChanged(object sender, EventArgs e) {
+            if (!_suppressCheckBoxEvent) {
+                _currentTracker.HapticNodeBinding = (HapticNodeBinding)hapticJointAssignment.SelectedIndex;
+                _currentTrackerConfig.HapticNodeBinding = (HapticNodeBinding)hapticJointAssignment.SelectedIndex;
+                _configuration.SaveConfig();
             }
         }
     }

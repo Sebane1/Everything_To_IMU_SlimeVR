@@ -38,6 +38,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private RotationReferenceType _yawReferenceTypeValue = RotationReferenceType.WaistRotation;
         Stopwatch buttonPressTimer = new Stopwatch();
         WiiTracker _connectedWiimote;
+        private HapticNodeBinding _hapticNodeBinding;
+        private bool isAlreadyVibrating;
+
         public event EventHandler<string> OnTrackerError;
 
         public WiiTracker(int index) {
@@ -123,7 +126,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     float finalY = !_nunchuck ? _euler.Y : _connectedWiimote.Euler.Y;
                     float finalZ = 0;
 
-                    await udpHandler.SetSensorBattery(value.Value.BatteryLevel / 255);
+                    await udpHandler.SetSensorBattery(value.Value.BatteryLevel / 255f);
                     await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion(), 0);
 
                     if (value.Value.NunchukConnected != 0) {
@@ -194,13 +197,26 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public void Identify() {
-            Task.Run(() => {
-                ForwardedWiimoteManager.RumbleState[_index] = 1;
-                Thread.Sleep(300);
-                ForwardedWiimoteManager.RumbleState[_index] = 0;
-            });
+            EngageHaptics(300);
         }
 
+        public void EngageHaptics(int duration, bool timed = true) {
+            Task.Run(() => {
+                if (!isAlreadyVibrating) {
+                    isAlreadyVibrating = true;
+                    ForwardedWiimoteManager.RumbleState[_index] = 1;
+                    if (timed) {
+                        Thread.Sleep(duration);
+                        ForwardedWiimoteManager.RumbleState[_index] = 0;
+                        isAlreadyVibrating = false;
+                    }
+                }
+            });
+        }
+        public void DisableHaptics() {
+            isAlreadyVibrating = false;
+            ForwardedWiimoteManager.RumbleState[_index] = 0;
+        }
         public string Debug { get => _debug; set => _debug = value; }
         public bool Ready { get => _ready; set => _ready = value; }
         public bool Disconnected { get => _disconnected; set => _disconnected = value; }
@@ -213,5 +229,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public bool SimulateThighs { get => _simulateThighs; set => _simulateThighs = value; }
         public bool UseWaistTrackerForYaw { get => _useWaistTrackerForYaw; set => _useWaistTrackerForYaw = value; }
         public RotationReferenceType YawReferenceTypeValue { get => _yawReferenceTypeValue; set => _yawReferenceTypeValue = value; }
+        public HapticNodeBinding HapticNodeBinding { get => _hapticNodeBinding; set => _hapticNodeBinding = value; }
     }
 }

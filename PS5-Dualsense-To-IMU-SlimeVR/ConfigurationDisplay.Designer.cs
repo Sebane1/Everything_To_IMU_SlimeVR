@@ -29,6 +29,8 @@
             falseThighSimulationCheckBox = new CheckBox();
             tabOptions = new TabControl();
             settingsPage = new TabPage();
+            hapticJointAssignment = new ComboBox();
+            indentifyButton = new Button();
             yawForSimulatedTracker = new ComboBox();
             rediscoverTrackerButton = new Button();
             trackerConfigLabel = new Label();
@@ -46,7 +48,6 @@
             label2 = new Label();
             label3 = new Label();
             memoryResetTimer = new System.Windows.Forms.Timer(components);
-            indentifyButton = new Button();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
@@ -96,6 +97,7 @@
             // 
             // settingsPage
             // 
+            settingsPage.Controls.Add(hapticJointAssignment);
             settingsPage.Controls.Add(indentifyButton);
             settingsPage.Controls.Add(yawForSimulatedTracker);
             settingsPage.Controls.Add(rediscoverTrackerButton);
@@ -110,6 +112,26 @@
             settingsPage.UseVisualStyleBackColor = true;
             settingsPage.Click += tabPage1_Click;
             // 
+            // hapticJointAssignment
+            // 
+            hapticJointAssignment.FormattingEnabled = true;
+            hapticJointAssignment.Items.AddRange(new object[] { "Right Thigh Haptics", "Right Calf Haptics", "Left Thigh Haptics", "Left Calf Haptics", "Right Upper Arm Haptics", "Right Fore Arm Haptics", "Left Upper Arm Haptics", "Left Fore Arm Haptics", "Chest Haptics", "Right Foot Haptics", "Left Foot Haptics", "Right Hand Haptics", "Left Hand Haptics", "Right Shoulder Haptics", "Left Shoulder Haptics", "Head Haptics", "Hips Haptics" });
+            hapticJointAssignment.Location = new Point(10, 86);
+            hapticJointAssignment.Name = "hapticJointAssignment";
+            hapticJointAssignment.Size = new Size(319, 23);
+            hapticJointAssignment.TabIndex = 7;
+            hapticJointAssignment.SelectedIndexChanged += hapticJointAssignment_SelectedIndexChanged;
+            // 
+            // indentifyButton
+            // 
+            indentifyButton.Location = new Point(165, 113);
+            indentifyButton.Name = "indentifyButton";
+            indentifyButton.Size = new Size(164, 23);
+            indentifyButton.TabIndex = 6;
+            indentifyButton.Text = "Rumble Identification";
+            indentifyButton.UseVisualStyleBackColor = true;
+            indentifyButton.Click += identifyButton_Click;
+            // 
             // yawForSimulatedTracker
             // 
             yawForSimulatedTracker.FormattingEnabled = true;
@@ -122,9 +144,9 @@
             // 
             // rediscoverTrackerButton
             // 
-            rediscoverTrackerButton.Location = new Point(10, 92);
+            rediscoverTrackerButton.Location = new Point(10, 113);
             rediscoverTrackerButton.Name = "rediscoverTrackerButton";
-            rediscoverTrackerButton.Size = new Size(117, 23);
+            rediscoverTrackerButton.Size = new Size(149, 23);
             rediscoverTrackerButton.TabIndex = 3;
             rediscoverTrackerButton.Text = "Rediscover Tracker";
             rediscoverTrackerButton.UseVisualStyleBackColor = true;
@@ -279,16 +301,6 @@
             memoryResetTimer.Interval = 3600000;
             memoryResetTimer.Tick += memoryResetTimer_Tick;
             // 
-            // indentifyButton
-            // 
-            indentifyButton.Location = new Point(133, 92);
-            indentifyButton.Name = "indentifyButton";
-            indentifyButton.Size = new Size(141, 23);
-            indentifyButton.TabIndex = 6;
-            indentifyButton.Text = "Rumble Identication";
-            indentifyButton.UseVisualStyleBackColor = true;
-            indentifyButton.Click += identifyButton_Click;
-            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
@@ -348,5 +360,6 @@
         private Label label4;
         private System.Windows.Forms.Timer memoryResetTimer;
         private Button indentifyButton;
+        private ComboBox hapticJointAssignment;
     }
 }

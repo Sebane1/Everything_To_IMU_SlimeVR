@@ -29,6 +29,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private string _rememberedStringId;
         private RotationReferenceType _yawReferenceTypeValue;
         Stopwatch buttonPressTimer = new Stopwatch();
+        private HapticNodeBinding _hapticNodeBinding;
+        private bool isAlreadyVibrating;
 
         public event EventHandler<string> OnTrackerError;
 
@@ -49,7 +51,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         _falseThighTracker = new FalseThighTracker(this);
                     }
                     udpHandler = new UDPHandler("GenericController" + _rememberedStringId,
-                     new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] }, 0);
+                     new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] }, 1);
                     udpHandler.Active = true;
                     Recalibrate();
                     _ready = true;
@@ -111,7 +113,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         $"Y:{trackerEuler}\r\n"
                         + _falseThighTracker.Debug;
                     }
-                    await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X / 1000f, _sensorOrientation.AccelerometerData.Y / 1000f, _sensorOrientation.AccelerometerData.Z / 1000f), 0);
+                    //await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X / 1000f, _sensorOrientation.AccelerometerData.Y / 1000f, _sensorOrientation.AccelerometerData.Z / 1000f), 0);
                     await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion(), 0);
                     if (_simulateThighs) {
                         _falseThighTracker.Update();
@@ -156,11 +158,26 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public void Identify() {
+            EngageHaptics(300);
+        }
+
+        public void EngageHaptics(int duration, bool timed = true) {
             Task.Run(() => {
-                JSL.JslSetRumble(_index, 100, 0);
-                Thread.Sleep(1000);
-                JSL.JslSetRumble(_index, 0, 0);
+                if (!isAlreadyVibrating) {
+                    isAlreadyVibrating = true;
+                    JSL.JslSetRumble(_index, 50, 0);
+                    if (timed) {
+                        Thread.Sleep(duration);
+                        JSL.JslSetRumble(_index, 0, 0);
+                        isAlreadyVibrating = false;
+                    }
+                }
             });
+        }
+
+        public void DisableHaptics() {
+            isAlreadyVibrating = false;
+            JSL.JslSetRumble(_index, 0, 0);
         }
 
         public string Debug { get => _debug; set => _debug = value; }
@@ -176,5 +193,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public bool UseWaistTrackerForYaw { get => _useWaistTrackerForYaw; set => _useWaistTrackerForYaw = value; }
         public RotationReferenceType YawReferenceTypeValue { get => _yawReferenceTypeValue; set => _yawReferenceTypeValue = value; }
         public bool UsingWiimoteKnees { get => _usingWiimoteKnees; set => _usingWiimoteKnees = value; }
+        public HapticNodeBinding HapticNodeBinding { get => _hapticNodeBinding; set => _hapticNodeBinding = value; }
     }
 }

@@ -8,11 +8,12 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
-    <Version>0.0.1.0</Version>
+    <Version>0.0.1.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
+    <PackageReference Include="LucHeart.CoreOSC" Version="1.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OVRSharp" Version="1.2.0" />
   </ItemGroup>

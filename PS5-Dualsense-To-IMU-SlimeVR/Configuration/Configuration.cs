@@ -10,6 +10,7 @@ namespace Everything_To_IMU_SlimeVR {
         private Dictionary<string, Vector3> _calibrationConfigurations = new Dictionary<string, Vector3>();
         private DateTime _lastConfigSave = new DateTime();
         private bool _switchingSessions = false;
+        private bool _enableHaptics = true;
 
         private int _pollingRate = 8;
         public List<TrackerConfig> TrackerConfigs { get => _trackerConfigs; set => _trackerConfigs = value; }
@@ -35,9 +36,9 @@ namespace Everything_To_IMU_SlimeVR {
             if (File.Exists(openPath)) {
                 var values = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(openPath));
                 Instance = values;
-                return values;
+                return Instance = (values == null ? new Configuration() : values);
             } else {
-                return new Configuration();
+                return Instance = new Configuration();
             }
         }
     }

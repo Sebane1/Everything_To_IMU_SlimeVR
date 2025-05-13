@@ -29,6 +29,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private string _rememberedStringId;
         private RotationReferenceType _yawReferenceTypeValue = RotationReferenceType.WaistRotation;
         Stopwatch buttonPressTimer = new Stopwatch();
+        private HapticNodeBinding _hapticNodeBinding;
 
         public event EventHandler<string> OnTrackerError;
 
@@ -151,6 +152,14 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             //throw new NotImplementedException();
         }
 
+        public void EngageHaptics(int duration, bool timed = true) {
+            //throw new NotImplementedException();
+        }
+
+        public void DisableHaptics() {
+            throw new NotImplementedException();
+        }
+
         public string Debug { get => _debug; set => _debug = value; }
         public bool Ready { get => _ready; set => _ready = value; }
         public bool Disconnected { get => _disconnected; set => _disconnected = value; }
@@ -163,5 +172,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public bool SimulateThighs { get => _simulateThighs; set => _simulateThighs = value; }
         public bool UseWaistTrackerForYaw { get => _useWaistTrackerForYaw; set => _useWaistTrackerForYaw = value; }
         public RotationReferenceType YawReferenceTypeValue { get => _yawReferenceTypeValue; set => _yawReferenceTypeValue = value; }
+        public HapticNodeBinding HapticNodeBinding { get => _hapticNodeBinding; set => _hapticNodeBinding = value; }
     }
 }
