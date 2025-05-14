@@ -121,9 +121,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         $"Y:{trackerEuler}\r\n"
                         + _falseThighTracker.Debug;
                     }
-                    //await udpHandler.SetSensorBattery(100);
-                    float finalX = !_nunchuck ? -_euler.X : _euler.X;
-                    float finalY = !_nunchuck ? _euler.Y : _connectedWiimote.Euler.Y;
+                    float finalX = -_euler.X;
+                    float finalY = _euler.Y;
                     float finalZ = 0;
 
                     await udpHandler.SetSensorBattery(value.Value.BatteryLevel / 200f);

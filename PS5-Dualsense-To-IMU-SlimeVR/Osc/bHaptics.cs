@@ -9,8 +9,8 @@ namespace AxSlime.Osc {
         private static readonly Dictionary<string, HapticNodeBinding[]> _mappings =
             new()
             {
-                { "VestFront", [HapticNodeBinding.Chest, HapticNodeBinding.Hips] },
-                { "VestBack", [HapticNodeBinding.Chest, HapticNodeBinding.Hips] },
+                { "VestFront", [HapticNodeBinding.Chest, HapticNodeBinding.Hips, HapticNodeBinding.ChestFront, HapticNodeBinding.HipsFront] },
+                { "VestBack", [HapticNodeBinding.Chest, HapticNodeBinding.Hips, HapticNodeBinding.ChestBack, HapticNodeBinding.HipsBack] },
                 { "ArmL", [HapticNodeBinding.LeftUpperArm, HapticNodeBinding.LeftForeArm] },
                 { "ArmR", [HapticNodeBinding.RightUpperArm, HapticNodeBinding.RightForeArm] },
                 { "FootL", [HapticNodeBinding.LeftFoot] },

@@ -27,20 +27,18 @@ namespace AxSlime.Osc
 
                 if (_nameToNode.TryGetValue(axHaptics[BinaryPrefix.Length..], out var nodeVal))
                     return [new HapticEvent(nodeVal)];
-            }
-            //else if (_config.Haptics.EnableProx && axHaptics.StartsWith(AnalogPrefix))
-            //{
-            //    var proximity = message.Arguments[0] as float? ?? -1f;
-            //    if (proximity <= _config.Haptics.ProxThreshold)
-            //        return [];
+            } else if (axHaptics.StartsWith(AnalogPrefix)) {
+                var proximity = message.Arguments[0] as float? ?? -1f;
+                if (proximity <= 0.5f)
+                    return [];
 
-            //    var intensity = _config.Haptics.CalcIntensity(proximity);
-            //    if (
-            //        intensity > 0f
-            //        && _nameToNode.TryGetValue(axHaptics[AnalogPrefix.Length..], out var nodeVal)
-            //    )
-            //        return [new HapticEvent(nodeVal, intensity, _config.Haptics.ProxDurationS)];
-            //}
+                var intensity = proximity;
+                if (
+                    intensity > 0f
+                    && _nameToNode.TryGetValue(axHaptics[AnalogPrefix.Length..], out var nodeVal)
+                )
+                    return [new HapticEvent(nodeVal, intensity, 300)];
+            }
 
             return [];
         }

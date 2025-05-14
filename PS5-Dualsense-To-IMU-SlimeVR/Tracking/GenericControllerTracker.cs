@@ -79,7 +79,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     case RotationReferenceType.WaistRotation:
                         return OpenVRReader.GetTrackerRotation("waist");
                     case RotationReferenceType.ChestRotation:
-                        return OpenVRReader.GetTrackerRotation("chest");
+                        return OpenVRReader.GetTrackerRotation("_chest");
                 }
             } catch {
 
@@ -95,8 +95,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     var trackerRotation = GetTrackerRotation(YawReferenceTypeValue);
                     float trackerEuler = trackerRotation.GetYawFromQuaternion();
                     _lastEulerPositon = -trackerEuler;
-                    _rotation = !_simulateThighs && !_usingWiimoteKnees ? trackerRotation : (_sensorOrientation.CurrentOrientation);
-                    _euler = _rotation.QuaternionToEuler() + (!_simulateThighs ? new Vector3() : _rotationCalibration);
+                    _rotation = _sensorOrientation.CurrentOrientation;
+                    _euler = _rotation.QuaternionToEuler() + _rotationCalibration;
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
 
@@ -149,11 +149,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public Vector3 GetCalibration() {
-            if (Configuration.Instance.TimeSinceLastConfig().TotalSeconds < 10) {
-                if (Configuration.Instance.CalibrationConfigurations.ContainsKey(macSpoof)) {
-                    return Configuration.Instance.CalibrationConfigurations[macSpoof];
-                }
-            }
             return -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
         }
 

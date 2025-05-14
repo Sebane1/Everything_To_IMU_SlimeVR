@@ -115,7 +115,7 @@
             // hapticJointAssignment
             // 
             hapticJointAssignment.FormattingEnabled = true;
-            hapticJointAssignment.Items.AddRange(new object[] { "Right Thigh Haptics", "Right Calf Haptics", "Left Thigh Haptics", "Left Calf Haptics", "Right Upper Arm Haptics", "Right Fore Arm Haptics", "Left Upper Arm Haptics", "Left Fore Arm Haptics", "Chest Haptics", "Right Foot Haptics", "Left Foot Haptics", "Right Hand Haptics", "Left Hand Haptics", "Right Shoulder Haptics", "Left Shoulder Haptics", "Head Haptics", "Hips Haptics" });
+            hapticJointAssignment.Items.AddRange(new object[] { "Right Thigh Haptics", "Right Calf Haptics", "Left Thigh Haptics", "Left Calf Haptics", "Right Upper Arm Haptics", "Right Fore Arm Haptics", "Left Upper Arm Haptics", "Left Fore Arm Haptics", "Chest Haptics", "Right Foot Haptics", "Left Foot Haptics", "Right Hand Haptics", "Left Hand Haptics", "Right Shoulder Haptics", "Left Shoulder Haptics", "Head Haptics", "Hips Haptics", "Chest Front Haptics", "Hips Front Haptics", "Chest Back Haptics", "Hips Back Haptics" });
             hapticJointAssignment.Location = new Point(10, 86);
             hapticJointAssignment.Name = "hapticJointAssignment";
             hapticJointAssignment.Size = new Size(319, 23);

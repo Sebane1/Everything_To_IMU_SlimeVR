@@ -61,6 +61,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                 }
                                 newTracker.SimulateThighs = _configuration.TrackerConfigs[i].SimulatesThighs;
                                 newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
+                                newTracker.HapticNodeBinding = _configuration.TrackerConfigs[i].HapticNodeBinding;
                                 _trackersBluetooth.Add(newTracker);
                                 _allTrackers.Add(newTracker);
                                 _trackerInfo[i] = new KeyValuePair<int, bool>(info.Key, true);
@@ -117,6 +118,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                 }
                                 newTracker.SimulateThighs = _configuration.TrackerConfigWiimote[i].SimulatesThighs;
                                 newTracker.YawReferenceTypeValue = _configuration.TrackerConfigWiimote[i].YawReferenceTypeValue;
+                                newTracker.HapticNodeBinding = _configuration.TrackerConfigWiimote[i].HapticNodeBinding;
                                 _trackersWiimote.Add(newTracker);
                                 _allTrackers.Add(newTracker);
                                 _trackerInfoWiimote[i] = new KeyValuePair<int, bool>(info.Key, true);
