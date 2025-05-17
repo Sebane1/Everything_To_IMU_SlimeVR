@@ -20,5 +20,8 @@ public enum HapticNodeBinding : byte {
     ChestFront,
     HipsFront,
     ChestBack,
-    HipsBack
+    HipsBack,
+    ChestAndHips,
+    ChestAndHipsFront,
+    ChestAndHipsBack
 }

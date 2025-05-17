@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using Everything_To_IMU_SlimeVR;
+using Everything_To_IMU_SlimeVR.Osc;
 using LucHeart.CoreOSC;
 
 namespace AxSlime.Osc {

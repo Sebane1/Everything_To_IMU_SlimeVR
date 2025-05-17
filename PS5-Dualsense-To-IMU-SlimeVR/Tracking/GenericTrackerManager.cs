@@ -1,16 +1,18 @@
 ﻿using AxSlime.Osc;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
-    public class GenericControllerTrackerManager {
+    public class GenericTrackerManager {
         private static List<IBodyTracker> _allTrackers = new List<IBodyTracker>();
         private static List<GenericControllerTracker> _trackersBluetooth = new List<GenericControllerTracker>();
         private static List<ThreeDsControllerTracker> _trackers3ds = new List<ThreeDsControllerTracker>();
         private static List<WiiTracker> _trackersWiimote = new List<WiiTracker>();
         private static List<WiiTracker> _trackersNunchuck = new List<WiiTracker>();
+        private static List<UDPHapticDevice> _trackersUdpHapticDevice = new List<UDPHapticDevice>();
         private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfo = new Dictionary<int, KeyValuePair<int, bool>>();
         private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfo3ds = new Dictionary<int, KeyValuePair<int, bool>>();
         private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfoWiimote = new Dictionary<int, KeyValuePair<int, bool>>();
         private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfoNunchuck = new Dictionary<int, KeyValuePair<int, bool>>();
+        private static Dictionary<string, KeyValuePair<int, bool>> _trackerInfoUdpHapticDevice = new Dictionary<string, KeyValuePair<int, bool>>();
 
         private bool disposed = false;
         public event EventHandler<string> OnTrackerError;
@@ -30,11 +32,14 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private OscHandler _oscHandler;
         private int _pollingRatePerTracker;
 
-        public GenericControllerTrackerManager(Configuration configuration) {
+        public GenericTrackerManager(Configuration configuration) {
             _configuration = configuration;
             _oscHandler = new OscHandler();
             int handshakeDelay = _configuration.SwitchingSessions ? 10 : 100;
             Task.Run(async () => {
+                foreach (var item in _configuration.TrackerConfigUdpHaptics) {
+                    AddRemoteHapticDevice(item.Key);
+                }
                 while (!disposed) {
                     try {
                         _controllerCount = JSL.JslConnectDevices();
@@ -145,7 +150,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             tracker.Dispose();
                         } else {
                             // Update tracker.
-                           tracker.Update();
+                            tracker.Update();
                         }
                     }
                     for (int i = 0; i < _trackers3ds.Count; i++) {
@@ -199,6 +204,43 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             OnTrackerError.Invoke(sender, e);
         }
 
+        public void AddRemoteHapticDevice(string ip) {
+            // Track whether or not we've seen this controller before this session.
+            if (!_trackerInfoUdpHapticDevice.ContainsKey(ip)) {
+                _trackerInfoUdpHapticDevice[ip] = new KeyValuePair<int, bool>(_trackerInfoUdpHapticDevice.Count, false);
+            }
+
+            // Get this controllers information.
+            var info = _trackerInfoUdpHapticDevice[ip];
+
+            // Have we dealt with setting up this controller tracker yet?
+            if (!info.Value) {
+                // Set up the controller tracker.
+                var newTracker = new UDPHapticDevice(ip);
+                while (!newTracker.Ready) {
+                    Thread.Sleep(100);
+                }
+                if (!_configuration.TrackerConfigUdpHaptics.ContainsKey(ip)) {
+                    _configuration.TrackerConfigUdpHaptics.Add(ip, new TrackerConfig());
+                }
+                newTracker.SimulateThighs = _configuration.TrackerConfigUdpHaptics[ip].SimulatesThighs;
+                newTracker.YawReferenceTypeValue = _configuration.TrackerConfigUdpHaptics[ip].YawReferenceTypeValue;
+                newTracker.HapticNodeBinding = _configuration.TrackerConfigUdpHaptics[ip].HapticNodeBinding;
+                _trackersUdpHapticDevice.Add(newTracker);
+                _allTrackers.Add(newTracker);
+                _trackerInfoUdpHapticDevice[ip] = new KeyValuePair<int, bool>(info.Key, true);
+            }
+        }
+
+        public void HapticTest() {
+            Task.Run(() => {
+                foreach (var tracker in _allTrackers) {
+                    tracker.Identify();
+                    Thread.Sleep(1000);
+                }
+            });
+        }
+
         internal static List<GenericControllerTracker> TrackersBluetooth { get => _trackersBluetooth; set => _trackersBluetooth = value; }
         public static int ControllerCount { get => _controllerCount; set => _controllerCount = value; }
         public int PollingRate { get => pollingRate; set => pollingRate = value; }
@@ -210,5 +252,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public Dictionary<int, KeyValuePair<int, bool>> TrackerInfoWiimote { get => _trackerInfoWiimote; set => _trackerInfoWiimote = value; }
         public Dictionary<int, KeyValuePair<int, bool>> TrackerInfoNunchuck { get => _trackerInfoNunchuck; set => _trackerInfoNunchuck = value; }
         public static List<IBodyTracker> AllTrackers { get => _allTrackers; set => _allTrackers = value; }
+        public static List<UDPHapticDevice> TrackersUdpHapticDevice { get => _trackersUdpHapticDevice; set => _trackersUdpHapticDevice = value; }
     }
 }

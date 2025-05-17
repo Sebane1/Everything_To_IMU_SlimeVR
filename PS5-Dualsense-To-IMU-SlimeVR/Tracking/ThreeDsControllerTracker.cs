@@ -89,7 +89,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
 
-                    if (GenericControllerTrackerManager.DebugOpen) {
+                    if (GenericTrackerManager.DebugOpen) {
                         _debug =
                         $"Device Id: {macSpoof}\r\n" +
                         $"Euler Rotation:\r\n" +
@@ -157,9 +157,11 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public void DisableHaptics() {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
-
+        public override string ToString() {
+            return "DS Tracker " + _index;
+        }
         public string Debug { get => _debug; set => _debug = value; }
         public bool Ready { get => _ready; set => _ready = value; }
         public bool Disconnected { get => _disconnected; set => _disconnected = value; }

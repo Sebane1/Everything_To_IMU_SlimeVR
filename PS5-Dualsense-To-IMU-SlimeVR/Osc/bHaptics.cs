@@ -9,8 +9,46 @@ namespace AxSlime.Osc {
         private static readonly Dictionary<string, HapticNodeBinding[]> _mappings =
             new()
             {
-                { "VestFront", [HapticNodeBinding.Chest, HapticNodeBinding.Hips, HapticNodeBinding.ChestFront, HapticNodeBinding.HipsFront] },
-                { "VestBack", [HapticNodeBinding.Chest, HapticNodeBinding.Hips, HapticNodeBinding.ChestBack, HapticNodeBinding.HipsBack] },
+                { "VestFront_0", [HapticNodeBinding.Chest, HapticNodeBinding.ChestFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront]},
+                { "VestFront_1", [HapticNodeBinding.Chest, HapticNodeBinding.ChestFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront]},
+                { "VestFront_2", [HapticNodeBinding.Chest, HapticNodeBinding.ChestFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_3", [HapticNodeBinding.Chest, HapticNodeBinding.ChestFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_4", [HapticNodeBinding.Chest, HapticNodeBinding.ChestFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_5", [HapticNodeBinding.Chest, HapticNodeBinding.ChestFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_6", [HapticNodeBinding.Chest, HapticNodeBinding.ChestFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_7", [HapticNodeBinding.Chest, HapticNodeBinding.ChestFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_8", [HapticNodeBinding.Chest, HapticNodeBinding.ChestFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_9", [HapticNodeBinding.Chest, HapticNodeBinding.ChestFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_10", [HapticNodeBinding.Hips, HapticNodeBinding.HipsFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_11", [HapticNodeBinding.Hips, HapticNodeBinding.HipsFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_12", [HapticNodeBinding.Hips, HapticNodeBinding.HipsFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_13", [HapticNodeBinding.Hips, HapticNodeBinding.HipsFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_14", [HapticNodeBinding.Hips, HapticNodeBinding.HipsFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_15", [HapticNodeBinding.Hips, HapticNodeBinding.HipsFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_16", [HapticNodeBinding.Hips, HapticNodeBinding.HipsFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_17", [HapticNodeBinding.Hips, HapticNodeBinding.HipsFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_18", [HapticNodeBinding.Hips, HapticNodeBinding.HipsFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestFront_19", [HapticNodeBinding.Hips, HapticNodeBinding.HipsFront, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsFront] },
+                { "VestBack_0", [HapticNodeBinding.Chest, HapticNodeBinding.ChestBack, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_1", [HapticNodeBinding.Chest, HapticNodeBinding.ChestBack, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_2", [HapticNodeBinding.Chest, HapticNodeBinding.ChestBack, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_3", [HapticNodeBinding.Chest, HapticNodeBinding.ChestBack, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_4", [HapticNodeBinding.Chest, HapticNodeBinding.ChestBack, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_5", [HapticNodeBinding.Chest, HapticNodeBinding.ChestBack, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_6", [HapticNodeBinding.Chest, HapticNodeBinding.ChestBack, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_7", [HapticNodeBinding.Chest, HapticNodeBinding.ChestBack, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_8", [HapticNodeBinding.Chest, HapticNodeBinding.ChestBack, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_9", [HapticNodeBinding.Chest, HapticNodeBinding.ChestBack, HapticNodeBinding.ChestAndHips, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_10", [HapticNodeBinding.Hips, HapticNodeBinding.ChestAndHips, HapticNodeBinding.HipsBack, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_11", [HapticNodeBinding.Hips, HapticNodeBinding.ChestAndHips, HapticNodeBinding.HipsBack, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_12", [HapticNodeBinding.Hips, HapticNodeBinding.ChestAndHips, HapticNodeBinding.HipsBack, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_13", [HapticNodeBinding.Hips, HapticNodeBinding.ChestAndHips, HapticNodeBinding.HipsBack, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_14", [HapticNodeBinding.Hips, HapticNodeBinding.ChestAndHips, HapticNodeBinding.HipsBack, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_15", [HapticNodeBinding.Hips, HapticNodeBinding.ChestAndHips, HapticNodeBinding.HipsBack, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_16", [HapticNodeBinding.Hips, HapticNodeBinding.ChestAndHips, HapticNodeBinding.HipsBack, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_17", [HapticNodeBinding.Hips, HapticNodeBinding.ChestAndHips, HapticNodeBinding.HipsBack, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_18", [HapticNodeBinding.Hips, HapticNodeBinding.ChestAndHips, HapticNodeBinding.HipsBack, HapticNodeBinding.ChestAndHipsBack] },
+                { "VestBack_19", [HapticNodeBinding.Hips, HapticNodeBinding.ChestAndHips, HapticNodeBinding.HipsBack, HapticNodeBinding.ChestAndHipsBack] },
                 { "ArmL", [HapticNodeBinding.LeftUpperArm, HapticNodeBinding.LeftForeArm] },
                 { "ArmR", [HapticNodeBinding.RightUpperArm, HapticNodeBinding.RightForeArm] },
                 { "FootL", [HapticNodeBinding.LeftFoot] },
@@ -47,7 +85,7 @@ namespace AxSlime.Osc {
 
             var bHaptics = parameter[isFloatBased ? (bHapticsPrefix.Length..) : (bHapticsPrefix2.Length..)];
             foreach (var binding in _eventMap) {
-                if (bHaptics.Replace("_", "").Contains(binding.Key)) {
+                if (bHaptics.ToLower().Contains(binding.Key.ToLower())) {
                     return binding.Value;
                 }
             }

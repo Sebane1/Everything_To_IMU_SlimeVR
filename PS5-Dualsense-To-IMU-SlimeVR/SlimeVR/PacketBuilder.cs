@@ -37,6 +37,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
         private BigEndianBinaryWriter _batteryLevelPacketWriter;
 
         public byte[] HeartBeat { get => _heartBeat; set => _heartBeat = value; }
+        public long PacketId { get => _packetId; set => _packetId = value; }
 
         public PacketBuilder(string fwString) {
             _identifierString = fwString;
@@ -177,7 +178,6 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             buttonPushPacketStream.Position = 0;
             writer.Write(UDPPackets.BUTTON_PUSHED); // Header
             writer.Write(_packetId++); // Packet counter
-            writer.Write((byte)0); // Tracker id
             buttonPushPacketStream.Position = 0;
             var data = buttonPushPacketStream.ToArray();
             return data;

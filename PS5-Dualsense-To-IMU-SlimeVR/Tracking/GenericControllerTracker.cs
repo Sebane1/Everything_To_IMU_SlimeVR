@@ -61,12 +61,20 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             });
         }
         public bool GetGlobalState(int code) {
-            int connections = GenericControllerTrackerManager.ControllerCount;
+            int connections = GenericTrackerManager.ControllerCount;
             for (int i = 0; i < connections; i++) {
                 var buttons = JSL.JslGetSimpleState(i).buttons;
                 if ((buttons & code) != 0) {
                     return true;
                 }
+            }
+            return false;
+        }
+        public bool GetLocalState(int code) {
+            int connections = GenericTrackerManager.ControllerCount;
+            var buttons = JSL.JslGetSimpleState(_index).buttons;
+            if ((buttons & code) != 0) {
+                return true;
             }
             return false;
         }
@@ -79,7 +87,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     case RotationReferenceType.WaistRotation:
                         return OpenVRReader.GetTrackerRotation("waist");
                     case RotationReferenceType.ChestRotation:
-                        return OpenVRReader.GetTrackerRotation("_chest");
+                        return OpenVRReader.GetTrackerRotation("chest");
                 }
             } catch {
 
@@ -100,7 +108,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
 
-                    if (GenericControllerTrackerManager.DebugOpen) {
+                    if (GenericTrackerManager.DebugOpen) {
                         _debug =
                         $"Device Id: {macSpoof}\r\n" +
                         $"Euler Rotation:\r\n" +
@@ -113,10 +121,18 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         $"Y:{trackerEuler}\r\n"
                         + _falseThighTracker.Debug;
                     }
+                    if (GetLocalState(0x20000)) {
+                        if (!_waitForRelease) {
+                            await udpHandler.SendButton();
+                            _waitForRelease = true;
+                        }
+                    } else {
+                        _waitForRelease = false;
+                    }
                     //await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X / 1000f, _sensorOrientation.AccelerometerData.Y / 1000f, _sensorOrientation.AccelerometerData.Z / 1000f), 0);
                     await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion(), 0);
                     if (_simulateThighs) {
-                        _falseThighTracker.Update();
+                        await _falseThighTracker.Update();
                     }
                     _falseThighTracker.IsActive = _simulateThighs;
                 } catch (Exception e) {
@@ -157,22 +173,26 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public void EngageHaptics(int duration, bool timed = true) {
-            Task.Run(() => {
-                if (!isAlreadyVibrating) {
-                    isAlreadyVibrating = true;
-                    JSL.JslSetRumble(_index, 50, 0);
+            if (!isAlreadyVibrating) {
+                isAlreadyVibrating = true;
+                Task.Run(() => {
+                    JSL.JslSetRumble(_index, 100, 0);
                     if (timed) {
                         Thread.Sleep(duration);
                         JSL.JslSetRumble(_index, 0, 0);
                         isAlreadyVibrating = false;
                     }
-                }
-            });
+                });
+            }
         }
 
         public void DisableHaptics() {
             isAlreadyVibrating = false;
             JSL.JslSetRumble(_index, 0, 0);
+        }
+
+        public override string ToString() {
+            return "Controller Tracker " + _index;
         }
 
         public string Debug { get => _debug; set => _debug = value; }

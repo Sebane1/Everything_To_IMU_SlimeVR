@@ -20,8 +20,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             _macAddress = macAddress;
             _supportedSensorCount = supportedSensorCount;
             packetBuilder = new PacketBuilder(trackerLabel);
-            udpClient = new UdpClient();
-            udpClient.Connect("localhost", 6969);
+            ResetUdp();
             Task.Run(() => {
                 while (true) {
                     if (_active) {
@@ -35,9 +34,22 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
                         Thread.Sleep(5000);
                     }
                 }
+                while (true) {
+                    Thread.Sleep(1800000);
+                    packetBuilder.PacketId = 0;
+                    ResetUdp();
+                    Initialize();
+                }
             });
         }
-
+        public void ResetUdp() {
+            if (udpClient != null) {
+                udpClient?.Close();
+                udpClient?.Dispose();
+            }
+            udpClient = new UdpClient();
+            udpClient.Connect("localhost", 6969);
+        }
         public void Initialize() {
             Handshake(BoardType.UNKNOWN, ImuType.UNKNOWN, McuType.UNKNOWN, _macAddress);
             for (int i = 0; i < _supportedSensorCount; i++) {

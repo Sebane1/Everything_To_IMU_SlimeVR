@@ -56,6 +56,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         async Task HandleRequest(HttpListenerContext context) {
             var clientIp = context.Request.RemoteEndPoint?.Address.ToString() ?? "Unknown";
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            Debug.WriteLine($"Wiimote request gap is {_timeBetweenRequests.ElapsedMilliseconds}ms");
             _timeBetweenRequests.Restart();
             try {
                 var request = context.Request;
@@ -93,6 +94,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 } else {
                     context.Response.StatusCode = 400;
                     await context.Response.OutputStream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
+                    await context.Response.OutputStream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1); // Send polling rate wii should use
                     await context.Response.OutputStream.FlushAsync(); // Just to be safe
                     context.Response.Close();
                     LegacyClientDetected?.Invoke(this, EventArgs.Empty);
@@ -107,8 +109,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     _wiimotes[key] = packet;
                 }
                 context.Response.StatusCode = 200;
-                context.Response.ContentLength64 = 4;
+                context.Response.ContentLength64 = 5;
                 await context.Response.OutputStream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
+                await context.Response.OutputStream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1); // Send polling rate wii should use 
                 await context.Response.OutputStream.FlushAsync(); // Just to be safe
                 context.Response.Close();
                 NewPacketReceived?.Invoke(this, EventArgs.Empty);
@@ -117,6 +120,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 try {
                     context.Response.StatusCode = 500;
                     await context.Response.OutputStream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
+                    await context.Response.OutputStream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1); // Send polling rate wii should use
                     await context.Response.OutputStream.FlushAsync(); // Just to be safe
                     context.Response.Close();
                 } catch { /* ignored */ }

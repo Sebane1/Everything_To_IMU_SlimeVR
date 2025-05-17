@@ -69,7 +69,7 @@ typedef struct {
 	float y;
 	float z;
 } Quaternion;
-
+u32 finalTargetFrameMs = 32;
 // ----- CONFIG -----
 #define PATH "/"
 #define BUFLEN 512
@@ -86,7 +86,7 @@ static int persistent_sock = -1;
 #define MAX_WIIMOTES 4
 bool formatSet[MAX_WIIMOTES] = { false, false, false, false };
 bool wasVibrating[MAX_WIIMOTES] = { false, false, false, false };
-char vib_response[128] = { 0, 0, 0, 0 };
+char vib_response[128] = { 0, 0, 0, 0, 0 };
 
 static void* xfb = NULL;
 static GXRModeObj* rmode = NULL;
@@ -233,7 +233,6 @@ int main(int argc, char** argv) {
 		}
 		u64 end = gettime();
 		u32 elapsed_ms = (u32)ticks_to_millisecs(end - start);
-		u32 finalTargetFrameMs = 32;
 		if (elapsed_ms < finalTargetFrameMs) {
 			u32 sleep_ms = finalTargetFrameMs - elapsed_ms;
 			if (sleep_ms >= 1) {
@@ -393,8 +392,8 @@ void send_http_post_binary(uint8_t* payload, int payload_len) {
 
 	// Now read exactly 4 bytes of vibration data
 	int total_read = 0;
-	while (total_read < 4) {
-		int r = net_read(persistent_sock, &vib_response[total_read], 4 - total_read);
+	while (total_read < 5) {
+		int r = net_read(persistent_sock, &vib_response[total_read], 5 - total_read);
 		if (r <= 0) {
 			printf("Failed to read vibration data.\n");
 			net_close(persistent_sock);
@@ -421,6 +420,7 @@ void send_http_post_binary(uint8_t* payload, int payload_len) {
 				}
 			}
 		}
+		finalTargetFrameMs = (u32)vib_response[4];
 	}
 }
 

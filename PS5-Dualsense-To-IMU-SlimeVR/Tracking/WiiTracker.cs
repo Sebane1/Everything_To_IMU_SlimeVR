@@ -106,7 +106,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     _gyro = _sensorOrientation.GyroData;
                     _acceleration = _sensorOrientation.AccelerometerData;
 
-                    if (GenericControllerTrackerManager.DebugOpen) {
+                    if (GenericTrackerManager.DebugOpen) {
                         _debug =
                         $"Device Id: {macSpoof}\r\n" +
                         $"Euler Rotation Uncalibrated:\r\n" +
@@ -135,7 +135,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         _gyro = _sensorOrientation.GyroData;
                         _acceleration = _sensorOrientation.AccelerometerData;
 
-                        if (GenericControllerTrackerManager.DebugOpen) {
+                        if (GenericTrackerManager.DebugOpen) {
                             _debug +=
                             $"\r\n\r\nNunchuck" +
                             $"Euler Rotation Uncalibrated:\r\n" +
@@ -200,21 +200,24 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public void EngageHaptics(int duration, bool timed = true) {
-            Task.Run(() => {
-                if (!isAlreadyVibrating) {
-                    isAlreadyVibrating = true;
+            if (!isAlreadyVibrating) {
+                isAlreadyVibrating = true;
+                Task.Run(() => {
                     ForwardedWiimoteManager.RumbleState[_index] = 1;
                     if (timed) {
                         Thread.Sleep(duration);
                         ForwardedWiimoteManager.RumbleState[_index] = 0;
                         isAlreadyVibrating = false;
                     }
-                }
-            });
+                });
+            }
         }
         public void DisableHaptics() {
             isAlreadyVibrating = false;
             ForwardedWiimoteManager.RumbleState[_index] = 0;
+        }
+        public override string ToString() {
+            return "Wiimote " + (_index + 1);
         }
         public string Debug { get => _debug; set => _debug = value; }
         public bool Ready { get => _ready; set => _ready = value; }

@@ -48,11 +48,19 @@
             label2 = new Label();
             label3 = new Label();
             memoryResetTimer = new System.Windows.Forms.Timer(components);
+            label4 = new Label();
+            hapticDeviceList = new ListBox();
+            newIpFeild = new TextBox();
+            newHapticCellphoneButton = new Button();
+            testHaptics = new Button();
+            wiimoteRateLabel = new Label();
+            wiimoteRate = new TrackBar();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
             errorLog.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pollingRate).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)wiimoteRate).BeginInit();
             SuspendLayout();
             // 
             // refreshTimer
@@ -68,7 +76,7 @@
             controllerDeviceList.ItemHeight = 15;
             controllerDeviceList.Location = new Point(3, 22);
             controllerDeviceList.Name = "controllerDeviceList";
-            controllerDeviceList.Size = new Size(104, 499);
+            controllerDeviceList.Size = new Size(104, 409);
             controllerDeviceList.TabIndex = 0;
             controllerDeviceList.SelectedIndexChanged += selectedDevice_SelectedIndexChanged;
             // 
@@ -89,10 +97,10 @@
             tabOptions.Controls.Add(settingsPage);
             tabOptions.Controls.Add(debugPage);
             tabOptions.Controls.Add(errorLog);
-            tabOptions.Location = new Point(327, -2);
+            tabOptions.Location = new Point(438, -2);
             tabOptions.Name = "tabOptions";
             tabOptions.SelectedIndex = 0;
-            tabOptions.Size = new Size(459, 531);
+            tabOptions.Size = new Size(348, 433);
             tabOptions.TabIndex = 2;
             // 
             // settingsPage
@@ -106,7 +114,7 @@
             settingsPage.Location = new Point(4, 24);
             settingsPage.Name = "settingsPage";
             settingsPage.Padding = new Padding(3);
-            settingsPage.Size = new Size(451, 503);
+            settingsPage.Size = new Size(340, 405);
             settingsPage.TabIndex = 0;
             settingsPage.Text = "Settings";
             settingsPage.UseVisualStyleBackColor = true;
@@ -115,7 +123,7 @@
             // hapticJointAssignment
             // 
             hapticJointAssignment.FormattingEnabled = true;
-            hapticJointAssignment.Items.AddRange(new object[] { "Right Thigh Haptics", "Right Calf Haptics", "Left Thigh Haptics", "Left Calf Haptics", "Right Upper Arm Haptics", "Right Fore Arm Haptics", "Left Upper Arm Haptics", "Left Fore Arm Haptics", "Chest Haptics", "Right Foot Haptics", "Left Foot Haptics", "Right Hand Haptics", "Left Hand Haptics", "Right Shoulder Haptics", "Left Shoulder Haptics", "Head Haptics", "Hips Haptics", "Chest Front Haptics", "Hips Front Haptics", "Chest Back Haptics", "Hips Back Haptics" });
+            hapticJointAssignment.Items.AddRange(new object[] { "Right Thigh Haptics", "Right Calf Haptics", "Left Thigh Haptics", "Left Calf Haptics", "Right Upper Arm Haptics", "Right Fore Arm Haptics", "Left Upper Arm Haptics", "Left Fore Arm Haptics", "Chest Haptics", "Right Foot Haptics", "Left Foot Haptics", "Right Hand Haptics", "Left Hand Haptics", "Right Shoulder Haptics", "Left Shoulder Haptics", "Head Haptics", "Hips Haptics", "Chest Front Haptics", "Hips Front Haptics", "Chest Back Haptics", "Hips Back Haptics", "Chest And Hips Haptics", "Chest And Hips Front Haptics", "Chest And Hips Back Haptics" });
             hapticJointAssignment.Location = new Point(10, 86);
             hapticJointAssignment.Name = "hapticJointAssignment";
             hapticJointAssignment.Size = new Size(319, 23);
@@ -167,7 +175,7 @@
             debugPage.Location = new Point(4, 24);
             debugPage.Name = "debugPage";
             debugPage.Padding = new Padding(3);
-            debugPage.Size = new Size(451, 503);
+            debugPage.Size = new Size(340, 405);
             debugPage.TabIndex = 1;
             debugPage.Text = "Debug";
             debugPage.UseVisualStyleBackColor = true;
@@ -185,7 +193,7 @@
             errorLog.Controls.Add(errorLogText);
             errorLog.Location = new Point(4, 24);
             errorLog.Name = "errorLog";
-            errorLog.Size = new Size(451, 503);
+            errorLog.Size = new Size(340, 405);
             errorLog.TabIndex = 2;
             errorLog.Text = "Error Log";
             errorLog.UseVisualStyleBackColor = true;
@@ -201,9 +209,9 @@
             // trackerCalibrationButton
             // 
             trackerCalibrationButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            trackerCalibrationButton.Location = new Point(329, 530);
+            trackerCalibrationButton.Location = new Point(442, 434);
             trackerCalibrationButton.Name = "trackerCalibrationButton";
-            trackerCalibrationButton.Size = new Size(216, 23);
+            trackerCalibrationButton.Size = new Size(212, 23);
             trackerCalibrationButton.TabIndex = 4;
             trackerCalibrationButton.Text = "Recalibrate Controller Trackers";
             trackerCalibrationButton.UseVisualStyleBackColor = true;
@@ -215,7 +223,7 @@
             donateButton.BackColor = Color.RosyBrown;
             donateButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             donateButton.ForeColor = Color.Snow;
-            donateButton.Location = new Point(543, 530);
+            donateButton.Location = new Point(652, 434);
             donateButton.Name = "donateButton";
             donateButton.Size = new Size(127, 23);
             donateButton.TabIndex = 5;
@@ -226,11 +234,11 @@
             // pollingRate
             // 
             pollingRate.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            pollingRate.Location = new Point(103, 557);
+            pollingRate.Location = new Point(2, 516);
             pollingRate.Maximum = 120;
             pollingRate.Minimum = 8;
             pollingRate.Name = "pollingRate";
-            pollingRate.Size = new Size(683, 45);
+            pollingRate.Size = new Size(777, 45);
             pollingRate.TabIndex = 6;
             pollingRate.Value = 8;
             pollingRate.Scroll += pollingRate_Scroll;
@@ -239,7 +247,7 @@
             // 
             polllingRateLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             polllingRateLabel.AutoSize = true;
-            polllingRateLabel.Location = new Point(2, 561);
+            polllingRateLabel.Location = new Point(2, 490);
             polllingRateLabel.Name = "polllingRateLabel";
             polllingRateLabel.Size = new Size(105, 15);
             polllingRateLabel.TabIndex = 7;
@@ -252,7 +260,7 @@
             threeDsDeviceList.ItemHeight = 15;
             threeDsDeviceList.Location = new Point(113, 22);
             threeDsDeviceList.Name = "threeDsDeviceList";
-            threeDsDeviceList.Size = new Size(104, 499);
+            threeDsDeviceList.Size = new Size(104, 409);
             threeDsDeviceList.TabIndex = 8;
             threeDsDeviceList.SelectedIndexChanged += threeDsDeviceList_SelectedIndexChanged;
             // 
@@ -263,7 +271,7 @@
             wiimoteDeviceList.ItemHeight = 15;
             wiimoteDeviceList.Location = new Point(223, 22);
             wiimoteDeviceList.Name = "wiimoteDeviceList";
-            wiimoteDeviceList.Size = new Size(104, 499);
+            wiimoteDeviceList.Size = new Size(104, 409);
             wiimoteDeviceList.TabIndex = 9;
             wiimoteDeviceList.SelectedIndexChanged += wiimoteDeviceList_SelectedIndexChanged;
             // 
@@ -301,11 +309,90 @@
             memoryResetTimer.Interval = 3600000;
             memoryResetTimer.Tick += memoryResetTimer_Tick;
             // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Location = new Point(332, 2);
+            label4.Name = "label4";
+            label4.Size = new Size(99, 15);
+            label4.TabIndex = 15;
+            label4.Text = "Haptic Cellphone";
+            label4.Click += label4_Click;
+            // 
+            // hapticDeviceList
+            // 
+            hapticDeviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            hapticDeviceList.FormattingEnabled = true;
+            hapticDeviceList.ItemHeight = 15;
+            hapticDeviceList.Location = new Point(332, 67);
+            hapticDeviceList.Name = "hapticDeviceList";
+            hapticDeviceList.Size = new Size(104, 364);
+            hapticDeviceList.TabIndex = 14;
+            hapticDeviceList.SelectedIndexChanged += hapticDeviceList_SelectedIndexChanged;
+            // 
+            // newIpFeild
+            // 
+            newIpFeild.Location = new Point(331, 22);
+            newIpFeild.Name = "newIpFeild";
+            newIpFeild.Size = new Size(105, 23);
+            newIpFeild.TabIndex = 16;
+            // 
+            // newHapticCellphoneButton
+            // 
+            newHapticCellphoneButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            newHapticCellphoneButton.Location = new Point(331, 41);
+            newHapticCellphoneButton.Name = "newHapticCellphoneButton";
+            newHapticCellphoneButton.Size = new Size(105, 23);
+            newHapticCellphoneButton.TabIndex = 17;
+            newHapticCellphoneButton.Text = "Add Haptic IP";
+            newHapticCellphoneButton.UseVisualStyleBackColor = true;
+            newHapticCellphoneButton.Click += newHapticCellphoneButton_Click;
+            // 
+            // testHaptics
+            // 
+            testHaptics.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            testHaptics.Location = new Point(442, 463);
+            testHaptics.Name = "testHaptics";
+            testHaptics.Size = new Size(94, 23);
+            testHaptics.TabIndex = 18;
+            testHaptics.Text = "Test Haptics";
+            testHaptics.UseVisualStyleBackColor = true;
+            testHaptics.Click += testHaptics_Click;
+            // 
+            // wiimoteRateLabel
+            // 
+            wiimoteRateLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            wiimoteRateLabel.AutoSize = true;
+            wiimoteRateLabel.Location = new Point(7, 567);
+            wiimoteRateLabel.Name = "wiimoteRateLabel";
+            wiimoteRateLabel.Size = new Size(112, 15);
+            wiimoteRateLabel.TabIndex = 20;
+            wiimoteRateLabel.Text = "Wiimote Rate: 30ms";
+            // 
+            // wiimoteRate
+            // 
+            wiimoteRate.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            wiimoteRate.Location = new Point(3, 582);
+            wiimoteRate.Maximum = 120;
+            wiimoteRate.Minimum = 8;
+            wiimoteRate.Name = "wiimoteRate";
+            wiimoteRate.Size = new Size(779, 45);
+            wiimoteRate.TabIndex = 19;
+            wiimoteRate.Value = 8;
+            wiimoteRate.Scroll += wiimoteRate_Scroll;
+            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(790, 606);
+            ClientSize = new Size(790, 639);
+            Controls.Add(wiimoteRateLabel);
+            Controls.Add(wiimoteRate);
+            Controls.Add(testHaptics);
+            Controls.Add(newHapticCellphoneButton);
+            Controls.Add(newIpFeild);
+            Controls.Add(label4);
+            Controls.Add(hapticDeviceList);
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
@@ -330,6 +417,7 @@
             errorLog.ResumeLayout(false);
             errorLog.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)pollingRate).EndInit();
+            ((System.ComponentModel.ISupportInitialize)wiimoteRate).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -361,5 +449,11 @@
         private System.Windows.Forms.Timer memoryResetTimer;
         private Button indentifyButton;
         private ComboBox hapticJointAssignment;
+        private ListBox hapticDeviceList;
+        private TextBox newIpFeild;
+        private Button newHapticCellphoneButton;
+        private Button testHaptics;
+        private Label wiimoteRateLabel;
+        private TrackBar wiimoteRate;
     }
 }

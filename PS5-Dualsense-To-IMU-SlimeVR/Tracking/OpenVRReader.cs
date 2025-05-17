@@ -58,7 +58,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public static Tuple<bool, string, float> WaistIsInFrontOfHMD() {
             string debug = "";
             var waistRotation = GetTrackerRotation("waist").GetXAxisFromQuaternion();
-            if (GenericControllerTrackerManager.DebugOpen) {
+            if (GenericTrackerManager.DebugOpen) {
                 debug += $"Waist X Rotation: {waistRotation}\r\n";
             }
 

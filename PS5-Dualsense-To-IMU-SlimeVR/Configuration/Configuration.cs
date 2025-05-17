@@ -13,15 +13,20 @@ namespace Everything_To_IMU_SlimeVR {
         private bool _enableHaptics = true;
 
         private int _pollingRate = 8;
+        private byte _wiiPollingRate = 32;
+        private Dictionary<string, TrackerConfig> _trackerConfigUdpHaptics = new Dictionary<string, TrackerConfig>();
+
         public List<TrackerConfig> TrackerConfigs { get => _trackerConfigs; set => _trackerConfigs = value; }
         public List<TrackerConfig> TrackerConfigs3ds { get => _trackerConfig3ds; set => _trackerConfig3ds = value; }
         public List<TrackerConfig> TrackerConfigWiimote { get => _trackerConfigWiimote; set => _trackerConfigWiimote = value; }
         public List<TrackerConfig> TrackerConfigNunchuck { get => _trackerConfigNunchuck; set => _trackerConfigNunchuck = value; }
+        public Dictionary<string, TrackerConfig> TrackerConfigUdpHaptics { get => _trackerConfigUdpHaptics; set => _trackerConfigUdpHaptics = value; }
         public Dictionary<string, Vector3> CalibrationConfigurations { get => _calibrationConfigurations; set => _calibrationConfigurations = value; }
         public DateTime LastCalibration { get => _lastConfigSave; set => _lastConfigSave = value; }
         public int PollingRate { get => _pollingRate; set => _pollingRate = value; }
         public bool SwitchingSessions { get => _switchingSessions; set => _switchingSessions = value; }
         public static Configuration? Instance { get; private set; }
+        public byte WiiPollingRate { get => _wiiPollingRate; set => _wiiPollingRate = value; }
 
         public void SaveConfig() {
             _lastConfigSave = DateTime.UtcNow;

@@ -65,7 +65,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 var legHmdHeight = hmdHeight - legDifferenceToSubtract;
                 bool sitting = hmdHeight < _calibratedHeight / 2 && hmdHeight > OpenVRReader.GetWaistTrackerHeight();
                 Vector3 euler = _tracker.Euler;
-                if (GenericControllerTrackerManager.DebugOpen) {
+                if (GenericTrackerManager.DebugOpen) {
                     _debug =
                 $"Device Id: {_macSpoof}\r\n" +
                 $"HMD Height: {hmdHeight}\r\n" +
@@ -73,7 +73,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 $"X:{-euler.X}, Y:{euler.Y}, Z:{euler.Z}\r\n";
                 }
                 var directionalData = OpenVRReader.WaistIsInFrontOfHMD();
-                if (GenericControllerTrackerManager.DebugOpen) {
+                if (GenericTrackerManager.DebugOpen) {
                     _debug += $"Is Leaning Forward: {directionalData.Item1.ToString()} \r\n";
                     _debug += directionalData.Item2;
                 }

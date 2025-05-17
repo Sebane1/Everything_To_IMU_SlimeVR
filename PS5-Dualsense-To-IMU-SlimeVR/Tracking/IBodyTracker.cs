@@ -8,6 +8,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         float LastHmdPositon { get; set; }
         bool SimulateThighs { get; set; }
 
+        bool Ready {  get; set; }
         HapticNodeBinding HapticNodeBinding { get; set; }
 
         TrackerConfig.RotationReferenceType YawReferenceTypeValue { get; set; }
@@ -20,5 +21,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         public void EngageHaptics(int duration, bool timed = true);
         public void DisableHaptics();
+
+        public string ToString();
     }
 }

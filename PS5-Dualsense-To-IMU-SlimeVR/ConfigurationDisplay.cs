@@ -1,11 +1,12 @@
 using Everything_To_IMU_SlimeVR.Tracking;
 using System.Diagnostics;
+using System.Net;
 using System.Runtime.InteropServices;
 using static Everything_To_IMU_SlimeVR.TrackerConfig;
 
 namespace Everything_To_IMU_SlimeVR {
     public partial class ConfigurationDisplay : Form {
-        private GenericControllerTrackerManager _genericControllerTranslator;
+        private GenericTrackerManager _genericControllerTranslator;
         private Configuration _configuration = new Configuration();
         Queue<string> errorQueue = new Queue<string>();
         private TrackerConfig _currentTrackerConfig;
@@ -23,9 +24,13 @@ namespace Everything_To_IMU_SlimeVR {
             if (_configuration.SwitchingSessions) {
                 _configuration.LastCalibration = DateTime.UtcNow;
             }
-            _genericControllerTranslator = new GenericControllerTrackerManager(_configuration);
+            _genericControllerTranslator = new GenericTrackerManager(_configuration);
             _genericControllerTranslator.OnTrackerError += _genericControllerTranslator_OnTrackerError;
             _genericControllerTranslator.PollingRate = _configuration.PollingRate;
+
+            wiimoteRate.Value = _configuration.WiiPollingRate;
+            wiimoteRateLabel.Text = "Wiimote Rate: " + _configuration.WiiPollingRate + "ms";
+
             _forwardedWiimoteManager = new ForwardedWiimoteManager();
             _forwarded3DSDataManager = new Forwarded3DSDataManager();
             _configuration.SwitchingSessions = false;
@@ -46,24 +51,28 @@ namespace Everything_To_IMU_SlimeVR {
                 } catch {
 
                 }
-                GenericControllerTrackerManager.DebugOpen = true;
+                GenericTrackerManager.DebugOpen = true;
                 refreshTimer.Interval = 1;
             } else {
-                GenericControllerTrackerManager.DebugOpen = false;
+                GenericTrackerManager.DebugOpen = false;
                 refreshTimer.Interval = 1000;
             }
             controllerDeviceList.Items.Clear();
             threeDsDeviceList.Items.Clear();
             wiimoteDeviceList.Items.Clear();
+            hapticDeviceList.Items.Clear();
             try {
-                foreach (var item in GenericControllerTrackerManager.TrackersBluetooth) {
-                    controllerDeviceList.Items.Add("Tracker " + item.Id);
+                foreach (var item in GenericTrackerManager.TrackersBluetooth) {
+                    controllerDeviceList.Items.Add(item.ToString());
                 }
-                foreach (var item in GenericControllerTrackerManager.Trackers3ds) {
-                    threeDsDeviceList.Items.Add("Tracker " + item.Id);
+                foreach (var item in GenericTrackerManager.Trackers3ds) {
+                    threeDsDeviceList.Items.Add(item.ToString());
                 }
-                foreach (var item in GenericControllerTrackerManager.TrackersWiimote) {
-                    wiimoteDeviceList.Items.Add("Tracker " + item.Id);
+                foreach (var item in GenericTrackerManager.TrackersWiimote) {
+                    wiimoteDeviceList.Items.Add(item.ToString());
+                }
+                foreach (var item in GenericTrackerManager.TrackersUdpHapticDevice) {
+                    hapticDeviceList.Items.Add(item.ToString());
                 }
             } catch {
 
@@ -93,7 +102,7 @@ namespace Everything_To_IMU_SlimeVR {
             var currentIndex = controllerDeviceList.SelectedIndex;
             if (currentIndex >= 0) {
                 _currentTrackerConfig = _configuration.TrackerConfigs[currentIndex];
-                _currentTracker = GenericControllerTrackerManager.TrackersBluetooth[currentIndex];
+                _currentTracker = GenericTrackerManager.TrackersBluetooth[currentIndex];
             }
             RefreshTracker();
         }
@@ -102,7 +111,7 @@ namespace Everything_To_IMU_SlimeVR {
             var currentIndex = threeDsDeviceList.SelectedIndex;
             if (currentIndex >= 0) {
                 _currentTrackerConfig = _configuration.TrackerConfigs3ds[currentIndex];
-                _currentTracker = GenericControllerTrackerManager.Trackers3ds[currentIndex];
+                _currentTracker = GenericTrackerManager.Trackers3ds[currentIndex];
             }
             RefreshTracker();
         }
@@ -111,7 +120,7 @@ namespace Everything_To_IMU_SlimeVR {
             var currentIndex = wiimoteDeviceList.SelectedIndex;
             if (currentIndex >= 0) {
                 _currentTrackerConfig = _configuration.TrackerConfigWiimote[currentIndex];
-                _currentTracker = GenericControllerTrackerManager.TrackersWiimote[currentIndex];
+                _currentTracker = GenericTrackerManager.TrackersWiimote[currentIndex];
             }
             RefreshTracker();
         }
@@ -121,7 +130,7 @@ namespace Everything_To_IMU_SlimeVR {
             var currentIndex = nunchuckDeviceList.SelectedIndex;
             if (currentIndex >= 0) {
                 _currentTrackerConfig = _configuration.TrackerConfigNunchuck[currentIndex];
-                _currentTracker = GenericControllerTrackerManager.TrackersNunchuck[currentIndex];
+                _currentTracker = GenericTrackerManager.TrackersNunchuck[currentIndex];
             }
             RefreshTracker();
         }
@@ -137,7 +146,7 @@ namespace Everything_To_IMU_SlimeVR {
                 hapticJointAssignment.SelectedIndex = (int)_currentTracker.HapticNodeBinding;
                 _currentTracker.HapticNodeBinding = _currentTrackerConfig.HapticNodeBinding;
 
-                trackerConfigLabel.Text = $"Tracker {_currentTracker.Id} Config";
+                trackerConfigLabel.Text = $"{_currentTracker.ToString()} Config";
                 _suppressCheckBoxEvent = false;
                 refreshTimer.Start();
             }
@@ -160,16 +169,16 @@ namespace Everything_To_IMU_SlimeVR {
         }
 
         private void trackerCalibrationButton_Click(object sender, EventArgs e) {
-            foreach (var item in GenericControllerTrackerManager.TrackersBluetooth) {
+            foreach (var item in GenericTrackerManager.TrackersBluetooth) {
                 item.Recalibrate();
             }
-            foreach (var item in GenericControllerTrackerManager.Trackers3ds) {
+            foreach (var item in GenericTrackerManager.Trackers3ds) {
                 item.Recalibrate();
             }
-            foreach (var item in GenericControllerTrackerManager.TrackersWiimote) {
+            foreach (var item in GenericTrackerManager.TrackersWiimote) {
                 item.Recalibrate();
             }
-            foreach (var item in GenericControllerTrackerManager.TrackersNunchuck) {
+            foreach (var item in GenericTrackerManager.TrackersNunchuck) {
                 item.Recalibrate();
             }
         }
@@ -197,11 +206,6 @@ namespace Everything_To_IMU_SlimeVR {
             ForwardedWiimoteManager.LegacyClientDetected += delegate {
                 if (!_legacyWiiClientDetected) {
                     _legacyWiiClientDetected = true;
-                    //if (this.InvokeRequired) {
-                    //    this.Invoke(new Action(() => this.SendToBack()));
-                    //} else {
-                    //    this.SendToBack();
-                    //}
                     if (MessageBox.Show("Your Wii client is outdated! Please consider updating to the latest version.", "Outdated Wii Client", MessageBoxButtons.OK, MessageBoxIcon.Warning) == DialogResult.OK) {
                         string url = "https://github.com/Sebane1/Everything_To_IMU_SlimeVR/releases";
 
@@ -257,6 +261,40 @@ namespace Everything_To_IMU_SlimeVR {
                 _currentTrackerConfig.HapticNodeBinding = (HapticNodeBinding)hapticJointAssignment.SelectedIndex;
                 _configuration.SaveConfig();
             }
+        }
+
+        private void label4_Click(object sender, EventArgs e) {
+
+        }
+
+        private void newHapticCellphoneButton_Click(object sender, EventArgs e) {
+            if (IPAddress.TryParse(newIpFeild.Text, out var validIp)) {
+                _genericControllerTranslator.AddRemoteHapticDevice(newIpFeild.Text);
+            } else {
+                MessageBox.Show("Invalid ip address!");
+            }
+            newIpFeild.Text = string.Empty;
+            _configuration.SaveConfig();
+        }
+
+        private void hapticDeviceList_SelectedIndexChanged(object sender, EventArgs e) {
+            refreshTimer.Stop();
+            var currentIndex = hapticDeviceList.SelectedIndex;
+            if (currentIndex >= 0) {
+                _currentTrackerConfig = _configuration.TrackerConfigUdpHaptics[hapticDeviceList.SelectedItem.ToString()];
+                _currentTracker = GenericTrackerManager.TrackersUdpHapticDevice[currentIndex];
+            }
+            RefreshTracker();
+        }
+
+        private void testHaptics_Click(object sender, EventArgs e) {
+            _genericControllerTranslator.HapticTest();
+        }
+
+        private void wiimoteRate_Scroll(object sender, EventArgs e) {
+            _configuration.WiiPollingRate = (byte)wiimoteRate.Value;
+            wiimoteRateLabel.Text = "Wiimote Rate: " + wiimoteRate.Value + "ms";
+            _configuration.SaveConfig();
         }
     }
 }
