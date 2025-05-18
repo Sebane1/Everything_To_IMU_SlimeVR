@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Collections.Concurrent;
 using System.Numerics;
@@ -6,7 +7,7 @@ using System.Threading.Channels;
 using System.Diagnostics;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
-    internal class ForwardedWiimoteManager {
+    public class ForwardedWiimoteManager {
         private static ConcurrentDictionary<string, WiimotePacket> _wiimotes = new();
         private static byte[] _rumbleState = new byte[4] { 0, 0, 0, 0 };
 
@@ -19,112 +20,84 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private ConcurrentDictionary<string, List<Vector3>> _calibrationSamples = new();
         private ConcurrentDictionary<string, (Vector3 center, float scale)> _calibrationData = new();
 
-        private readonly Channel<HttpListenerContext> _contextQueue = Channel.CreateUnbounded<HttpListenerContext>();
-
         public ForwardedWiimoteManager() {
             Task.Run(() => StartListener());
-            Task.Run(() => ProcessQueue());
             _timeBetweenRequests.Restart();
         }
 
         public static ConcurrentDictionary<string, WiimotePacket> Wiimotes => _wiimotes;
-
         public static byte[] RumbleState { get => _rumbleState; set => _rumbleState = value; }
 
         async Task StartListener() {
-            HttpListener listener = new();
-            listener.Prefixes.Add("http://+:9909/");
+            TcpListener listener = new TcpListener(IPAddress.Any, 9909);
             listener.Start();
-            Console.WriteLine("HTTP Listener started on port 9909...");
+            Console.WriteLine("TCP Listener started on port 9909...");
 
             while (true) {
                 try {
-                    var context = await listener.GetContextAsync();
-                    await _contextQueue.Writer.WriteAsync(context);
+                    var client = await listener.AcceptTcpClientAsync();
+                    _ = Task.Run(() => HandleClient(client));
                 } catch (Exception ex) {
                     Console.WriteLine($"Listener error: {ex.Message}");
                 }
             }
         }
 
-        async Task ProcessQueue() {
-            await foreach (var context in _contextQueue.Reader.ReadAllAsync()) {
-                _ = Task.Run(() => HandleRequest(context));
-            }
-        }
+        async Task HandleClient(TcpClient client) {
+            var endpoint = client.Client.RemoteEndPoint?.ToString() ?? "Unknown";
+            NetworkStream stream = client.GetStream();
+            byte[] buffer = new byte[4096];
 
-        async Task HandleRequest(HttpListenerContext context) {
-            var clientIp = context.Request.RemoteEndPoint?.Address.ToString() ?? "Unknown";
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            Debug.WriteLine($"Wiimote request gap is {_timeBetweenRequests.ElapsedMilliseconds}ms");
-            _timeBetweenRequests.Restart();
-            try {
-                var request = context.Request;
-                if (request.HttpMethod != "POST") {
-                    context.Response.StatusCode = 405;
-                    context.Response.Close();
-                    return;
-                }
-
-                if (request.ContentLength64 <= 0 || request.ContentLength64 > 4096) {
-                    context.Response.StatusCode = 411;
-                    context.Response.Close();
-                    return;
-                }
-
-                byte[] data = new byte[request.ContentLength64];
-                int bytesRead = 0;
-                while (bytesRead < data.Length) {
-                    int read = await request.InputStream.ReadAsync(data, bytesRead, data.Length - bytesRead);
-                    if (read == 0) break;
-                    bytesRead += read;
-                }
-
-                stopwatch.Stop();
-                int packetLength = 0;
-                int numPackets = 0;
-                if (data.Length % 38 == 0) {
-                    numPackets = data.Length / 38;
-                    packetLength = 38;
-                } else if (data.Length % 37 == 0) {
-                    numPackets = data.Length / 37;
-                    packetLength = 37;
-                    Console.WriteLine("⚠️  Legacy client detected.");
-                    LegacyClientDetected?.Invoke(this, EventArgs.Empty);
-                } else {
-                    context.Response.StatusCode = 400;
-                    await context.Response.OutputStream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
-                    await context.Response.OutputStream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1); // Send polling rate wii should use
-                    await context.Response.OutputStream.FlushAsync(); // Just to be safe
-                    context.Response.Close();
-                    LegacyClientDetected?.Invoke(this, EventArgs.Empty);
-                    return;
-                }
-
-                for (int i = 0; i < numPackets; i++) {
-                    byte[] packetBytes = new byte[packetLength];
-                    Buffer.BlockCopy(data, i * packetLength, packetBytes, 0, packetLength);
-                    WiimotePacket packet = ParsePacket(packetBytes);
-                    string key = $"{clientIp}:{packet.Id}";
-                    _wiimotes[key] = packet;
-                }
-                context.Response.StatusCode = 200;
-                context.Response.ContentLength64 = 5;
-                await context.Response.OutputStream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
-                await context.Response.OutputStream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1); // Send polling rate wii should use 
-                await context.Response.OutputStream.FlushAsync(); // Just to be safe
-                context.Response.Close();
-                NewPacketReceived?.Invoke(this, EventArgs.Empty);
-            } catch (Exception ex) {
-                Console.WriteLine($"❌ Handler error from {clientIp}: {ex.Message}");
+            while (client.Connected) {
                 try {
-                    context.Response.StatusCode = 500;
-                    await context.Response.OutputStream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
-                    await context.Response.OutputStream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1); // Send polling rate wii should use
-                    await context.Response.OutputStream.FlushAsync(); // Just to be safe
-                    context.Response.Close();
-                } catch { /* ignored */ }
+                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                    if (bytesRead <= 0) break;
+
+                    //Debug.WriteLine($"Wiimote request gap is {_timeBetweenRequests.ElapsedMilliseconds}ms");
+                    _timeBetweenRequests.Restart();
+
+                    byte[] data = new byte[bytesRead];
+                    Array.Copy(buffer, data, bytesRead);
+
+                    int packetLength = 0;
+                    int numPackets = 0;
+
+                    if (data.Length % 38 == 0) {
+                        numPackets = data.Length / 38;
+                        packetLength = 38;
+                    } else if (data.Length % 37 == 0) {
+                        numPackets = data.Length / 37;
+                        packetLength = 37;
+                        Console.WriteLine("⚠️  Legacy client detected.");
+                        LegacyClientDetected?.Invoke(this, EventArgs.Empty);
+                    } else {
+                        Console.WriteLine($"❌ Malformed packet from {endpoint} (size={data.Length})");
+                        await stream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
+                        await stream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1);
+                        LegacyClientDetected?.Invoke(this, EventArgs.Empty);
+                        continue;
+                    }
+
+                    for (int i = 0; i < numPackets; i++) {
+                        byte[] packetBytes = new byte[packetLength];
+                        Buffer.BlockCopy(data, i * packetLength, packetBytes, 0, packetLength);
+                        WiimotePacket packet = ParsePacket(packetBytes);
+                        string key = $"{endpoint}:{packet.Id}";
+                        _wiimotes[key] = packet;
+                    }
+
+                    await stream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
+                    await stream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1);
+                    NewPacketReceived?.Invoke(this, EventArgs.Empty);
+
+                } catch (Exception ex) {
+                    Console.WriteLine($"❌ Handler error from {endpoint}: {ex.Message}");
+                    LegacyClientDetected?.Invoke(this, EventArgs.Empty);
+                    break;
+                }
             }
+
+            client.Close();
         }
 
         WiimotePacket ParsePacket(byte[] data) {

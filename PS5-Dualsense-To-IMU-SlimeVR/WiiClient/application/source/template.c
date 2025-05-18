@@ -349,45 +349,11 @@ void send_http_post_binary(uint8_t* payload, int payload_len) {
 		}
 	}
 
-	char header[256];
-	int header_len = snprintf(header, sizeof(header), HEADER_STUB, server_ip, payload_len);
-	if (header_len <= 0 || header_len >= sizeof(header)) {
-		printf("Error formatting HTTP header\n");
-		return;
-	}
-
-	int total_len = header_len + payload_len;
-	char request_buffer[header_len + payload_len]; // VLA (if supported) or malloc if not
-	memcpy(request_buffer, header, header_len);
-	memcpy(request_buffer + header_len, payload, payload_len);
-
-	if (net_write(persistent_sock, request_buffer, total_len) < 0) {
+	if (net_write(persistent_sock, payload, payload_len) < 0) {
 		printf("Write failed, retrying socket...\n");
 		net_close(persistent_sock);
 		persistent_sock = -1;
 		return;
-	}
-
-	char header_buf[1024];
-	int response_header_len = 0;
-
-	// Read until we find the double CRLF that marks the end of headers
-	while (response_header_len < sizeof(header_buf) - 1) {
-		int r = net_read(persistent_sock, &header_buf[response_header_len], 1);
-		if (r <= 0) {
-			printf("Failed to read HTTP headers.\n");
-			net_close(persistent_sock);
-			persistent_sock = -1;
-			return;
-		}
-
-		response_header_len += r;
-		header_buf[response_header_len] = '\0'; // Null-terminate so strstr works
-
-		// End of headers found?
-		if (strstr(header_buf, "\r\n\r\n")) {
-			break;
-		}
 	}
 
 	// Now read exactly 4 bytes of vibration data
