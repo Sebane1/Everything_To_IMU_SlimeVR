@@ -42,8 +42,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public void DisableHaptics() {
         }
 
-        public void EngageHaptics(int duration, bool timed = true) {
-            if (!isAlreadyVibrating) {
+        public void EngageHaptics(int duration, float intensity, bool timed = true) {
+            if (!isAlreadyVibrating || !timed) {
                 isAlreadyVibrating = true;
                 Task.Run(() => {
                     string message = "1"; // This message will trigger vibration on the Android client
@@ -62,7 +62,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public void Identify() {
-            EngageHaptics(300);
+            EngageHaptics(300, 0);
         }
 
         public void Rediscover() {

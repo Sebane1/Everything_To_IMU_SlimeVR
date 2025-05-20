@@ -60,6 +60,7 @@ namespace AxSlime.Osc {
                 { "HandLeft", [HapticNodeBinding.LeftHand] },
                 { "HandRight", [HapticNodeBinding.RightHand] },
                 { "Head", [HapticNodeBinding.Head] },
+                { "Pat", [HapticNodeBinding.Head] },
             };
 
         private static readonly Dictionary<string, HapticEvent[]> _eventMap = _mappings
@@ -71,8 +72,10 @@ namespace AxSlime.Osc {
 
         public HapticEvent[] ComputeHaptics(string parameter, OscMessage message) {
             bool isFloatBased = parameter.StartsWith(bHapticsPrefix);
+            float intensity = 0f;
             if (isFloatBased) {
-                var trigger = message.Arguments[0] as float?;
+                float trigger = (float)message.Arguments[0];
+                intensity = trigger;
                 if (trigger < 0.4f) {
                     return [];
                 }
@@ -86,6 +89,9 @@ namespace AxSlime.Osc {
             var bHaptics = parameter[isFloatBased ? (bHapticsPrefix.Length..) : (bHapticsPrefix2.Length..)];
             foreach (var binding in _eventMap) {
                 if (bHaptics.ToLower().Contains(binding.Key.ToLower())) {
+                    for(int i =0; i <binding.Value.Length;i++) {
+                        binding.Value[i].Intensity = intensity;
+                    }
                     return binding.Value;
                 }
             }
@@ -94,7 +100,7 @@ namespace AxSlime.Osc {
         }
 
         public bool IsSource(string parameter, OscMessage message) {
-            return parameter.StartsWith(bHapticsPrefix) || parameter.StartsWith(bHapticsPrefix2);
+            return parameter.StartsWith(bHapticsPrefix) || parameter.StartsWith(bHapticsPrefix2) || parameter.StartsWith("Pat");
         }
     }
 }

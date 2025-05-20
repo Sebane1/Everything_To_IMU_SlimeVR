@@ -10,8 +10,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private static List<UDPHapticDevice> _trackersUdpHapticDevice = new List<UDPHapticDevice>();
         private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfo = new Dictionary<int, KeyValuePair<int, bool>>();
         private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfo3ds = new Dictionary<int, KeyValuePair<int, bool>>();
-        private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfoWiimote = new Dictionary<int, KeyValuePair<int, bool>>();
-        private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfoNunchuck = new Dictionary<int, KeyValuePair<int, bool>>();
+        private static Dictionary<string, KeyValuePair<string, bool>> _trackerInfoWiimote = new Dictionary<string, KeyValuePair<string, bool>>();
         private static Dictionary<string, KeyValuePair<int, bool>> _trackerInfoUdpHapticDevice = new Dictionary<string, KeyValuePair<int, bool>>();
 
         private bool disposed = false;
@@ -103,12 +102,13 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         }
                         for (int i = 0; i < ForwardedWiimoteManager.Wiimotes.Count; i++) {
                             // Track whether or not we've seen this controller before this session.
-                            if (!_trackerInfoWiimote.ContainsKey(i)) {
-                                _trackerInfoWiimote[i] = new KeyValuePair<int, bool>(_trackerInfoWiimote.Count, false);
+                            string key = ForwardedWiimoteManager.Wiimotes.ElementAt(i).Key;
+                            if (!_trackerInfoWiimote.ContainsKey(key)) {
+                                _trackerInfoWiimote[key] = new KeyValuePair<string, bool>(key, false);
                             }
 
                             // Get this controllers information.
-                            var info = _trackerInfoWiimote[i];
+                            var info = _trackerInfoWiimote[key];
 
                             // Have we dealt with setting up this controller tracker yet?
                             if (!info.Value) {
@@ -118,15 +118,15 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                     Thread.Sleep(100);
                                 }
                                 newTracker.OnTrackerError += NewTracker_OnTrackerError;
-                                if (i > _configuration.TrackerConfigWiimote.Count - 1) {
-                                    _configuration.TrackerConfigWiimote.Add(new TrackerConfig());
+                                if (!_configuration.TrackerConfigWiimote.ContainsKey(key)) {
+                                    _configuration.TrackerConfigWiimote.Add(key, new TrackerConfig());
                                 }
-                                newTracker.SimulateThighs = _configuration.TrackerConfigWiimote[i].SimulatesThighs;
-                                newTracker.YawReferenceTypeValue = _configuration.TrackerConfigWiimote[i].YawReferenceTypeValue;
-                                newTracker.HapticNodeBinding = _configuration.TrackerConfigWiimote[i].HapticNodeBinding;
+                                newTracker.SimulateThighs = _configuration.TrackerConfigWiimote[key].SimulatesThighs;
+                                newTracker.YawReferenceTypeValue = _configuration.TrackerConfigWiimote[key].YawReferenceTypeValue;
+                                newTracker.HapticNodeBinding = _configuration.TrackerConfigWiimote[key].HapticNodeBinding;
                                 _trackersWiimote.Add(newTracker);
                                 _allTrackers.Add(newTracker);
-                                _trackerInfoWiimote[i] = new KeyValuePair<int, bool>(info.Key, true);
+                                _trackerInfoWiimote[key] = new KeyValuePair<string, bool>(key, true);
                             }
                             Thread.Sleep(handshakeDelay);
                         }
@@ -150,7 +150,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             tracker.Dispose();
                         } else {
                             // Update tracker.
-                            tracker.Update();
+                            await tracker.Update();
                         }
                     }
                     for (int i = 0; i < _trackers3ds.Count; i++) {
@@ -164,37 +164,13 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             tracker.Dispose();
                         } else {
                             // Update tracker.
-                            tracker.Update();
+                            await tracker.Update();
                         }
                     }
-                    for (int i = 0; i < _trackersWiimote.Count; i++) {
-                        var tracker = _trackersWiimote[i];
-                        // Remove tracker if its been disconnected.
-                        if (tracker.Disconnected) {
-                            var info = _trackerInfoWiimote[i];
-                            _trackerInfoWiimote[i] = new KeyValuePair<int, bool>(info.Key, false);
-                            _trackersWiimote.RemoveAt(i);
-                            i = 0;
-                            tracker.Dispose();
-                        } else {
-                            // Update tracker.
-                            tracker.Update();
-                        }
-                    }
-                    for (int i = 0; i < _trackersNunchuck.Count; i++) {
-                        var tracker = _trackersNunchuck[i];
-                        // Remove tracker if its been disconnected.
-                        if (tracker.Disconnected) {
-                            var info = _trackerInfoNunchuck[i];
-                            _trackerInfoNunchuck[i] = new KeyValuePair<int, bool>(info.Key, false);
-                            _trackersNunchuck.RemoveAt(i);
-                            i = 0;
-                            tracker.Dispose();
-                        } else {
-                            // Update tracker.
-                            tracker.Update();
-                        }
-                    }
+                    //for (int i = 0; i < _trackersWiimote.Count; i++) {
+                    //    var tracker = _trackersWiimote[i];
+                    //    await tracker.Update();
+                    //}
                     Thread.Sleep(pollingRate);
                 }
             });
@@ -249,8 +225,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public Dictionary<int, KeyValuePair<int, bool>> TrackerInfo3ds { get => _trackerInfo3ds; set => _trackerInfo3ds = value; }
         public static List<WiiTracker> TrackersWiimote { get => _trackersWiimote; set => _trackersWiimote = value; }
         public static List<WiiTracker> TrackersNunchuck { get => _trackersNunchuck; set => _trackersNunchuck = value; }
-        public Dictionary<int, KeyValuePair<int, bool>> TrackerInfoWiimote { get => _trackerInfoWiimote; set => _trackerInfoWiimote = value; }
-        public Dictionary<int, KeyValuePair<int, bool>> TrackerInfoNunchuck { get => _trackerInfoNunchuck; set => _trackerInfoNunchuck = value; }
+        public Dictionary<string, KeyValuePair<string, bool>> TrackerInfoWiimote { get => _trackerInfoWiimote; set => _trackerInfoWiimote = value; }
         public static List<IBodyTracker> AllTrackers { get => _allTrackers; set => _allTrackers = value; }
         public static List<UDPHapticDevice> TrackersUdpHapticDevice { get => _trackersUdpHapticDevice; set => _trackersUdpHapticDevice = value; }
     }

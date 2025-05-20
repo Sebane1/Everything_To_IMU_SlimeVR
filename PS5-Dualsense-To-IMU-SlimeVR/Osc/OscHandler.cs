@@ -31,7 +31,7 @@ namespace AxSlime.Osc {
             _bHaptics = new();
 
             _hapticsSources = [_axHaptics, _bHaptics];
-           
+
 
             Task.Run(() => {
                 _oscReceiveTask = OscReceiveTask(_cancelTokenSource.Token);
@@ -58,16 +58,16 @@ namespace AxSlime.Osc {
             //var timeTag = OscPacketUtils.GetULong(msgReadOnly, index);
             //index += 8;
 
-                //var size = OscPacketUtils.GetInt(msgReadOnly, index);
-                //index += 4;
+            //var size = OscPacketUtils.GetInt(msgReadOnly, index);
+            //index += 4;
 
-                var messageBytes = msg.Slice(index, msgReadOnly.Length - index);
-                var message = OscMessage.ParseMessage(messageBytes);
-                messages.Add(message);
+            var messageBytes = msg.Slice(index, msgReadOnly.Length - index);
+            var message = OscMessage.ParseMessage(messageBytes);
+            messages.Add(message);
 
-                //index += size;
-                //while (index % 4 != 0)
-                //    index++;
+            //index += size;
+            //while (index % 4 != 0)
+            //    index++;
 
             var output = new OscBundle((ulong)DateTime.Now.Ticks, messages.ToArray());
             return output;
@@ -111,7 +111,10 @@ namespace AxSlime.Osc {
             }
             var events = ComputeEvents(message);
             foreach (var hapticEvent in events) {
-                HapticsManager.SetNodeVibration(hapticEvent.Node, 300);
+                HapticsManager.SetNodeVibration(hapticEvent.Node, 300, (float)hapticEvent.Intensity);
+            }
+            if (events.Length == 0 && HapticsManager.HapticsEngaged) {
+                HapticsManager.StopNodeVibrations();
             }
         }
 

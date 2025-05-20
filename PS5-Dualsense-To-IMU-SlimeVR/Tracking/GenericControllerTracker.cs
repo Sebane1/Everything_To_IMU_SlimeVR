@@ -31,6 +31,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         Stopwatch buttonPressTimer = new Stopwatch();
         private HapticNodeBinding _hapticNodeBinding;
         private bool isAlreadyVibrating;
+        private bool identifying;
 
         public event EventHandler<string> OnTrackerError;
 
@@ -129,7 +130,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     } else {
                         _waitForRelease = false;
                     }
-                    //await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X / 1000f, _sensorOrientation.AccelerometerData.Y / 1000f, _sensorOrientation.AccelerometerData.Z / 1000f), 0);
+                    //await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X / 10000f, _sensorOrientation.AccelerometerData.Y / 10000f, _sensorOrientation.AccelerometerData.Z / 10000f), 0);
                     await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion(), 0);
                     if (_simulateThighs) {
                         await _falseThighTracker.Update();
@@ -169,26 +170,32 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public void Identify() {
-            EngageHaptics(300);
+            identifying = true;
+            EngageHaptics(300, 100);
+            identifying = false;
         }
 
-        public void EngageHaptics(int duration, bool timed = true) {
+        public void EngageHaptics(int duration, float intensity, bool timed = true) {
             if (!isAlreadyVibrating) {
                 isAlreadyVibrating = true;
                 Task.Run(() => {
-                    JSL.JslSetRumble(_index, 100, 0);
+                    JSL.JslSetRumble(_index, (int)(100 * intensity), (int)(intensity * 100f));
                     if (timed) {
                         Thread.Sleep(duration);
                         JSL.JslSetRumble(_index, 0, 0);
                         isAlreadyVibrating = false;
                     }
+                    isAlreadyVibrating = false;
+                    identifying = false;
                 });
             }
         }
 
         public void DisableHaptics() {
-            isAlreadyVibrating = false;
-            JSL.JslSetRumble(_index, 0, 0);
+            if (!identifying) {
+                isAlreadyVibrating = false;
+                JSL.JslSetRumble(_index, 0, 0);
+            }
         }
 
         public override string ToString() {

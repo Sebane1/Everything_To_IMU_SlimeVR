@@ -2,13 +2,13 @@
 
 namespace AxSlime.Osc
 {
-    public readonly record struct HapticEvent
+    public struct HapticEvent
     {
-        public readonly HapticNodeBinding Node;
-        public readonly float? Intensity;
-        public readonly float? Duration;
+        public HapticNodeBinding Node;
+        public float Intensity;
+        public float Duration;
 
-        public HapticEvent(HapticNodeBinding node, float? intensity = null, float? duration = null)
+        public HapticEvent(HapticNodeBinding node, float intensity = 0, float duration = 300)
         {
             Node = node;
             Intensity = intensity;

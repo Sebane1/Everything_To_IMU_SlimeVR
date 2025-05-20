@@ -119,7 +119,11 @@ namespace Everything_To_IMU_SlimeVR {
             refreshTimer.Stop();
             var currentIndex = wiimoteDeviceList.SelectedIndex;
             if (currentIndex >= 0) {
-                _currentTrackerConfig = _configuration.TrackerConfigWiimote[currentIndex];
+                string value = wiimoteDeviceList.SelectedItem.ToString();
+                if (!_configuration.TrackerConfigWiimote.ContainsKey(value)) {
+                    _configuration.TrackerConfigWiimote[value] = new TrackerConfig();
+                }
+                _currentTrackerConfig = _configuration.TrackerConfigWiimote[value];
                 _currentTracker = GenericTrackerManager.TrackersWiimote[currentIndex];
             }
             RefreshTracker();

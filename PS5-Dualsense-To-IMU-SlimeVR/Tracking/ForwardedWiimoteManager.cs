@@ -9,7 +9,7 @@ using System.Diagnostics;
 namespace Everything_To_IMU_SlimeVR.Tracking {
     public class ForwardedWiimoteManager {
         private static ConcurrentDictionary<string, WiimotePacket> _wiimotes = new();
-        private static byte[] _rumbleState = new byte[4] { 0, 0, 0, 0 };
+        private static Dictionary<string, byte[]> _rumbleState = new Dictionary<string, byte[]>();
 
         private static List<string> _wiimoteIds = new();
         public static EventHandler NewPacketReceived;
@@ -24,9 +24,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             Task.Run(() => StartListener());
             _timeBetweenRequests.Restart();
         }
-
         public static ConcurrentDictionary<string, WiimotePacket> Wiimotes => _wiimotes;
-        public static byte[] RumbleState { get => _rumbleState; set => _rumbleState = value; }
+        public static Dictionary<string, byte[]> RumbleState { get => _rumbleState; set => _rumbleState = value; }
 
         async Task StartListener() {
             TcpListener listener = new TcpListener(IPAddress.Any, 9909);
@@ -47,7 +46,10 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             var endpoint = client.Client.RemoteEndPoint?.ToString() ?? "Unknown";
             NetworkStream stream = client.GetStream();
             byte[] buffer = new byte[4096];
-
+            string baseIp = endpoint.Split(":")[0];
+            if (!_rumbleState.ContainsKey(baseIp)) {
+                _rumbleState[baseIp] = new byte[4] { 0, 0, 0, 0 };
+            }
             while (client.Connected) {
                 try {
                     int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
@@ -72,7 +74,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         LegacyClientDetected?.Invoke(this, EventArgs.Empty);
                     } else {
                         Console.WriteLine($"❌ Malformed packet from {endpoint} (size={data.Length})");
-                        await stream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
+                        await stream.WriteAsync(_rumbleState[baseIp], 0, _rumbleState[baseIp].Length);
                         await stream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1);
                         LegacyClientDetected?.Invoke(this, EventArgs.Empty);
                         continue;
@@ -82,11 +84,11 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         byte[] packetBytes = new byte[packetLength];
                         Buffer.BlockCopy(data, i * packetLength, packetBytes, 0, packetLength);
                         WiimotePacket packet = ParsePacket(packetBytes);
-                        string key = $"{endpoint}:{packet.Id}";
+                        string key = $"{baseIp}:{packet.Id}";
                         _wiimotes[key] = packet;
                     }
 
-                    await stream.WriteAsync(_rumbleState, 0, _rumbleState.Length);
+                    await stream.WriteAsync(_rumbleState[baseIp], 0, _rumbleState[baseIp].Length);
                     await stream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1);
                     NewPacketReceived?.Invoke(this, EventArgs.Empty);
 

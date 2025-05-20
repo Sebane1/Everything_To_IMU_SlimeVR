@@ -5,7 +5,7 @@ namespace Everything_To_IMU_SlimeVR {
     public class Configuration {
         private List<TrackerConfig> _trackerConfigs = new List<TrackerConfig>();
         private List<TrackerConfig> _trackerConfig3ds = new List<TrackerConfig>();
-        private List<TrackerConfig> _trackerConfigWiimote = new List<TrackerConfig>();
+        private Dictionary<string, TrackerConfig> _trackerConfigWiimote = new Dictionary<string, TrackerConfig>();
         private List<TrackerConfig> _trackerConfigNunchuck = new List<TrackerConfig>();
         private Dictionary<string, Vector3> _calibrationConfigurations = new Dictionary<string, Vector3>();
         private DateTime _lastConfigSave = new DateTime();
@@ -18,7 +18,7 @@ namespace Everything_To_IMU_SlimeVR {
 
         public List<TrackerConfig> TrackerConfigs { get => _trackerConfigs; set => _trackerConfigs = value; }
         public List<TrackerConfig> TrackerConfigs3ds { get => _trackerConfig3ds; set => _trackerConfig3ds = value; }
-        public List<TrackerConfig> TrackerConfigWiimote { get => _trackerConfigWiimote; set => _trackerConfigWiimote = value; }
+        public Dictionary<string,TrackerConfig> TrackerConfigWiimote { get => _trackerConfigWiimote; set => _trackerConfigWiimote = value; }
         public List<TrackerConfig> TrackerConfigNunchuck { get => _trackerConfigNunchuck; set => _trackerConfigNunchuck = value; }
         public Dictionary<string, TrackerConfig> TrackerConfigUdpHaptics { get => _trackerConfigUdpHaptics; set => _trackerConfigUdpHaptics = value; }
         public Dictionary<string, Vector3> CalibrationConfigurations { get => _calibrationConfigurations; set => _calibrationConfigurations = value; }
@@ -39,7 +39,11 @@ namespace Everything_To_IMU_SlimeVR {
         public static Configuration LoadConfig() {
             string openPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
             if (File.Exists(openPath)) {
-                var values = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(openPath));
+                Configuration values = null;
+                try {
+                    values = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(openPath));
+                } catch { 
+                }
                 Instance = values;
                 return Instance = (values == null ? new Configuration() : values);
             } else {

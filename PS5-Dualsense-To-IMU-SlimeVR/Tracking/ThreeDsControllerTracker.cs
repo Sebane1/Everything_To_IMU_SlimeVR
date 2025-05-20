@@ -152,7 +152,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             //throw new NotImplementedException();
         }
 
-        public void EngageHaptics(int duration, bool timed = true) {
+        public void EngageHaptics(int duration, float intensity, bool timed = true) {
             //throw new NotImplementedException();
         }
 
