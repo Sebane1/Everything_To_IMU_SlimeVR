@@ -8,14 +8,28 @@
 #include <arpa/inet.h>
 #include <3ds/services/apt.h>
 
-
-#define SERVER_IP   "10.0.0.21" // Change to your PC IP
 #define SERVER_PORT 9305
+#define CONFIG_PATH "/config/imu_stream.cfg"
+#define DEFAULT_SERVER_IP "10.0.0.21"
 
 typedef struct {
     s16 ax, ay, az;
     s16 gx, gy, gz;
 } ImuPacket;
+
+// Reads IP from config or returns default
+void getServerIp(char* ipBuffer, size_t bufferSize) {
+    FILE* file = fopen(CONFIG_PATH, "r");
+    if (file) {
+        fgets(ipBuffer, bufferSize, file);
+        // Remove newline character if present
+        ipBuffer[strcspn(ipBuffer, "\r\n")] = 0;
+        fclose(file);
+    }
+    else {
+        strncpy(ipBuffer, DEFAULT_SERVER_IP, bufferSize);
+    }
+}
 
 int main() {
     aptSetSleepAllowed(false);
@@ -36,6 +50,10 @@ int main() {
         return 1;
     }
 
+    char ipAddress[64];
+    getServerIp(ipAddress, sizeof(ipAddress));
+    printf("Using server IP: %s\n", ipAddress);
+
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) {
         printf("Socket creation failed\n");
@@ -49,7 +67,7 @@ int main() {
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVER_PORT);
-    inet_pton(AF_INET, SERVER_IP, &serverAddr.sin_addr);
+    inet_pton(AF_INET, ipAddress, &serverAddr.sin_addr);
 
     HIDUSER_EnableAccelerometer();
     HIDUSER_EnableGyroscope();
@@ -80,13 +98,11 @@ int main() {
             (struct sockaddr*)&serverAddr, sizeof(serverAddr));
 
         if (++frame % 50 == 0) {
-            // Clear screen and reposition cursor
             printf("\x1b[1;1H"); // Top-left
             printf("Streaming IMU data... Press START to exit\n");
             printf("Accel: %6d %6d %6d\n", accel.x, accel.y, accel.z);
             printf("Gyro : %6d %6d %6d\n", gyro.x, gyro.y, gyro.z);
         }
-
 
         svcSleepThread(10000000); // 10ms
     }
