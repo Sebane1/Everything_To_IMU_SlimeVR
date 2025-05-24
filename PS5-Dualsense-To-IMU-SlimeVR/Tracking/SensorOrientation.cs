@@ -79,38 +79,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public void Update() {
             if (!disposed) {
                 switch (_sensorType) {
-                    case SensorType.ThreeDs:
-                        RefreshSensorData();
-                        float currentTime = (float)stopwatch.Elapsed.TotalSeconds;
-
-                        // Calculate deltaTime (the difference between current and previous time)
-                        _deltaTime = currentTime - _previousTime;
-
-                        // Update previousTime for the next frame
-                        _previousTime = currentTime;
-
-                        // Accelerometer data
-                        accelerometerData = (_accelerometer + _accellerometerVectorCalibration) * 10;
-
-                        // Gyroscope data
-                        gyroData = (_gyro + _gyroVectorCalibration);
-
-                        // Step 1: Calculate pitch and roll from accelerometer data
-                        Quaternion accelerometerOrientation = GetOrientationFromAccelerometer(accelerometerData);
-
-                        //// Step 2: Calculate delta rotation from gyroscope data
-                        //Quaternion gyroDeltaRotation = GetDeltaRotationFromGyroscope(gyroData, _deltaTime);
-
-                        // Step 3: Fuse accelerometer and gyroscope data using complementary filter
-                        currentOrientation = accelerometerOrientation;
-
-                        // Normalize the quaternion to prevent drift
-                        currentOrientation = Quaternion.Normalize(currentOrientation);
-
-                        if (!IsValid(currentOrientation)) {
-                            currentOrientation = Quaternion.Identity;
-                        }
-                        break;
                     case SensorType.Bluetooth:
                         var motionState = JSL.JslGetMotionState(_index);
                         currentOrientation = new Quaternion(-motionState.quatX, motionState.quatZ, motionState.quatY, motionState.quatW);
