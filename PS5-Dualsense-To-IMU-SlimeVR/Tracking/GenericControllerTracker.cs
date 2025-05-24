@@ -32,6 +32,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private HapticNodeBinding _hapticNodeBinding;
         private bool isAlreadyVibrating;
         private bool identifying;
+        private bool updatingAlready;
 
         public event EventHandler<string> OnTrackerError;
 
@@ -97,7 +98,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public async Task<bool> Update() {
-            if (_ready) {
+            if (_ready && !updatingAlready) {
+                updatingAlready = true;
                 try {
                     var hmdHeight = OpenVRReader.GetHMDHeight();
                     bool isClamped = !_falseThighTracker.IsClamped;
@@ -135,7 +137,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
                         await udpHandler.SetSensorRotation(_rotation, 0);
                     } else {
-                        await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion(), 0);
+                        await udpHandler.SetSensorRotation(new Vector3(_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion(), 0);
                     }
                     if (_simulateThighs) {
                         await _falseThighTracker.Update();
@@ -144,6 +146,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 } catch (Exception e) {
                     OnTrackerError.Invoke(this, e.StackTrace + "\r\n" + e.Message);
                 }
+                updatingAlready = false;
             }
             return _ready;
         }

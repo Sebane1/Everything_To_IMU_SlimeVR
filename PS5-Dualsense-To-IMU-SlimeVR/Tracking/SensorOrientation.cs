@@ -9,6 +9,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private Vector3 gyroData = Vector3.Zero;
         private float _deltaTime = 0.02f; // Example time step (e.g., 50Hz)
         private float _previousTime;
+        private bool _useCustomFusion;
 
         // Complementary filter parameters
         private float alpha = 0.98f; // Weighting factor for blending
@@ -112,7 +113,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         break;
                     case SensorType.Bluetooth:
                         var motionState = JSL.JslGetMotionState(_index);
-                        currentOrientation = new Quaternion(motionState.quatX, motionState.quatZ, motionState.quatY, motionState.quatW);
+                        currentOrientation = new Quaternion(-motionState.quatX, motionState.quatZ, motionState.quatY, motionState.quatW);
                         break;
                 }
             }
