@@ -131,7 +131,12 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         _waitForRelease = false;
                     }
                     //await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X / 10000f, _sensorOrientation.AccelerometerData.Y / 10000f, _sensorOrientation.AccelerometerData.Z / 10000f), 0);
-                    await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion(), 0);
+
+                    if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
+                        await udpHandler.SetSensorRotation(_rotation, 0);
+                    } else {
+                        await udpHandler.SetSensorRotation(new Vector3(-_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion(), 0);
+                    }
                     if (_simulateThighs) {
                         await _falseThighTracker.Update();
                     }

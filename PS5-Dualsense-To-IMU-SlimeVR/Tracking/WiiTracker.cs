@@ -125,7 +125,11 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     float finalZ = 0;
 
                     await udpHandler.SetSensorBattery(value.BatteryLevel / 200f);
-                    await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion(), 0);
+                    if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
+                        await udpHandler.SetSensorRotation(_rotation, 0);
+                    } else {
+                        await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion(), 0);
+                    }
 
                     if (value.NunchukConnected != 0) {
                         _rotation = new Quaternion(value.NunchukQuatX, value.NunchukQuatY, value.NunchukQuatZ, value.NunchukQuatW);

@@ -103,10 +103,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         + _falseThighTracker.Debug;
                     }
                     //await udpHandler.SetSensorBattery(100);
+                    await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion(), 0);
                     if (!_simulateThighs) {
-                        await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion(), 0);
-                    } else {
-                        await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion(), 0);
                         await _falseThighTracker.Update();
                     }
                     _falseThighTracker.IsActive = _simulateThighs;

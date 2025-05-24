@@ -11,7 +11,8 @@
         public enum RotationReferenceType {
             HmdRotation = 0,
             WaistRotation = 1,
-            ChestRotation = 2
+            ChestRotation = 2,
+            TrustDeviceYaw = 3
         }
     }
 }

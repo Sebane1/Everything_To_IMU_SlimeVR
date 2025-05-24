@@ -143,7 +143,7 @@
             // yawForSimulatedTracker
             // 
             yawForSimulatedTracker.FormattingEnabled = true;
-            yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)" });
+            yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
             yawForSimulatedTracker.Location = new Point(10, 57);
             yawForSimulatedTracker.Name = "yawForSimulatedTracker";
             yawForSimulatedTracker.Size = new Size(319, 23);

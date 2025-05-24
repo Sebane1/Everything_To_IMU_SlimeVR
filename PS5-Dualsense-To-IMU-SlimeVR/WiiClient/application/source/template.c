@@ -35,6 +35,9 @@ static bool dummy_clearStatus(void) { return false; }
 static bool dummy_shutdown(void) { return false; }
 static bool dummy_readSectors(sec_t sector, sec_t numSectors, void* buffer) { return false; }
 static bool dummy_writeSectors(sec_t sector, sec_t numSectors, const void* buffer) { return false; }
+bool has_motionplus(int chan);
+
+#define DEG_TO_RAD(x) ((x) * (M_PI / 180.0f))
 
 const DISC_INTERFACE __io_gcsda = {
 	.features = 0,
@@ -87,6 +90,7 @@ static int persistent_sock = -1;
 bool formatSet[MAX_WIIMOTES] = { false, false, false, false };
 bool wasVibrating[MAX_WIIMOTES] = { false, false, false, false };
 char vib_response[128] = { 0, 0, 0, 0, 0 };
+Quaternion euler_to_quaternion(float pitch, float roll, float yaw);
 
 static void* xfb = NULL;
 static GXRModeObj* rmode = NULL;
@@ -194,9 +198,9 @@ int main(int argc, char** argv) {
 					nay = wpad_data->exp.nunchuk.accel.y;
 					naz = wpad_data->exp.nunchuk.accel.z;
 				}
-
 				Quaternion wm_quat = quat_from_gravity((float)x, (float)y, (float)z, wiimote_offset, wiimote_offset, wiimote_offset, 200.0f);
 				Quaternion nc_quat = quat_from_gravity((float)nax, (float)nay, (float)naz, nunchuck_offset, nunchuck_offset, nunchuck_offset, 200.0f);
+
 
 				uint32_t id_le = to_little_endian_u32(i);
 				memcpy(ptr, &id_le, 4); ptr += 4;
@@ -241,7 +245,23 @@ int main(int argc, char** argv) {
 		}
 	}
 }
+bool has_motionplus(int chan) {
+	expansion_t exp;
+	WPAD_Expansion(chan, &exp);
+	// Get expansion info
+	// 
+	// Check for MotionPlus-only
+	if (exp.type == EXP_MOTION_PLUS) {
+		return true;
+	}
 
+	// Check for MotionPlus in passthrough mode with Nunchuk
+	if (exp.type == EXP_NUNCHUK && exp.mp.status != 0) {
+		return true;
+	}
+
+	return false;  // No MotionPlus detected
+}
 void get_app_directory(char* out_path, size_t out_size, char* argv0) {
 	if (!argv0 || argv0[0] == '\0') {
 		strncpy(out_path, "sd:/apps/WiiImuForwarder", out_size - 1); // fallback default
@@ -459,6 +479,25 @@ uint32_t count_connected_wiimotes() {
 		}
 	}
 	return count;
+}
+Quaternion euler_to_quaternion(float pitch, float roll, float yaw) {
+	pitch = DEG_TO_RAD(pitch);
+	roll = DEG_TO_RAD(roll);
+	yaw = DEG_TO_RAD(yaw);
+
+	float cy = cosf(yaw * 0.5f);
+	float sy = sinf(yaw * 0.5f);
+	float cp = cosf(pitch * 0.5f);
+	float sp = sinf(pitch * 0.5f);
+	float cr = cosf(roll * 0.5f);
+	float sr = sinf(roll * 0.5f);
+
+	Quaternion q;
+	q.w = cr * cp * cy + sr * sp * sy;
+	q.x = sr * cp * cy - cr * sp * sy;
+	q.y = cr * sp * cy + sr * cp * sy;
+	q.z = cr * cp * sy - sr * sp * cy;
+	return q;
 }
 
 uint32_t to_little_endian_u32(uint32_t val) {
