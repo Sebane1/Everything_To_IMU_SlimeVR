@@ -79,7 +79,7 @@ u32 finalTargetFrameMs = 32;
 #define MOTIONPLUS_DELAY_FRAMES 60
 #define DEFAULT_SERVER_IP "10.0.0.21"
 #define DEFAULT_SERVER_PORT 9909
-#define DATA_PER_CONTROLLER 38
+#define DATA_PER_CONTROLLER 18
 
 static char server_ip[32] = DEFAULT_SERVER_IP;
 static int server_port = DEFAULT_SERVER_PORT;
@@ -160,9 +160,6 @@ int main(int argc, char** argv) {
 	printf("IP: %s\n", localip);
 	printf("Gateway: %s\n", gateway);
 	printf("Netmask: %s\n", netmask);
-
-	s16 wiimote_offset = 512;
-	s16 nunchuck_offset = 512;
 	WPAD_SetIdleTimeout(36000);
 	uint8_t full_buffer[MAX_WIIMOTES * DATA_PER_CONTROLLER];
 	uint8_t* ptr;
@@ -181,7 +178,7 @@ int main(int argc, char** argv) {
 					formatSet[i] = true;
 				}
 
-				u32 pressed = WPAD_ButtonsDown(i);
+				u32 pressed = WPAD_ButtonsUp(i);
 				if (pressed & WPAD_BUTTON_HOME) {
 					exit(0);
 				}
@@ -198,27 +195,26 @@ int main(int argc, char** argv) {
 					nay = wpad_data->exp.nunchuk.accel.y;
 					naz = wpad_data->exp.nunchuk.accel.z;
 				}
-				Quaternion wm_quat = quat_from_gravity((float)x, (float)y, (float)z, wiimote_offset, wiimote_offset, wiimote_offset, 200.0f);
-				Quaternion nc_quat = quat_from_gravity((float)nax, (float)nay, (float)naz, nunchuck_offset, nunchuck_offset, nunchuck_offset, 200.0f);
-
 
 				uint32_t id_le = to_little_endian_u32(i);
 				memcpy(ptr, &id_le, 4); ptr += 4;
 
-				float_to_little_endian(wm_quat.w, ptr); ptr += 4;
-				float_to_little_endian(wm_quat.x, ptr); ptr += 4;
-				float_to_little_endian(wm_quat.y, ptr); ptr += 4;
-				float_to_little_endian(wm_quat.z, ptr); ptr += 4;
+				// Wiimote accel (x, y, z)
 
+				s16_to_little_endian(x, ptr); ptr += 2;
+				s16_to_little_endian(y, ptr); ptr += 2;
+				s16_to_little_endian(z, ptr); ptr += 2;
+
+
+				// Nunchuk accel (x, y, z) or zeros
 				if (nunchuk_connected) {
-					float_to_little_endian(nc_quat.w, ptr); ptr += 4;
-					float_to_little_endian(nc_quat.x, ptr); ptr += 4;
-					float_to_little_endian(nc_quat.y, ptr); ptr += 4;
-					float_to_little_endian(nc_quat.z, ptr); ptr += 4;
+					s16_to_little_endian(nax, ptr); ptr += 2;
+					s16_to_little_endian(nay, ptr); ptr += 2;
+					s16_to_little_endian(naz, ptr); ptr += 2;
 				}
 				else {
-					memset(ptr, 0, 16);
-					ptr += 16;
+					memset(ptr, 0, 6);
+					ptr += 6;
 				}
 
 				*ptr = nunchuk_connected;
@@ -227,6 +223,14 @@ int main(int argc, char** argv) {
 				u8 battery = WPAD_BatteryLevel(i);
 				*ptr = battery;
 				ptr++;
+
+				*ptr = (pressed & WPAD_BUTTON_ONE || pressed & WPAD_BUTTON_TWO) ? 1 : 0;
+				ptr++;
+			}
+			else {
+				if (i < MAX_WIIMOTES - 1) {
+					ptr += DATA_PER_CONTROLLER;
+				}
 			}
 		}
 
@@ -411,7 +415,10 @@ void send_http_post_binary(uint8_t* payload, int payload_len) {
 }
 
 
-
+void s16_to_little_endian(s16 value, u8* dest) {
+	dest[0] = value & 0xFF;
+	dest[1] = (value >> 8) & 0xFF;
+}
 
 Vector normalize_vector(float x, float y, float z) {
 	float length = sqrtf(x * x + y * y + z * z);

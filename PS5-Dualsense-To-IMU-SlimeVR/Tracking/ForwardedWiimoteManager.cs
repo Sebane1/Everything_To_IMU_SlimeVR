@@ -8,8 +8,8 @@ using System.Diagnostics;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     public class ForwardedWiimoteManager {
-        private static ConcurrentDictionary<string, WiimotePacket> _wiimotes = new();
-        private static Dictionary<string, byte[]> _rumbleState = new Dictionary<string, byte[]>();
+        private static ConcurrentDictionary<string, WiimoteInfo> _wiimotes = new();
+        private static ConcurrentDictionary<string, byte[]> _rumbleState = new ConcurrentDictionary<string, byte[]>();
 
         private static List<string> _wiimoteIds = new();
         public static EventHandler NewPacketReceived;
@@ -24,8 +24,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             Task.Run(() => StartListener());
             _timeBetweenRequests.Restart();
         }
-        public static ConcurrentDictionary<string, WiimotePacket> Wiimotes => _wiimotes;
-        public static Dictionary<string, byte[]> RumbleState { get => _rumbleState; set => _rumbleState = value; }
+        public static ConcurrentDictionary<string, WiimoteInfo> Wiimotes => _wiimotes;
+        public static ConcurrentDictionary<string, byte[]> RumbleState { get => _rumbleState; set => _rumbleState = value; }
 
         async Task StartListener() {
             TcpListener listener = new TcpListener(IPAddress.Any, 9909);
@@ -64,14 +64,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     int packetLength = 0;
                     int numPackets = 0;
 
-                    if (data.Length % 38 == 0) {
-                        numPackets = data.Length / 38;
+                    if (data.Length % 19 == 0) {
+                        numPackets = data.Length / 19;
                         packetLength = 38;
-                    } else if (data.Length % 37 == 0) {
-                        numPackets = data.Length / 37;
-                        packetLength = 37;
-                        Console.WriteLine("⚠️  Legacy client detected.");
-                        LegacyClientDetected?.Invoke(this, EventArgs.Empty);
                     } else {
                         Console.WriteLine($"❌ Malformed packet from {endpoint} (size={data.Length})");
                         await stream.WriteAsync(_rumbleState[baseIp], 0, _rumbleState[baseIp].Length);
@@ -85,7 +80,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         Buffer.BlockCopy(data, i * packetLength, packetBytes, 0, packetLength);
                         WiimotePacket packet = ParsePacket(packetBytes);
                         string key = $"{baseIp}:{packet.Id}";
-                        _wiimotes[key] = packet;
+                        _wiimotes[key] = new WiimoteInfo(packet);
                     }
 
                     await stream.WriteAsync(_rumbleState[baseIp], 0, _rumbleState[baseIp].Length);
@@ -114,16 +109,41 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct WiimotePacket {
             public uint Id;
-            public float WiimoteQuatW;
-            public float WiimoteQuatX;
-            public float WiimoteQuatY;
-            public float WiimoteQuatZ;
-            public float NunchukQuatW;
-            public float NunchukQuatX;
-            public float NunchukQuatY;
-            public float NunchukQuatZ;
+            public short WiimoteAccelX;
+            public short WiimoteAccelY;
+            public short WiimoteAccelZ;
+            public short NunchukAccelX;
+            public short NunchukAccelY;
+            public short NunchukAccelZ;
             public byte NunchukConnected;
             public byte BatteryLevel;
+            public byte ButtonUp;
+        }
+        public struct WiimoteInfo {
+            public uint Id;
+            public Quaternion WiimoteOrientation;
+            public Quaternion NunchuckOrientation;
+            public byte NunchukConnected;
+            public byte BatteryLevel;
+            public byte ButtonUp;
+
+            public WiimoteInfo(WiimotePacket wiimotePacket) {
+                short wiimoteOffset = 512;
+                short nunchuckOffset = 512;
+                Id = wiimotePacket.Id;
+
+                WiimoteOrientation = QuaternionUtils.QuatFromGravity(
+                    wiimotePacket.WiimoteAccelX, wiimotePacket.WiimoteAccelY, wiimotePacket.NunchukAccelZ,
+                    wiimoteOffset, wiimoteOffset, wiimoteOffset, 200f);
+
+                NunchuckOrientation = QuaternionUtils.QuatFromGravity(
+                    wiimotePacket.NunchukAccelX, wiimotePacket.NunchukAccelY, wiimotePacket.NunchukAccelZ,
+                    nunchuckOffset, nunchuckOffset, nunchuckOffset, 200f);
+
+                NunchukConnected = wiimotePacket.NunchukConnected;
+                BatteryLevel = wiimotePacket.BatteryLevel;
+                ButtonUp = wiimotePacket.ButtonUp;
+            }
         }
     }
 }

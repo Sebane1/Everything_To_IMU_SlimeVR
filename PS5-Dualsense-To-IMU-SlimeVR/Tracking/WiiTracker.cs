@@ -16,7 +16,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private string _wiimoteId;
         private string _firmwareId;
         private bool _nunchuck;
-        private ConcurrentDictionary<string, WiimotePacket> _motionStateList;
+        private ConcurrentDictionary<string, WiimoteInfo> _motionStateList;
         private string macSpoof;
         private UDPHandler udpHandler;
         private Vector3 _wiimoteRotationCalibration;
@@ -102,7 +102,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     _lastEulerPositon = -trackerEuler;
 
                     var value = _motionStateList[_wiimoteId];
-                    _rotation = new Quaternion(value.WiimoteQuatX, value.WiimoteQuatY, value.WiimoteQuatZ, value.WiimoteQuatW);
+                    _rotation = value.WiimoteOrientation;
                     _eulerUncalibrated = _rotation.QuaternionToEuler();
                     _euler = _eulerUncalibrated + _wiimoteRotationCalibration;
                     if (GenericTrackerManager.DebugOpen) {
@@ -132,7 +132,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     }
 
                     if (value.NunchukConnected != 0) {
-                        _rotation = new Quaternion(value.NunchukQuatX, value.NunchukQuatY, value.NunchukQuatZ, value.NunchukQuatW);
+                        _rotation = value.NunchuckOrientation;
                         _eulerUncalibrated = _rotation.QuaternionToEuler();
                         _euler = _eulerUncalibrated + _nunchuckRotationCalibration;
                         if (GenericTrackerManager.DebugOpen) {
@@ -168,7 +168,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             await Task.Delay(5000);
             _calibratedHeight = OpenVRReader.GetHMDHeight();
             var value = _motionStateList.ElementAt(_index);
-            _rotation = new Quaternion(value.Value.WiimoteQuatX, value.Value.WiimoteQuatY, value.Value.WiimoteQuatZ, value.Value.WiimoteQuatW);
+            _rotation = new Quaternion(value.Value.x, value.Value.WiimoteQuatY, value.Value.WiimoteQuatZ, value.Value.WiimoteQuatW);
             _wiimoteRotationCalibration = -_rotation.QuaternionToEuler();
 
             _rotation = new Quaternion(value.Value.NunchukQuatX, value.Value.NunchukQuatY, value.Value.NunchukQuatZ, value.Value.NunchukQuatW);
@@ -221,7 +221,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public void DisableHaptics() {
             if (!identifying) {
                 isAlreadyVibrating = false;
-                ForwardedWiimoteManager.RumbleState[_wiimoteClient][_id] = 0;
+                EngageHaptics(Configuration.Instance.WiiPollingRate, 100);
             }
         }
         public override string ToString() {

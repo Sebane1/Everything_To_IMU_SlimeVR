@@ -99,61 +99,63 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         public async Task<bool> Update() {
             if (_ready && !updatingAlready) {
-                updatingAlready = true;
-                try {
-                    var hmdHeight = OpenVRReader.GetHMDHeight();
-                    bool isClamped = !_falseThighTracker.IsClamped;
-                    var trackerRotation = GetTrackerRotation(YawReferenceTypeValue);
-                    float trackerEuler = trackerRotation.GetYawFromQuaternion();
-                    _lastEulerPositon = -trackerEuler;
-                    _rotation = _sensorOrientation.CurrentOrientation;
-                    _euler = _rotation.QuaternionToEuler() + _rotationCalibration;
-                    _gyro = _sensorOrientation.GyroData;
-                    _acceleration = _sensorOrientation.AccelerometerData;
+                _ = Task.Run(async () => {
+                    updatingAlready = true;
+                    try {
+                        var hmdHeight = OpenVRReader.GetHMDHeight();
+                        bool isClamped = !_falseThighTracker.IsClamped;
+                        var trackerRotation = GetTrackerRotation(YawReferenceTypeValue);
+                        float trackerEuler = trackerRotation.GetYawFromQuaternion();
+                        _lastEulerPositon = -trackerEuler;
+                        _rotation = _sensorOrientation.CurrentOrientation;
+                        _euler = _rotation.QuaternionToEuler() + _rotationCalibration;
+                        _gyro = _sensorOrientation.GyroData;
+                        _acceleration = _sensorOrientation.AccelerometerData;
 
-                    if (GenericTrackerManager.DebugOpen) {
-                        _debug =
-                        $"Device Id: {macSpoof}\r\n" +
-                        $"Euler Rotation:\r\n" +
-                        $"X:{_euler.X}, Y:{_euler.Y}, Z:{_rotation.Z}" +
-                        $"\r\nGyro:\r\n" +
-                        $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
-                        $"\r\nAcceleration:\r\n" +
-                        $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
-                        $"Yaw Reference Rotation:\r\n" +
-                        $"Y:{trackerEuler}\r\n"
-                        + _falseThighTracker.Debug;
-                    }
-                    if (GetLocalState(0x20000)) {
-                        if (!_waitForRelease) {
-                            await udpHandler.SendButton();
-                            _waitForRelease = true;
+                        if (GenericTrackerManager.DebugOpen) {
+                            _debug =
+                            $"Device Id: {macSpoof}\r\n" +
+                            $"Euler Rotation:\r\n" +
+                            $"X:{_euler.X}, Y:{_euler.Y}, Z:{_rotation.Z}" +
+                            $"\r\nGyro:\r\n" +
+                            $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
+                            $"\r\nAcceleration:\r\n" +
+                            $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
+                            $"Yaw Reference Rotation:\r\n" +
+                            $"Y:{trackerEuler}\r\n"
+                            + _falseThighTracker.Debug;
                         }
-                    } else {
-                        _waitForRelease = false;
-                    }
-                    //await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X / 10000f, _sensorOrientation.AccelerometerData.Y / 10000f, _sensorOrientation.AccelerometerData.Z / 10000f), 0);
+                        if (GetLocalState(0x20000)) {
+                            if (!_waitForRelease) {
+                                await udpHandler.SendButton();
+                                _waitForRelease = true;
+                            }
+                        } else {
+                            _waitForRelease = false;
+                        }
+                        //await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.AccelerometerData.X / 10000f, _sensorOrientation.AccelerometerData.Y / 10000f, _sensorOrientation.AccelerometerData.Z / 10000f), 0);
 
-                    if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
-                        await udpHandler.SetSensorRotation(_rotation, 0);
-                    } else {
-                        await udpHandler.SetSensorRotation(new Vector3(_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion(), 0);
+                        if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
+                            await udpHandler.SetSensorRotation(_rotation, 0);
+                        } else {
+                            await udpHandler.SetSensorRotation(new Vector3(_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion(), 0);
+                        }
+                        if (_simulateThighs) {
+                            await _falseThighTracker.Update();
+                        }
+                        _falseThighTracker.IsActive = _simulateThighs;
+                    } catch (Exception e) {
+                        OnTrackerError.Invoke(this, e.StackTrace + "\r\n" + e.Message);
                     }
-                    if (_simulateThighs) {
-                        await _falseThighTracker.Update();
-                    }
-                    _falseThighTracker.IsActive = _simulateThighs;
-                } catch (Exception e) {
-                    OnTrackerError.Invoke(this, e.StackTrace + "\r\n" + e.Message);
-                }
-                updatingAlready = false;
+                    updatingAlready = false;
+                });
             }
             return _ready;
         }
         public async void Recalibrate() {
             _sensorOrientation.Recalibrate();
             await Task.Delay(5000);
-            JSL.JslResetContinuousCalibration(_index);
+            //JSL.JslResetContinuousCalibration(_index);
             _calibratedHeight = OpenVRReader.GetHMDHeight();
             _rotationCalibration = GetCalibration();
             _falseThighTracker.Recalibrate();

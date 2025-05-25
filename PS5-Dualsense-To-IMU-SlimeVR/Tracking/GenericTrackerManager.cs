@@ -149,12 +149,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             i = 0;
                             tracker.Dispose();
                         } else {
-                            // Some controllers (joycons) have bad polling rates that become input blocking for other devices.
-                            // So we run the update as its own task now.
-                            _= Task.Run(async () => {
-                                // Update tracker.
-                                await tracker.Update();
-                            });
+                            // Update tracker.
+                            await tracker.Update();
                         }
                     }
                     for (int i = 0; i < _trackers3ds.Count; i++) {
