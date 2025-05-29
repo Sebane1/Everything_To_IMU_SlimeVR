@@ -68,6 +68,13 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             FLEX_ANGLE = 2
         }
 
+        public enum UserActionType : byte {
+            RESET_FULL = 2,
+            RESET_YAW = 3,
+            RESET_MOUNTING = 4,
+            PAUSE_TRACKING = 5
+        }
+
         public enum TrackerPosition {
             NONE = 0,
             HEAD = 1,
@@ -141,6 +148,8 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             public static int ROTATION_2 = 16;
             public static int ROTATION_DATA = 17;
             public static int MAGENTOMETER_ACCURACY = 18;
+
+            public static int CALIBRATION_RESET = 21;
 
             public static int FLEX_DATA_PACKET = 26;
             public static int BUTTON_PUSHED = 60;

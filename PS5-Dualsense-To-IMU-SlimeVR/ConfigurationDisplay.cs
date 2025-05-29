@@ -147,6 +147,9 @@ namespace Everything_To_IMU_SlimeVR {
                 yawForSimulatedTracker.SelectedIndex = (int)_currentTrackerConfig.YawReferenceTypeValue;
                 _currentTracker.YawReferenceTypeValue = _currentTrackerConfig.YawReferenceTypeValue;
 
+                extensionYawForSimulatedTracker.SelectedIndex = (int)_currentTrackerConfig.ExtensionYawReferenceTypeValue;
+                _currentTracker.ExtensionYawReferenceTypeValue = _currentTrackerConfig.ExtensionYawReferenceTypeValue;
+
                 hapticJointAssignment.SelectedIndex = (int)_currentTracker.HapticNodeBinding;
                 _currentTracker.HapticNodeBinding = _currentTrackerConfig.HapticNodeBinding;
 
@@ -299,6 +302,14 @@ namespace Everything_To_IMU_SlimeVR {
             _configuration.WiiPollingRate = (byte)wiimoteRate.Value;
             wiimoteRateLabel.Text = "Wiimote Rate: " + wiimoteRate.Value + "ms";
             _configuration.SaveConfig();
+        }
+
+        private void extensionYawForSimulatedTracker_SelectedIndexChanged(object sender, EventArgs e) {
+            if (!_suppressCheckBoxEvent) {
+                _currentTracker.ExtensionYawReferenceTypeValue = (RotationReferenceType)extensionYawForSimulatedTracker.SelectedIndex;
+                _currentTrackerConfig.ExtensionYawReferenceTypeValue = (RotationReferenceType)extensionYawForSimulatedTracker.SelectedIndex;
+                _configuration.SaveConfig();
+            }
         }
     }
 }

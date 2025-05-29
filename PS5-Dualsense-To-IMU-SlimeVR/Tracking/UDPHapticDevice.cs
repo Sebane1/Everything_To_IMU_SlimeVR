@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Windows.Forms;
+using static Everything_To_IMU_SlimeVR.TrackerConfig;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     public class UDPHapticDevice : IBodyTracker {
@@ -16,6 +17,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private UdpClient _udpServer;
         private IPEndPoint _clientEndPoint;
         private bool isAlreadyVibrating;
+        private RotationReferenceType _extensionYawReferenceTypeValue;
 
         public UDPHapticDevice(string ipAddress) {
             // Set up UDP server
@@ -38,7 +40,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public string Debug => "Use owotrack to get SlimeVR Tracking on cellphones. Only haptics are provided by this application.";
 
         public bool Ready { get; set; }
-
+        public RotationReferenceType ExtensionYawReferenceTypeValue { get => _extensionYawReferenceTypeValue; set => _extensionYawReferenceTypeValue = value; }
         public void DisableHaptics() {
         }
 

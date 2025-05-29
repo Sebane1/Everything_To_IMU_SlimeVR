@@ -41,15 +41,15 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
 
         public PacketBuilder(string fwString) {
             _identifierString = fwString;
-            heartbeatStream = new MemoryStream(new byte[28]);
-            handshakeStream = new MemoryStream(new byte[128]);
-            sensorInfoStream = new MemoryStream(new byte[128]);
-            rotationPacketStream = new MemoryStream(new byte[128]);
-            accellerationPacketStream = new MemoryStream(new byte[128]);
-            gyroPacketStream = new MemoryStream(new byte[128]);
-            flexdataPacketStream = new MemoryStream(new byte[128]);
-            buttonPushPacketStream = new MemoryStream(new byte[128]);
-            batteryLevelPacketStream = new MemoryStream(new byte[128]);
+            heartbeatStream = new MemoryStream();
+            handshakeStream = new MemoryStream();
+            sensorInfoStream = new MemoryStream();
+            rotationPacketStream = new MemoryStream();
+            accellerationPacketStream = new MemoryStream();
+            gyroPacketStream = new MemoryStream();
+            flexdataPacketStream = new MemoryStream();
+            buttonPushPacketStream = new MemoryStream();
+            batteryLevelPacketStream = new MemoryStream();
 
 
             _handshakeWriter = new BigEndianBinaryWriter(handshakeStream);
@@ -173,11 +173,12 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             var data = flexdataPacketStream.ToArray();
             return data;
         }
-        public byte[] BuildButtonPushedPacket() {
+        public byte[] BuildButtonPushedPacket(UserActionType userActionType) {
             BigEndianBinaryWriter writer = _buttonPushPacketWriter;
             buttonPushPacketStream.Position = 0;
-            writer.Write(UDPPackets.BUTTON_PUSHED); // Header
+            writer.Write(UDPPackets.CALIBRATION_RESET); // Header 21
             writer.Write(_packetId++); // Packet counter
+            writer.Write((byte)userActionType); // Action
             buttonPushPacketStream.Position = 0;
             var data = buttonPushPacketStream.ToArray();
             return data;

@@ -36,6 +36,7 @@ static bool dummy_shutdown(void) { return false; }
 static bool dummy_readSectors(sec_t sector, sec_t numSectors, void* buffer) { return false; }
 static bool dummy_writeSectors(sec_t sector, sec_t numSectors, const void* buffer) { return false; }
 bool has_motionplus(int chan);
+void s16_to_little_endian(s16 value, u8* dest);
 
 #define DEG_TO_RAD(x) ((x) * (M_PI / 180.0f))
 
@@ -79,7 +80,7 @@ u32 finalTargetFrameMs = 32;
 #define MOTIONPLUS_DELAY_FRAMES 60
 #define DEFAULT_SERVER_IP "10.0.0.21"
 #define DEFAULT_SERVER_PORT 9909
-#define DATA_PER_CONTROLLER 18
+#define DATA_PER_CONTROLLER 19
 
 static char server_ip[32] = DEFAULT_SERVER_IP;
 static int server_port = DEFAULT_SERVER_PORT;
@@ -224,13 +225,33 @@ int main(int argc, char** argv) {
 				*ptr = battery;
 				ptr++;
 
-				*ptr = (pressed & WPAD_BUTTON_ONE || pressed & WPAD_BUTTON_TWO) ? 1 : 0;
+				*ptr = (pressed & WPAD_BUTTON_1 || pressed & WPAD_BUTTON_2) ? 1 : 0;
 				ptr++;
 			}
 			else {
-				if (i < MAX_WIIMOTES - 1) {
-					ptr += DATA_PER_CONTROLLER;
-				}
+				uint32_t id_le = to_little_endian_u32(-1);
+				memcpy(ptr, &id_le, 4); ptr += 4;
+
+				// Wiimote accel (x, y, z)
+
+				s16_to_little_endian(0, ptr); ptr += 2;
+				s16_to_little_endian(0, ptr); ptr += 2;
+				s16_to_little_endian(0, ptr); ptr += 2;
+
+
+				// Nunchuk accel (x, y, z) or zeros
+				memset(ptr, 0, 6);
+				ptr += 6;
+
+				*ptr = 0;
+				ptr++;
+
+				u8 battery = 0;
+				*ptr = battery;
+				ptr++;
+
+				*ptr = 0;
+				ptr++;
 			}
 		}
 

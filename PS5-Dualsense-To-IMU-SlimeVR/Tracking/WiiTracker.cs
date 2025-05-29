@@ -29,19 +29,22 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private bool _useWaistTrackerForYaw;
         private FalseThighTracker _falseThighTracker;
         private float _lastEulerPositon;
-        private Quaternion _rotation;
-        private Vector3 _eulerUncalibrated;
-        private Vector3 _euler;
-        private Vector3 _gyro;
         private Vector3 _acceleration;
         private bool _waitForRelease;
         private string _rememberedStringId;
         private RotationReferenceType _yawReferenceTypeValue = RotationReferenceType.WaistRotation;
+        private RotationReferenceType _extensionYawReferenceTypeValue = RotationReferenceType.WaistRotation;
         Stopwatch buttonPressTimer = new Stopwatch();
         WiiTracker _connectedWiimote;
         private HapticNodeBinding _hapticNodeBinding;
         private bool isAlreadyVibrating;
         private bool identifying;
+        private bool _isAlreadyUpdating;
+        private float _minAccelDelta;
+        private bool _hasTrackedFirstAccel;
+        private Vector3Short _previousAccelValue;
+        private Vector3Short _previousWiimoteAccelValue;
+        private Vector3Short _previousNunchuckAccelValue;
 
         public event EventHandler<string> OnTrackerError;
 
@@ -55,7 +58,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     _wiimoteClient = split[0];
                     _id = int.Parse(split[1]);
                     _wiimoteId = id;
-                    _rememberedStringId = _wiimoteClient + _id.ToString();
+                    _rememberedStringId = _wiimoteClient + ":" + _id.ToString();
                     macSpoof = HashUtility.CalculateMD5Hash(_rememberedStringId + "Wiimote_Tracker");
                     _firmwareId = "Wiimote_Tracker" + _rememberedStringId;
                     _motionStateList = ForwardedWiimoteManager.Wiimotes;
@@ -92,93 +95,126 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public async Task<bool> Update() {
+            var accelerationMultiplier = 1f;
+            var accelerationNunchuckMultiplier = 1f;
             if (_ready) {
                 try {
-                    var hmdHeight = OpenVRReader.GetHMDHeight();
-                    bool isClamped = !_falseThighTracker.IsClamped;
-                    var trackerRotation = GetTrackerRotation(YawReferenceTypeValue);
-                    float trackerEuler = trackerRotation.GetYawFromQuaternion();
-
-                    _lastEulerPositon = -trackerEuler;
-
                     var value = _motionStateList[_wiimoteId];
-                    _rotation = value.WiimoteOrientation;
-                    _eulerUncalibrated = _rotation.QuaternionToEuler();
-                    _euler = _eulerUncalibrated + _wiimoteRotationCalibration;
-                    if (GenericTrackerManager.DebugOpen) {
-                        _debug =
-                        $"Device Id: {macSpoof}\r\n" +
-                        $"Euler Rotation Uncalibrated:\r\n" +
-                        $"X:{_eulerUncalibrated.X}, Y:{_eulerUncalibrated.Y}, Z:{_eulerUncalibrated.Z}" +
-                        $"\r\nEuler Rotation:\r\n" +
-                        $"X:{_euler.X}, Y:{_euler.Y}, Z:{_rotation.Z}" +
-                        $"\r\nGyro:\r\n" +
-                        $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
-                        $"\r\nAcceleration:\r\n" +
-                        $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
-                        $"Yaw Reference Rotation:\r\n" +
-                        $"Y:{trackerEuler}\r\n"
-                        + _falseThighTracker.Debug;
-                    }
-                    float finalX = -_euler.X;
-                    float finalY = _euler.Y;
-                    float finalZ = 0;
-
-                    await udpHandler.SetSensorBattery(value.BatteryLevel / 200f);
-                    if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
-                        await udpHandler.SetSensorRotation(_rotation, 0);
-                    } else {
-                        await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion(), 0);
-                    }
-
-                    if (value.NunchukConnected != 0) {
-                        _rotation = value.NunchuckOrientation;
-                        _eulerUncalibrated = _rotation.QuaternionToEuler();
-                        _euler = _eulerUncalibrated + _nunchuckRotationCalibration;
-                        if (GenericTrackerManager.DebugOpen) {
-                            _debug +=
-                            $"\r\n\r\nNunchuck" +
-                            $"Euler Rotation Uncalibrated:\r\n" +
-                            $"X:{_eulerUncalibrated.X}, Y:{_eulerUncalibrated.Y}, Z:{_eulerUncalibrated.Z}" +
-                            $"\r\nEuler Rotation:\r\n" +
-                            $"X:{_euler.X}, Y:{_euler.Y}, Z:{_rotation.Z}" +
-                            $"\r\nGyro:\r\n" +
-                            $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
-                            $"\r\nAcceleration:\r\n" +
-                            $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
-                            $"Yaw Reference Rotation:\r\n" +
-                            $"Y:{trackerEuler}\r\n";
+                    if (value.ButtonUp) {
+                        if (!_waitForRelease) {
+                            _waitForRelease = true;
+                            udpHandler.SendButton(HapticNodeBinding);
                         }
-                        finalX = _euler.X;
-                        await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion(), 1);
-                    }
+                    } else if (!_isAlreadyUpdating) {
+                        _isAlreadyUpdating = true;
+                        var hmdHeight = OpenVRReader.GetHMDHeight();
+                        bool isClamped = !_falseThighTracker.IsClamped;
+                        var trackerRotation = GetTrackerRotation(YawReferenceTypeValue);
+                        float trackerEuler = trackerRotation.GetYawFromQuaternion();
+
+                        _lastEulerPositon = -trackerEuler;
+                        if (_waitForRelease) {
+                            _waitForRelease = false;
+                        }
+                        var wiimoteRotation = value.WiimoteOrientation;
+                        var eulerUncalibrated = wiimoteRotation.QuaternionToEuler();
+                        var euler = eulerUncalibrated;
+                        if (GenericTrackerManager.DebugOpen) {
+                            _debug =
+                            $"Device Id: {macSpoof}\r\n" +
+                            $"Euler Rotation Uncalibrated:\r\n" +
+                            $"X:{eulerUncalibrated.X}, Y:{eulerUncalibrated.Y}, Z:{eulerUncalibrated.Z}" +
+                            $"\r\nEuler Rotation:\r\n" +
+                            $"X:{euler.X}, Y:{euler.Y}, Z:{euler.Z}" +
+                            $"\r\nAcceleration:\r\n" +
+                            $"X:{value.WiimoteAccelX}, Y:{value.WiimoteAccelY}, Z:{value.WiimoteAccelZ}\r\n" +
+                            $"Yaw Reference Rotation:\r\n" +
+                            $"Y:{trackerEuler}\r\n"
+                            + _falseThighTracker.Debug;
+                        }
+                        float finalX = -euler.X;
+                        float finalY = euler.Y;
+                        float finalZ = 0;
+
+                        await udpHandler.SetSensorBattery(Math.Clamp(value.BatteryLevel / 100f, 0f, 1f));
+                        var shortVector = new Vector3Short(value.WiimoteAccelZ, value.WiimoteAccelY, value.WiimoteAccelZ);
+                        await udpHandler.SetSensorAcceleration(new Vector3(
+    (value.WiimoteAccelX / 512f) * accelerationMultiplier,
+    (value.WiimoteAccelY / 512f) * accelerationMultiplier,
+    (value.WiimoteAccelZ / 512f) * accelerationMultiplier), 0);
+                        if (HasSignificantAccelChange(shortVector, _previousWiimoteAccelValue, 5f)) {
+                            if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
+                                await udpHandler.SetSensorRotation(wiimoteRotation, 0);
+                            } else {
+                                await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion(), 0);
+                            }
+                            _previousWiimoteAccelValue = shortVector;
+                        }
+
+                        if (value.NunchukConnected != 0) {
+                            if (YawReferenceTypeValue != ExtensionYawReferenceTypeValue) {
+                                trackerRotation = GetTrackerRotation(ExtensionYawReferenceTypeValue);
+                                trackerEuler = trackerRotation.GetYawFromQuaternion();
+                                _lastEulerPositon = -trackerEuler;
+                            }
+                            var nunchuckRotation = value.NunchuckOrientation;
+                            eulerUncalibrated = nunchuckRotation.QuaternionToEuler();
+                            euler = eulerUncalibrated;
+                            if (GenericTrackerManager.DebugOpen) {
+                                _debug +=
+                                $"\r\n\r\nNunchuck" +
+                                $"Euler Calibration Rotation Offset:\r\n" +
+                                $"X:{_nunchuckRotationCalibration.X}, Y:{_nunchuckRotationCalibration.Y}, Z:{_nunchuckRotationCalibration.Z}\r\n" +
+                                $"Euler Rotation Uncalibrated:\r\n" +
+                                $"X:{eulerUncalibrated.X}, Y:{eulerUncalibrated.Y}, Z:{eulerUncalibrated.Z}" +
+                                $"\r\nEuler Rotation:\r\n" +
+                                $"X:{euler.X}, Y:{euler.Y}, Z:{euler.Z}" +
+                                $"\r\nAcceleration:\r\n" +
+                                $"X:{value.NunchukAccelX}, Y:{value.NunchukAccelY}, Z:{value.NunchukAccelZ}\r\n" +
+                                $"Yaw Reference Rotation:\r\n" +
+                                $"Y:{trackerEuler}\r\n";
+                            }
+                            finalX = euler.X;
+                            shortVector = new Vector3Short(value.NunchukAccelX, value.NunchukAccelY, value.NunchukAccelZ);
+                            await udpHandler.SetSensorAcceleration(new Vector3(
+(value.NunchukAccelX / 512f) * accelerationNunchuckMultiplier,
+(value.NunchukAccelY / 512f) * accelerationNunchuckMultiplier,
+(value.NunchukAccelZ / 512f) * accelerationNunchuckMultiplier), 0);
+                            if (HasSignificantAccelChange(shortVector, _previousNunchuckAccelValue, 1f)) {
+                                await udpHandler.SetSensorRotation(new Vector3(finalX, -euler.Y, _lastEulerPositon).ToQuaternion(), 1);
+                                _previousNunchuckAccelValue = shortVector;
+                            }
+                        }
 
 
-                    if (_simulateThighs) {
-                        await _falseThighTracker.Update();
+                        if (_simulateThighs) {
+                            await _falseThighTracker.Update();
+                        }
+                        _falseThighTracker.IsActive = _simulateThighs;
+                        _isAlreadyUpdating = false;
                     }
-                    _falseThighTracker.IsActive = _simulateThighs;
                 } catch (Exception e) {
                     OnTrackerError.Invoke(this, e.StackTrace + "\r\n" + e.Message);
                 }
             }
+
             return _ready;
         }
+
         public async void Recalibrate() {
-            await Task.Delay(5000);
+            
             _calibratedHeight = OpenVRReader.GetHMDHeight();
             var value = _motionStateList.ElementAt(_index);
-            _rotation = new Quaternion(value.Value.x, value.Value.WiimoteQuatY, value.Value.WiimoteQuatZ, value.Value.WiimoteQuatW);
-            _wiimoteRotationCalibration = -_rotation.QuaternionToEuler();
+            var rotation = value.Value.WiimoteOrientation;
+            _wiimoteRotationCalibration = -rotation.QuaternionToEuler();
 
-            _rotation = new Quaternion(value.Value.NunchukQuatX, value.Value.NunchukQuatY, value.Value.NunchukQuatZ, value.Value.NunchukQuatW);
-            _nunchuckRotationCalibration = -_rotation.QuaternionToEuler();
-
-            await udpHandler.SendButton();
+            rotation = value.Value.NunchuckOrientation;
+            _nunchuckRotationCalibration = -rotation.QuaternionToEuler();
             if (_simulateThighs) {
                 _falseThighTracker.Recalibrate();
-                await _falseThighTracker.UdpHandler.SendButton();
             }
+            await Task.Delay(3000);
+            await udpHandler.SendButton(FirmwareConstants.UserActionType.RESET_FULL);
         }
         public void Rediscover() {
             udpHandler.Initialize();
@@ -203,6 +239,14 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             identifying = false;
         }
 
+        private bool HasSignificantAccelChange(Vector3Short current, Vector3Short previous, float minAccelDelta) {
+            if (_hasTrackedFirstAccel) {
+                float delta = Vector3Short.Distance(current, previous);
+                return delta > minAccelDelta;
+            }
+            _hasTrackedFirstAccel = true;
+            return true; // Always accept if no previous data
+        }
         public void EngageHaptics(int duration, float intensity, bool timed = true) {
             if (!isAlreadyVibrating || !timed) {
                 isAlreadyVibrating = true;
@@ -232,13 +276,14 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public bool Disconnected { get => _disconnected; set => _disconnected = value; }
         public int Id { get => _id; set => _id = value; }
         public string MacSpoof { get => macSpoof; set => macSpoof = value; }
-        public Vector3 Euler { get => _euler; set => _euler = value; }
-        public Vector3 Gyro { get => _gyro; set => _gyro = value; }
+        public Vector3 Euler { get; set ; }
+        public Vector3 Gyro { get; set; }
         public Vector3 Acceleration { get => _acceleration; set => _acceleration = value; }
         public float LastHmdPositon { get => _lastEulerPositon; set => _lastEulerPositon = value; }
         public bool SimulateThighs { get => _simulateThighs; set => _simulateThighs = value; }
         public bool UseWaistTrackerForYaw { get => _useWaistTrackerForYaw; set => _useWaistTrackerForYaw = value; }
         public RotationReferenceType YawReferenceTypeValue { get => _yawReferenceTypeValue; set => _yawReferenceTypeValue = value; }
         public HapticNodeBinding HapticNodeBinding { get => _hapticNodeBinding; set => _hapticNodeBinding = value; }
+        public RotationReferenceType ExtensionYawReferenceTypeValue { get => _extensionYawReferenceTypeValue; set => _extensionYawReferenceTypeValue = value; }
     }
 }

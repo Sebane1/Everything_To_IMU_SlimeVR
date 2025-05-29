@@ -33,6 +33,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private bool isAlreadyVibrating;
         private bool identifying;
         private bool updatingAlready;
+        private RotationReferenceType _extensionYawReferenceTypeValue;
 
         public event EventHandler<string> OnTrackerError;
 
@@ -127,8 +128,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         }
                         if (GetLocalState(0x20000)) {
                             if (!_waitForRelease) {
-                                await udpHandler.SendButton();
                                 _waitForRelease = true;
+                                udpHandler.SendButton(HapticNodeBinding);
                             }
                         } else {
                             _waitForRelease = false;
@@ -155,12 +156,10 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public async void Recalibrate() {
             _sensorOrientation.Recalibrate();
             await Task.Delay(5000);
-            //JSL.JslResetContinuousCalibration(_index);
             _calibratedHeight = OpenVRReader.GetHMDHeight();
             _rotationCalibration = GetCalibration();
             _falseThighTracker.Recalibrate();
-            await udpHandler.SendButton();
-            await _falseThighTracker.UdpHandler.SendButton();
+            await udpHandler.SendButton(FirmwareConstants.UserActionType.RESET_FULL);
         }
         public void Rediscover() {
             udpHandler.Initialize();
@@ -226,5 +225,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public RotationReferenceType YawReferenceTypeValue { get => _yawReferenceTypeValue; set => _yawReferenceTypeValue = value; }
         public bool UsingWiimoteKnees { get => _usingWiimoteKnees; set => _usingWiimoteKnees = value; }
         public HapticNodeBinding HapticNodeBinding { get => _hapticNodeBinding; set => _hapticNodeBinding = value; }
+        public RotationReferenceType ExtensionYawReferenceTypeValue { get => _extensionYawReferenceTypeValue; set => _extensionYawReferenceTypeValue = value; }
+    
     }
 }

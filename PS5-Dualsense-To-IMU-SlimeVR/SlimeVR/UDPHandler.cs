@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using Everything_To_IMU_SlimeVR.Tracking;
+using Microsoft.VisualBasic.ApplicationServices;
+using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
@@ -34,12 +36,11 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
                         Thread.Sleep(5000);
                     }
                 }
-                while (true) {
-                    Thread.Sleep(1800000);
-                    packetBuilder.PacketId = 0;
-                    ResetUdp();
-                    Initialize();
-                }
+                //while (true) {
+                //    Thread.Sleep(1800000);
+                //    ResetUdp();
+                //    Initialize();
+                //}
             });
         }
         public void ResetUdp() {
@@ -47,6 +48,7 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
                 udpClient?.Close();
                 udpClient?.Dispose();
             }
+            packetBuilder.PacketId = 0;
             udpClient = new UdpClient();
             udpClient.Connect("localhost", 6969);
         }
@@ -93,9 +95,28 @@ namespace Everything_To_IMU_SlimeVR.SlimeVR {
             await udpClient.SendAsync(packetBuilder.BuildFlexDataPacket(flexResistance, trackerId));
             return true;
         }
+        public async void SendButton(HapticNodeBinding hapticNodeBinding) {
+            UserActionType userActionType = UserActionType.RESET_YAW;
+            switch (hapticNodeBinding) {
+                case HapticNodeBinding.RightThigh:
+                case HapticNodeBinding.RightCalf:
+                    userActionType = UserActionType.RESET_MOUNTING;
+                    break;
+                case HapticNodeBinding.LeftThigh:
+                case HapticNodeBinding.LeftCalf:
+                    userActionType = UserActionType.RESET_FULL;
+                    break;
+                case HapticNodeBinding.Head:
+                case HapticNodeBinding.Chest:
+                case HapticNodeBinding.ChestFront:
+                    userActionType = UserActionType.RESET_YAW;
+                    break;
+            }
 
-        public async Task<bool> SendButton() {
-            await udpClient.SendAsync(packetBuilder.BuildButtonPushedPacket());
+            await SendButton(userActionType);
+        }
+        public async Task<bool> SendButton(UserActionType userActionType) {
+            await udpClient.SendAsync(packetBuilder.BuildButtonPushedPacket(userActionType));
             return true;
         }
 

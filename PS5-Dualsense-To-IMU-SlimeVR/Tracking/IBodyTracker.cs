@@ -12,6 +12,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         HapticNodeBinding HapticNodeBinding { get; set; }
 
         TrackerConfig.RotationReferenceType YawReferenceTypeValue { get; set; }
+
+        TrackerConfig.RotationReferenceType ExtensionYawReferenceTypeValue { get; set; }
         string Debug { get; }
 
         void Rediscover();

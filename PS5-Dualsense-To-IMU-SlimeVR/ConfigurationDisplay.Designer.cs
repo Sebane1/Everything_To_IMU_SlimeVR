@@ -29,6 +29,7 @@
             falseThighSimulationCheckBox = new CheckBox();
             tabOptions = new TabControl();
             settingsPage = new TabPage();
+            extensionYawForSimulatedTracker = new ComboBox();
             hapticJointAssignment = new ComboBox();
             indentifyButton = new Button();
             yawForSimulatedTracker = new ComboBox();
@@ -55,6 +56,9 @@
             testHaptics = new Button();
             wiimoteRateLabel = new Label();
             wiimoteRate = new TrackBar();
+            label5 = new Label();
+            label6 = new Label();
+            label7 = new Label();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
@@ -105,6 +109,10 @@
             // 
             // settingsPage
             // 
+            settingsPage.Controls.Add(label7);
+            settingsPage.Controls.Add(label6);
+            settingsPage.Controls.Add(label5);
+            settingsPage.Controls.Add(extensionYawForSimulatedTracker);
             settingsPage.Controls.Add(hapticJointAssignment);
             settingsPage.Controls.Add(indentifyButton);
             settingsPage.Controls.Add(yawForSimulatedTracker);
@@ -120,11 +128,21 @@
             settingsPage.UseVisualStyleBackColor = true;
             settingsPage.Click += tabPage1_Click;
             // 
+            // extensionYawForSimulatedTracker
+            // 
+            extensionYawForSimulatedTracker.FormattingEnabled = true;
+            extensionYawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
+            extensionYawForSimulatedTracker.Location = new Point(10, 131);
+            extensionYawForSimulatedTracker.Name = "extensionYawForSimulatedTracker";
+            extensionYawForSimulatedTracker.Size = new Size(319, 23);
+            extensionYawForSimulatedTracker.TabIndex = 8;
+            extensionYawForSimulatedTracker.SelectedIndexChanged += extensionYawForSimulatedTracker_SelectedIndexChanged;
+            // 
             // hapticJointAssignment
             // 
             hapticJointAssignment.FormattingEnabled = true;
             hapticJointAssignment.Items.AddRange(new object[] { "Right Thigh Haptics", "Right Calf Haptics", "Left Thigh Haptics", "Left Calf Haptics", "Right Upper Arm Haptics", "Right Fore Arm Haptics", "Left Upper Arm Haptics", "Left Fore Arm Haptics", "Chest Haptics", "Right Foot Haptics", "Left Foot Haptics", "Right Hand Haptics", "Left Hand Haptics", "Right Shoulder Haptics", "Left Shoulder Haptics", "Head Haptics", "Hips Haptics", "Chest Front Haptics", "Hips Front Haptics", "Chest Back Haptics", "Hips Back Haptics", "Chest And Hips Haptics", "Chest And Hips Front Haptics", "Chest And Hips Back Haptics" });
-            hapticJointAssignment.Location = new Point(10, 86);
+            hapticJointAssignment.Location = new Point(10, 186);
             hapticJointAssignment.Name = "hapticJointAssignment";
             hapticJointAssignment.Size = new Size(319, 23);
             hapticJointAssignment.TabIndex = 7;
@@ -132,7 +150,7 @@
             // 
             // indentifyButton
             // 
-            indentifyButton.Location = new Point(165, 113);
+            indentifyButton.Location = new Point(165, 213);
             indentifyButton.Name = "indentifyButton";
             indentifyButton.Size = new Size(164, 23);
             indentifyButton.TabIndex = 6;
@@ -144,7 +162,7 @@
             // 
             yawForSimulatedTracker.FormattingEnabled = true;
             yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
-            yawForSimulatedTracker.Location = new Point(10, 57);
+            yawForSimulatedTracker.Location = new Point(10, 78);
             yawForSimulatedTracker.Name = "yawForSimulatedTracker";
             yawForSimulatedTracker.Size = new Size(319, 23);
             yawForSimulatedTracker.TabIndex = 5;
@@ -152,7 +170,7 @@
             // 
             // rediscoverTrackerButton
             // 
-            rediscoverTrackerButton.Location = new Point(10, 113);
+            rediscoverTrackerButton.Location = new Point(10, 213);
             rediscoverTrackerButton.Name = "rediscoverTrackerButton";
             rediscoverTrackerButton.Size = new Size(149, 23);
             rediscoverTrackerButton.TabIndex = 3;
@@ -381,6 +399,33 @@
             wiimoteRate.Value = 8;
             wiimoteRate.Scroll += wiimoteRate_Scroll;
             // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(10, 60);
+            label5.Name = "label5";
+            label5.Size = new Size(111, 15);
+            label5.TabIndex = 9;
+            label5.Text = "Primary Yaw Source";
+            // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Location = new Point(10, 113);
+            label6.Name = "label6";
+            label6.Size = new Size(222, 15);
+            label6.TabIndex = 10;
+            label6.Text = "Extension Yaw Source (IE: Wii Nunchuck)";
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Location = new Point(10, 168);
+            label7.Name = "label7";
+            label7.Size = new Size(248, 15);
+            label7.TabIndex = 11;
+            label7.Text = "Haptic Joint Assignment (bHaptics Over OSC)";
+            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
@@ -455,5 +500,9 @@
         private Button testHaptics;
         private Label wiimoteRateLabel;
         private TrackBar wiimoteRate;
+        private ComboBox extensionYawForSimulatedTracker;
+        private Label label7;
+        private Label label6;
+        private Label label5;
     }
 }

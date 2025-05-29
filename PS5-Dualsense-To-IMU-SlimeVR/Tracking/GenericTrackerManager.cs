@@ -65,6 +65,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                 }
                                 newTracker.SimulateThighs = _configuration.TrackerConfigs[i].SimulatesThighs;
                                 newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
+                                newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
                                 newTracker.HapticNodeBinding = _configuration.TrackerConfigs[i].HapticNodeBinding;
                                 _trackersBluetooth.Add(newTracker);
                                 _allTrackers.Add(newTracker);
@@ -94,6 +95,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                 }
                                 newTracker.SimulateThighs = _configuration.TrackerConfigs3ds[i].SimulatesThighs;
                                 newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs3ds[i].YawReferenceTypeValue;
+                                newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigs3ds[i].YawReferenceTypeValue;
                                 _trackers3ds.Add(newTracker);
                                 _allTrackers.Add(newTracker);
                                 _trackerInfo3ds[i] = new KeyValuePair<int, bool>(info.Key, true);
@@ -123,6 +125,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                 }
                                 newTracker.SimulateThighs = _configuration.TrackerConfigWiimote[key].SimulatesThighs;
                                 newTracker.YawReferenceTypeValue = _configuration.TrackerConfigWiimote[key].YawReferenceTypeValue;
+                                newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigWiimote[key].ExtensionYawReferenceTypeValue;
                                 newTracker.HapticNodeBinding = _configuration.TrackerConfigWiimote[key].HapticNodeBinding;
                                 _trackersWiimote.Add(newTracker);
                                 _allTrackers.Add(newTracker);
@@ -167,10 +170,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             await tracker.Update();
                         }
                     }
-                    //for (int i = 0; i < _trackersWiimote.Count; i++) {
-                    //    var tracker = _trackersWiimote[i];
-                    //    await tracker.Update();
-                    //}
                     Thread.Sleep(pollingRate);
                 }
             });

@@ -8,6 +8,14 @@
             }
             return val;
         }
+        public static uint CorrectEndian(this uint val) {
+            if (BitConverter.IsLittleEndian) {
+                byte[] intAsBytes = BitConverter.GetBytes(val);
+                Array.Reverse(intAsBytes);
+                return BitConverter.ToUInt32(intAsBytes, 0);
+            }
+            return val;
+        }
         public static long CorrectEndian(this long val) {
             if (BitConverter.IsLittleEndian) {
                 byte[] longAsBytes = BitConverter.GetBytes(val);
@@ -40,6 +48,16 @@
             }
             return val;
         }
+
+        public static ushort CorrectEndian(this ushort val) {
+            if (BitConverter.IsLittleEndian) {
+                byte[] doubleAsBytes = BitConverter.GetBytes(val);
+                Array.Reverse(doubleAsBytes);
+                return BitConverter.ToUInt16(doubleAsBytes, 0);
+            }
+            return val;
+        }
+
         public static byte[] CorrectEndian(this byte[] val) {
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(val);
