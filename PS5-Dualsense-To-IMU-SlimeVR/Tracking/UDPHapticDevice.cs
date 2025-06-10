@@ -41,6 +41,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         public bool Ready { get; set; }
         public RotationReferenceType ExtensionYawReferenceTypeValue { get => _extensionYawReferenceTypeValue; set => _extensionYawReferenceTypeValue = value; }
+        public Vector3 RotationCalibration { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         public void DisableHaptics() {
         }
 

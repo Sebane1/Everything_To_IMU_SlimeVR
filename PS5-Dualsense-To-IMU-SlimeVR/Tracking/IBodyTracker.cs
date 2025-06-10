@@ -10,7 +10,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         bool Ready {  get; set; }
         HapticNodeBinding HapticNodeBinding { get; set; }
-
+        public Vector3 RotationCalibration { get; set; }
         TrackerConfig.RotationReferenceType YawReferenceTypeValue { get; set; }
 
         TrackerConfig.RotationReferenceType ExtensionYawReferenceTypeValue { get; set; }

@@ -64,7 +64,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 var legCalibratedHmdHeight = _calibratedHeight - legDifferenceToSubtract;
                 var legHmdHeight = hmdHeight - legDifferenceToSubtract;
                 bool sitting = hmdHeight < _calibratedHeight / 2 && hmdHeight > OpenVRReader.GetWaistTrackerHeight();
-                Vector3 euler = _tracker.Euler;
+                Vector3 euler = _tracker.Euler + _tracker.RotationCalibration;
                 if (GenericTrackerManager.DebugOpen) {
                     _debug =
                 $"Device Id: {_macSpoof}\r\n" +

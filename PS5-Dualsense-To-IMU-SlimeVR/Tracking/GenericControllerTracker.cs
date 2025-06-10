@@ -109,7 +109,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         float trackerEuler = trackerRotation.GetYawFromQuaternion();
                         _lastEulerPositon = -trackerEuler;
                         _rotation = _sensorOrientation.CurrentOrientation;
-                        _euler = _rotation.QuaternionToEuler() + _rotationCalibration;
+                        _euler = _rotation.QuaternionToEuler();
                         _gyro = _sensorOrientation.GyroData;
                         _acceleration = _sensorOrientation.AccelerometerData;
 
@@ -226,6 +226,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public bool UsingWiimoteKnees { get => _usingWiimoteKnees; set => _usingWiimoteKnees = value; }
         public HapticNodeBinding HapticNodeBinding { get => _hapticNodeBinding; set => _hapticNodeBinding = value; }
         public RotationReferenceType ExtensionYawReferenceTypeValue { get => _extensionYawReferenceTypeValue; set => _extensionYawReferenceTypeValue = value; }
-    
+        public Vector3 RotationCalibration { get => _rotationCalibration; set => _rotationCalibration = value; }
     }
 }

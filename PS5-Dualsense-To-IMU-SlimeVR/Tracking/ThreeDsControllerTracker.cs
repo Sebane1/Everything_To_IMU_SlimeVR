@@ -173,5 +173,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public RotationReferenceType YawReferenceTypeValue { get => _yawReferenceTypeValue; set => _yawReferenceTypeValue = value; }
         public HapticNodeBinding HapticNodeBinding { get => _hapticNodeBinding; set => _hapticNodeBinding = value; }
         public RotationReferenceType ExtensionYawReferenceTypeValue { get => _extensionYawReferenceTypeValue; set => _extensionYawReferenceTypeValue = value; }
+        public Vector3 RotationCalibration => _rotationCalibration;
+
+        Vector3 IBodyTracker.RotationCalibration { get => _rotationCalibration; set => _rotationCalibration = value; }
     }
 }

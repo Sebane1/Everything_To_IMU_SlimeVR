@@ -116,7 +116,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         if (_waitForRelease) {
                             _waitForRelease = false;
                         }
-                        var wiimoteRotation = value.WiimoteOrientation;
+                        var wiimoteRotation = value.MotionPlusSupport != 0 ? value.WiimoteFusedOrientation : value.WiimoteGravityOrientation;
                         var eulerUncalibrated = wiimoteRotation.QuaternionToEuler();
                         var euler = eulerUncalibrated;
                         if (GenericTrackerManager.DebugOpen) {
@@ -128,6 +128,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             $"X:{euler.X}, Y:{euler.Y}, Z:{euler.Z}" +
                             $"\r\nAcceleration:\r\n" +
                             $"X:{value.WiimoteAccelX}, Y:{value.WiimoteAccelY}, Z:{value.WiimoteAccelZ}\r\n" +
+                            $"Gyro:\r\n" +
+                            (value.MotionPlusSupport != 0 ? $"X:{value.WiimoteGyroX}, Y:{value.WiimoteGyroY}, Z:{value.WiimoteGyroZ}\r\n" : "No Motion Plus Support\r\n") +
                             $"Yaw Reference Rotation:\r\n" +
                             $"Y:{trackerEuler}\r\n"
                             + _falseThighTracker.Debug;
@@ -142,14 +144,14 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
     (value.WiimoteAccelX / 512f) * accelerationMultiplier,
     (value.WiimoteAccelY / 512f) * accelerationMultiplier,
     (value.WiimoteAccelZ / 512f) * accelerationMultiplier), 0);
-                        if (HasSignificantAccelChange(shortVector, _previousWiimoteAccelValue, 5f)) {
-                            if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
-                                await udpHandler.SetSensorRotation(wiimoteRotation, 0);
-                            } else {
-                                await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion(), 0);
-                            }
-                            _previousWiimoteAccelValue = shortVector;
+                        //if (HasSignificantAccelChange(shortVector, _previousWiimoteAccelValue, 5f)) {
+                        if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
+                            await udpHandler.SetSensorRotation(wiimoteRotation, 0);
+                        } else {
+                            await udpHandler.SetSensorRotation(new Vector3(finalX, finalY, _lastEulerPositon).ToQuaternion(), 0);
                         }
+                        _previousWiimoteAccelValue = shortVector;
+                        //}
 
                         if (value.NunchukConnected != 0) {
                             if (YawReferenceTypeValue != ExtensionYawReferenceTypeValue) {
@@ -202,17 +204,19 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public async void Recalibrate() {
-            
+
             _calibratedHeight = OpenVRReader.GetHMDHeight();
             var value = _motionStateList.ElementAt(_index);
-            var rotation = value.Value.WiimoteOrientation;
+            var rotation = value.Value.WiimoteGravityOrientation;
             _wiimoteRotationCalibration = -rotation.QuaternionToEuler();
+            RotationCalibration = _wiimoteRotationCalibration;
 
             rotation = value.Value.NunchuckOrientation;
             _nunchuckRotationCalibration = -rotation.QuaternionToEuler();
             if (_simulateThighs) {
                 _falseThighTracker.Recalibrate();
             }
+            ForwardedWiimoteManager.WiimoteTrackers[_rememberedStringId].StartCalibration();
             await Task.Delay(3000);
             await udpHandler.SendButton(FirmwareConstants.UserActionType.RESET_FULL);
         }
@@ -230,7 +234,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         public Vector3 GetCalibration() {
-            throw new NotImplementedException();
+            return new Vector3();
         }
 
         public void Identify() {
@@ -276,7 +280,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public bool Disconnected { get => _disconnected; set => _disconnected = value; }
         public int Id { get => _id; set => _id = value; }
         public string MacSpoof { get => macSpoof; set => macSpoof = value; }
-        public Vector3 Euler { get; set ; }
+        public Vector3 Euler { get; set; }
         public Vector3 Gyro { get; set; }
         public Vector3 Acceleration { get => _acceleration; set => _acceleration = value; }
         public float LastHmdPositon { get => _lastEulerPositon; set => _lastEulerPositon = value; }
@@ -285,5 +289,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public RotationReferenceType YawReferenceTypeValue { get => _yawReferenceTypeValue; set => _yawReferenceTypeValue = value; }
         public HapticNodeBinding HapticNodeBinding { get => _hapticNodeBinding; set => _hapticNodeBinding = value; }
         public RotationReferenceType ExtensionYawReferenceTypeValue { get => _extensionYawReferenceTypeValue; set => _extensionYawReferenceTypeValue = value; }
+        public Vector3 RotationCalibration { get; set; }
     }
 }

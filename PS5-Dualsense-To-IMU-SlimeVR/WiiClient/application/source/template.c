@@ -80,7 +80,7 @@ u32 finalTargetFrameMs = 32;
 #define MOTIONPLUS_DELAY_FRAMES 60
 #define DEFAULT_SERVER_IP "10.0.0.21"
 #define DEFAULT_SERVER_PORT 9909
-#define DATA_PER_CONTROLLER 19
+#define DATA_PER_CONTROLLER 26
 
 static char server_ip[32] = DEFAULT_SERVER_IP;
 static int server_port = DEFAULT_SERVER_PORT;
@@ -175,7 +175,9 @@ int main(int argc, char** argv) {
 				if (!wpad_data) continue;
 
 				if (!formatSet[i]) {
-					WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC);
+					WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC_IR);
+					WPAD_SetMotionPlus(i, true);
+					usleep(100000); // 100ms delay for initialization
 					formatSet[i] = true;
 				}
 
@@ -218,7 +220,25 @@ int main(int argc, char** argv) {
 					ptr += 6;
 				}
 
+				bool has_motion_plus = has_motionplus(i);
+				if (has_motion_plus) {
+					s16 gx = 0, gy = 0, gz = 0;
+					gx = wpad_data->exp.mp.rx;
+					gy = wpad_data->exp.mp.ry;
+					gz = wpad_data->exp.mp.rz;
+					s16_to_little_endian(gx, ptr); ptr += 2;
+					s16_to_little_endian(gy, ptr); ptr += 2;
+					s16_to_little_endian(gz, ptr); ptr += 2;
+				}
+				else {
+					memset(ptr, 0, 6);
+					ptr += 6;
+				}
+
 				*ptr = nunchuk_connected;
+				ptr++;
+
+				*ptr = has_motion_plus;
 				ptr++;
 
 				u8 battery = WPAD_BatteryLevel(i);
@@ -243,6 +263,16 @@ int main(int argc, char** argv) {
 				memset(ptr, 0, 6);
 				ptr += 6;
 
+
+				// Gyro
+				memset(ptr, 0, 6);
+				ptr += 6;
+				
+				// Nunchuck connected
+				*ptr = 0;
+				ptr++;
+
+				// Has motion plus
 				*ptr = 0;
 				ptr++;
 
@@ -270,23 +300,21 @@ int main(int argc, char** argv) {
 		}
 	}
 }
+
 bool has_motionplus(int chan) {
 	expansion_t exp;
 	WPAD_Expansion(chan, &exp);
-	// Get expansion info
-	// 
-	// Check for MotionPlus-only
-	if (exp.type == EXP_MOTION_PLUS) {
+
+	// Check for MotionPlus status
+	if (exp.type == EXP_MOTION_PLUS ||
+		(exp.type == EXP_NUNCHUK && exp.mp.status != 0)) {
 		return true;
 	}
 
-	// Check for MotionPlus in passthrough mode with Nunchuk
-	if (exp.type == EXP_NUNCHUK && exp.mp.status != 0) {
-		return true;
-	}
-
-	return false;  // No MotionPlus detected
+	return false;
 }
+
+
 void get_app_directory(char* out_path, size_t out_size, char* argv0) {
 	if (!argv0 || argv0[0] == '\0') {
 		strncpy(out_path, "sd:/apps/WiiImuForwarder", out_size - 1); // fallback default
