@@ -44,8 +44,6 @@
             errorLogText = new TextBox();
             trackerCalibrationButton = new Button();
             donateButton = new Button();
-            pollingRate = new TrackBar();
-            polllingRateLabel = new Label();
             threeDsDeviceList = new ListBox();
             wiimoteDeviceList = new ListBox();
             label1 = new Label();
@@ -57,18 +55,15 @@
             newIpFeild = new TextBox();
             newHapticCellphoneButton = new Button();
             testHaptics = new Button();
-            wiimoteRateLabel = new Label();
-            wiimoteRate = new TrackBar();
             timer1 = new System.Windows.Forms.Timer(components);
             timer2 = new System.Windows.Forms.Timer(components);
             timer3 = new System.Windows.Forms.Timer(components);
             listRefreshTimer = new System.Windows.Forms.Timer(components);
+            lockInDetectedDevicesButton = new Button();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
             errorLog.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)pollingRate).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)wiimoteRate).BeginInit();
             SuspendLayout();
             // 
             // refreshTimer
@@ -84,7 +79,7 @@
             controllerDeviceList.ItemHeight = 15;
             controllerDeviceList.Location = new Point(3, 22);
             controllerDeviceList.Name = "controllerDeviceList";
-            controllerDeviceList.Size = new Size(104, 409);
+            controllerDeviceList.Size = new Size(104, 244);
             controllerDeviceList.TabIndex = 0;
             controllerDeviceList.SelectedIndexChanged += selectedDevice_SelectedIndexChanged;
             // 
@@ -108,7 +103,7 @@
             tabOptions.Location = new Point(438, -2);
             tabOptions.Name = "tabOptions";
             tabOptions.SelectedIndex = 0;
-            tabOptions.Size = new Size(348, 433);
+            tabOptions.Size = new Size(348, 267);
             tabOptions.TabIndex = 2;
             // 
             // settingsPage
@@ -126,7 +121,7 @@
             settingsPage.Location = new Point(4, 24);
             settingsPage.Name = "settingsPage";
             settingsPage.Padding = new Padding(3);
-            settingsPage.Size = new Size(340, 405);
+            settingsPage.Size = new Size(340, 239);
             settingsPage.TabIndex = 0;
             settingsPage.Text = "Settings";
             settingsPage.UseVisualStyleBackColor = true;
@@ -224,7 +219,7 @@
             debugPage.Location = new Point(4, 24);
             debugPage.Name = "debugPage";
             debugPage.Padding = new Padding(3);
-            debugPage.Size = new Size(340, 405);
+            debugPage.Size = new Size(340, 239);
             debugPage.TabIndex = 1;
             debugPage.Text = "Debug";
             debugPage.UseVisualStyleBackColor = true;
@@ -242,7 +237,7 @@
             errorLog.Controls.Add(errorLogText);
             errorLog.Location = new Point(4, 24);
             errorLog.Name = "errorLog";
-            errorLog.Size = new Size(340, 405);
+            errorLog.Size = new Size(340, 239);
             errorLog.TabIndex = 2;
             errorLog.Text = "Error Log";
             errorLog.UseVisualStyleBackColor = true;
@@ -258,7 +253,7 @@
             // trackerCalibrationButton
             // 
             trackerCalibrationButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            trackerCalibrationButton.Location = new Point(442, 434);
+            trackerCalibrationButton.Location = new Point(442, 270);
             trackerCalibrationButton.Name = "trackerCalibrationButton";
             trackerCalibrationButton.Size = new Size(212, 23);
             trackerCalibrationButton.TabIndex = 4;
@@ -272,35 +267,13 @@
             donateButton.BackColor = Color.RosyBrown;
             donateButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             donateButton.ForeColor = Color.Snow;
-            donateButton.Location = new Point(652, 434);
+            donateButton.Location = new Point(652, 270);
             donateButton.Name = "donateButton";
             donateButton.Size = new Size(127, 23);
             donateButton.TabIndex = 5;
             donateButton.Text = "Donate";
             donateButton.UseVisualStyleBackColor = false;
             donateButton.Click += donateButton_Click;
-            // 
-            // pollingRate
-            // 
-            pollingRate.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            pollingRate.Location = new Point(2, 516);
-            pollingRate.Maximum = 120;
-            pollingRate.Minimum = 8;
-            pollingRate.Name = "pollingRate";
-            pollingRate.Size = new Size(777, 45);
-            pollingRate.TabIndex = 6;
-            pollingRate.Value = 8;
-            pollingRate.Scroll += pollingRate_Scroll;
-            // 
-            // polllingRateLabel
-            // 
-            polllingRateLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            polllingRateLabel.AutoSize = true;
-            polllingRateLabel.Location = new Point(2, 490);
-            polllingRateLabel.Name = "polllingRateLabel";
-            polllingRateLabel.Size = new Size(105, 15);
-            polllingRateLabel.TabIndex = 7;
-            polllingRateLabel.Text = "Update Rate: 30ms";
             // 
             // threeDsDeviceList
             // 
@@ -309,7 +282,7 @@
             threeDsDeviceList.ItemHeight = 15;
             threeDsDeviceList.Location = new Point(113, 22);
             threeDsDeviceList.Name = "threeDsDeviceList";
-            threeDsDeviceList.Size = new Size(104, 409);
+            threeDsDeviceList.Size = new Size(104, 244);
             threeDsDeviceList.TabIndex = 8;
             threeDsDeviceList.SelectedIndexChanged += threeDsDeviceList_SelectedIndexChanged;
             // 
@@ -320,7 +293,7 @@
             wiimoteDeviceList.ItemHeight = 15;
             wiimoteDeviceList.Location = new Point(223, 22);
             wiimoteDeviceList.Name = "wiimoteDeviceList";
-            wiimoteDeviceList.Size = new Size(104, 409);
+            wiimoteDeviceList.Size = new Size(104, 244);
             wiimoteDeviceList.TabIndex = 9;
             wiimoteDeviceList.SelectedIndexChanged += wiimoteDeviceList_SelectedIndexChanged;
             // 
@@ -375,7 +348,7 @@
             hapticDeviceList.ItemHeight = 15;
             hapticDeviceList.Location = new Point(332, 67);
             hapticDeviceList.Name = "hapticDeviceList";
-            hapticDeviceList.Size = new Size(104, 364);
+            hapticDeviceList.Size = new Size(104, 199);
             hapticDeviceList.TabIndex = 14;
             hapticDeviceList.SelectedIndexChanged += hapticDeviceList_SelectedIndexChanged;
             // 
@@ -389,7 +362,7 @@
             // newHapticCellphoneButton
             // 
             newHapticCellphoneButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            newHapticCellphoneButton.Location = new Point(331, 41);
+            newHapticCellphoneButton.Location = new Point(331, -275);
             newHapticCellphoneButton.Name = "newHapticCellphoneButton";
             newHapticCellphoneButton.Size = new Size(105, 23);
             newHapticCellphoneButton.TabIndex = 17;
@@ -400,35 +373,13 @@
             // testHaptics
             // 
             testHaptics.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            testHaptics.Location = new Point(442, 463);
+            testHaptics.Location = new Point(442, 299);
             testHaptics.Name = "testHaptics";
             testHaptics.Size = new Size(94, 23);
             testHaptics.TabIndex = 18;
             testHaptics.Text = "Test Haptics";
             testHaptics.UseVisualStyleBackColor = true;
             testHaptics.Click += testHaptics_Click;
-            // 
-            // wiimoteRateLabel
-            // 
-            wiimoteRateLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            wiimoteRateLabel.AutoSize = true;
-            wiimoteRateLabel.Location = new Point(7, 567);
-            wiimoteRateLabel.Name = "wiimoteRateLabel";
-            wiimoteRateLabel.Size = new Size(112, 15);
-            wiimoteRateLabel.TabIndex = 20;
-            wiimoteRateLabel.Text = "Wiimote Rate: 30ms";
-            // 
-            // wiimoteRate
-            // 
-            wiimoteRate.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            wiimoteRate.Location = new Point(3, 582);
-            wiimoteRate.Maximum = 120;
-            wiimoteRate.Minimum = 8;
-            wiimoteRate.Name = "wiimoteRate";
-            wiimoteRate.Size = new Size(779, 45);
-            wiimoteRate.TabIndex = 19;
-            wiimoteRate.Value = 8;
-            wiimoteRate.Scroll += wiimoteRate_Scroll;
             // 
             // timer1
             // 
@@ -451,13 +402,23 @@
             listRefreshTimer.Interval = 15000;
             listRefreshTimer.Tick += listRefreshTimer_Tick;
             // 
+            // lockInDetectedDevicesButton
+            // 
+            lockInDetectedDevicesButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            lockInDetectedDevicesButton.Location = new Point(7, 270);
+            lockInDetectedDevicesButton.Name = "lockInDetectedDevicesButton";
+            lockInDetectedDevicesButton.Size = new Size(429, 52);
+            lockInDetectedDevicesButton.TabIndex = 21;
+            lockInDetectedDevicesButton.Text = "Disable New Device Detection (Reduces Drift)";
+            lockInDetectedDevicesButton.UseVisualStyleBackColor = true;
+            lockInDetectedDevicesButton.Click += lockInDetectedDevicesButton_Click;
+            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(790, 639);
-            Controls.Add(wiimoteRateLabel);
-            Controls.Add(wiimoteRate);
+            ClientSize = new Size(790, 323);
+            Controls.Add(lockInDetectedDevicesButton);
             Controls.Add(testHaptics);
             Controls.Add(newHapticCellphoneButton);
             Controls.Add(newIpFeild);
@@ -468,8 +429,6 @@
             Controls.Add(label1);
             Controls.Add(wiimoteDeviceList);
             Controls.Add(threeDsDeviceList);
-            Controls.Add(polllingRateLabel);
-            Controls.Add(pollingRate);
             Controls.Add(donateButton);
             Controls.Add(trackerCalibrationButton);
             Controls.Add(tabOptions);
@@ -487,8 +446,6 @@
             debugPage.PerformLayout();
             errorLog.ResumeLayout(false);
             errorLog.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)pollingRate).EndInit();
-            ((System.ComponentModel.ISupportInitialize)wiimoteRate).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -534,5 +491,6 @@
         private System.Windows.Forms.Timer timer2;
         private System.Windows.Forms.Timer timer3;
         private System.Windows.Forms.Timer listRefreshTimer;
+        private Button lockInDetectedDevicesButton;
     }
 }

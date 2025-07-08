@@ -12,7 +12,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfo3ds = new Dictionary<int, KeyValuePair<int, bool>>();
         private static Dictionary<string, KeyValuePair<string, bool>> _trackerInfoWiimote = new Dictionary<string, KeyValuePair<string, bool>>();
         private static Dictionary<string, KeyValuePair<int, bool>> _trackerInfoUdpHapticDevice = new Dictionary<string, KeyValuePair<int, bool>>();
-
+        public static bool lockInDetectedDevices = false;
         private bool disposed = false;
         public event EventHandler<string> OnTrackerError;
         private int pollingRate = 8;
@@ -41,93 +41,95 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 }
                 while (!disposed) {
                     try {
-                        _controllerCount = JSL.JslConnectDevices();
-                        // Loop through currently connected controllers.
-                        for (int i = 0; i < _controllerCount; i++) {
-                            // Track whether or not we've seen this controller before this session.
-                            if (!_trackerInfo.ContainsKey(i)) {
-                                _trackerInfo[i] = new KeyValuePair<int, bool>(_trackersBluetooth.Count, false);
+                        if (!lockInDetectedDevices) {
+                            _controllerCount = JSL.JslConnectDevices();
+                            // Loop through currently connected controllers.
+                            for (int i = 0; i < _controllerCount; i++) {
+                                // Track whether or not we've seen this controller before this session.
+                                if (!_trackerInfo.ContainsKey(i)) {
+                                    _trackerInfo[i] = new KeyValuePair<int, bool>(_trackersBluetooth.Count, false);
+                                }
+
+                                // Get this controllers information.
+                                var info = _trackerInfo[i];
+
+                                // Have we dealt with setting up this controller tracker yet?
+                                if (!info.Value) {
+                                    // Set up the controller tracker.
+                                    var newTracker = new GenericControllerTracker(info.Key, colours[info.Key]);
+                                    while (!newTracker.Ready) {
+                                        Thread.Sleep(100);
+                                    }
+                                    newTracker.OnTrackerError += NewTracker_OnTrackerError;
+                                    if (i > _configuration.TrackerConfigs.Count - 1) {
+                                        _configuration.TrackerConfigs.Add(new TrackerConfig());
+                                    }
+                                    newTracker.SimulateThighs = _configuration.TrackerConfigs[i].SimulatesThighs;
+                                    newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
+                                    newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
+                                    newTracker.HapticNodeBinding = _configuration.TrackerConfigs[i].HapticNodeBinding;
+                                    _trackersBluetooth.Add(newTracker);
+                                    _allTrackers.Add(newTracker);
+                                    _trackerInfo[i] = new KeyValuePair<int, bool>(info.Key, true);
+                                }
                             }
-
-                            // Get this controllers information.
-                            var info = _trackerInfo[i];
-
-                            // Have we dealt with setting up this controller tracker yet?
-                            if (!info.Value) {
-                                // Set up the controller tracker.
-                                var newTracker = new GenericControllerTracker(info.Key, colours[info.Key]);
-                                while (!newTracker.Ready) {
-                                    Thread.Sleep(100);
+                            for (int i = 0; i < Forwarded3DSDataManager.DeviceMap.Count; i++) {
+                                // Track whether or not we've seen this controller before this session.
+                                if (!_trackerInfo3ds.ContainsKey(i)) {
+                                    _trackerInfo3ds[i] = new KeyValuePair<int, bool>(_trackerInfo3ds.Count, false);
                                 }
-                                newTracker.OnTrackerError += NewTracker_OnTrackerError;
-                                if (i > _configuration.TrackerConfigs.Count - 1) {
-                                    _configuration.TrackerConfigs.Add(new TrackerConfig());
+
+                                // Get this controllers information.
+                                var info = _trackerInfo3ds[i];
+
+                                // Have we dealt with setting up this controller tracker yet?
+                                if (!info.Value) {
+                                    // Set up the controller tracker.
+                                    var newTracker = new ThreeDsControllerTracker(info.Key);
+                                    while (!newTracker.Ready) {
+                                        Thread.Sleep(100);
+                                    }
+                                    newTracker.OnTrackerError += NewTracker_OnTrackerError;
+                                    if (i > _configuration.TrackerConfigs3ds.Count - 1) {
+                                        _configuration.TrackerConfigs3ds.Add(new TrackerConfig());
+                                    }
+                                    newTracker.SimulateThighs = _configuration.TrackerConfigs3ds[i].SimulatesThighs;
+                                    newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs3ds[i].YawReferenceTypeValue;
+                                    newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigs3ds[i].YawReferenceTypeValue;
+                                    _trackers3ds.Add(newTracker);
+                                    _allTrackers.Add(newTracker);
+                                    _trackerInfo3ds[i] = new KeyValuePair<int, bool>(info.Key, true);
                                 }
-                                newTracker.SimulateThighs = _configuration.TrackerConfigs[i].SimulatesThighs;
-                                newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
-                                newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
-                                newTracker.HapticNodeBinding = _configuration.TrackerConfigs[i].HapticNodeBinding;
-                                _trackersBluetooth.Add(newTracker);
-                                _allTrackers.Add(newTracker);
-                                _trackerInfo[i] = new KeyValuePair<int, bool>(info.Key, true);
                             }
-                        }
-                        for (int i = 0; i < Forwarded3DSDataManager.DeviceMap.Count; i++) {
-                            // Track whether or not we've seen this controller before this session.
-                            if (!_trackerInfo3ds.ContainsKey(i)) {
-                                _trackerInfo3ds[i] = new KeyValuePair<int, bool>(_trackerInfo3ds.Count, false);
-                            }
-
-                            // Get this controllers information.
-                            var info = _trackerInfo3ds[i];
-
-                            // Have we dealt with setting up this controller tracker yet?
-                            if (!info.Value) {
-                                // Set up the controller tracker.
-                                var newTracker = new ThreeDsControllerTracker(info.Key);
-                                while (!newTracker.Ready) {
-                                    Thread.Sleep(100);
+                            for (int i = 0; i < ForwardedWiimoteManager.Wiimotes.Count; i++) {
+                                // Track whether or not we've seen this controller before this session.
+                                string key = ForwardedWiimoteManager.Wiimotes.ElementAt(i).Key;
+                                if (!_trackerInfoWiimote.ContainsKey(key)) {
+                                    _trackerInfoWiimote[key] = new KeyValuePair<string, bool>(key, false);
                                 }
-                                newTracker.OnTrackerError += NewTracker_OnTrackerError;
-                                if (i > _configuration.TrackerConfigs3ds.Count - 1) {
-                                    _configuration.TrackerConfigs3ds.Add(new TrackerConfig());
-                                }
-                                newTracker.SimulateThighs = _configuration.TrackerConfigs3ds[i].SimulatesThighs;
-                                newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs3ds[i].YawReferenceTypeValue;
-                                newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigs3ds[i].YawReferenceTypeValue;
-                                _trackers3ds.Add(newTracker);
-                                _allTrackers.Add(newTracker);
-                                _trackerInfo3ds[i] = new KeyValuePair<int, bool>(info.Key, true);
-                            }
-                        }
-                        for (int i = 0; i < ForwardedWiimoteManager.Wiimotes.Count; i++) {
-                            // Track whether or not we've seen this controller before this session.
-                            string key = ForwardedWiimoteManager.Wiimotes.ElementAt(i).Key;
-                            if (!_trackerInfoWiimote.ContainsKey(key)) {
-                                _trackerInfoWiimote[key] = new KeyValuePair<string, bool>(key, false);
-                            }
 
-                            // Get this controllers information.
-                            var info = _trackerInfoWiimote[key];
+                                // Get this controllers information.
+                                var info = _trackerInfoWiimote[key];
 
-                            // Have we dealt with setting up this controller tracker yet?
-                            if (!info.Value) {
-                                // Set up the controller tracker.
-                                var newTracker = new WiiTracker(info.Key);
-                                while (!newTracker.Ready) {
-                                    Thread.Sleep(100);
+                                // Have we dealt with setting up this controller tracker yet?
+                                if (!info.Value) {
+                                    // Set up the controller tracker.
+                                    var newTracker = new WiiTracker(info.Key);
+                                    while (!newTracker.Ready) {
+                                        Thread.Sleep(100);
+                                    }
+                                    newTracker.OnTrackerError += NewTracker_OnTrackerError;
+                                    if (!_configuration.TrackerConfigWiimote.ContainsKey(key)) {
+                                        _configuration.TrackerConfigWiimote.Add(key, new TrackerConfig());
+                                    }
+                                    newTracker.SimulateThighs = _configuration.TrackerConfigWiimote[key].SimulatesThighs;
+                                    newTracker.YawReferenceTypeValue = _configuration.TrackerConfigWiimote[key].YawReferenceTypeValue;
+                                    newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigWiimote[key].ExtensionYawReferenceTypeValue;
+                                    newTracker.HapticNodeBinding = _configuration.TrackerConfigWiimote[key].HapticNodeBinding;
+                                    _trackersWiimote.Add(newTracker);
+                                    _allTrackers.Add(newTracker);
+                                    _trackerInfoWiimote[key] = new KeyValuePair<string, bool>(key, true);
                                 }
-                                newTracker.OnTrackerError += NewTracker_OnTrackerError;
-                                if (!_configuration.TrackerConfigWiimote.ContainsKey(key)) {
-                                    _configuration.TrackerConfigWiimote.Add(key, new TrackerConfig());
-                                }
-                                newTracker.SimulateThighs = _configuration.TrackerConfigWiimote[key].SimulatesThighs;
-                                newTracker.YawReferenceTypeValue = _configuration.TrackerConfigWiimote[key].YawReferenceTypeValue;
-                                newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigWiimote[key].ExtensionYawReferenceTypeValue;
-                                newTracker.HapticNodeBinding = _configuration.TrackerConfigWiimote[key].HapticNodeBinding;
-                                _trackersWiimote.Add(newTracker);
-                                _allTrackers.Add(newTracker);
-                                _trackerInfoWiimote[key] = new KeyValuePair<string, bool>(key, true);
                             }
                         }
                         Thread.Sleep(10000);

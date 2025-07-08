@@ -89,6 +89,8 @@ static int server_port = DEFAULT_SERVER_PORT;
 static int persistent_sock = -1;
 #define MAX_WIIMOTES 4
 bool formatSet[MAX_WIIMOTES] = { false, false, false, false };
+bool motionPlusState[MAX_WIIMOTES] = { false, false, false, false };
+bool motionPlusUnsupported[MAX_WIIMOTES] = { false, false, false, false };
 bool wasVibrating[MAX_WIIMOTES] = { false, false, false, false };
 char vib_response[128] = { 0, 0, 0, 0, 0 };
 Quaternion euler_to_quaternion(float pitch, float roll, float yaw);
@@ -177,9 +179,9 @@ int main(int argc, char** argv) {
 				if (!formatSet[i]) {
 					WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC_IR);
 					WPAD_SetMotionPlus(i, true);
-					usleep(100000); // 100ms delay for initialization
-
 					formatSet[i] = true;
+					motionPlusState[i] = true;
+					usleep(500000); // 100ms delay for initialization	
 				}
 
 				u32 pressed = WPAD_ButtonsUp(i);
@@ -201,6 +203,14 @@ int main(int argc, char** argv) {
 						nax = wpad_data->exp.nunchuk.accel.x;
 						nay = wpad_data->exp.nunchuk.accel.y;
 						naz = wpad_data->exp.nunchuk.accel.z;
+
+						// Have to choose between motion plus or nunchuck data. Disable motion plus if nunchuck is connected.
+						if (motionPlusState[i]) {
+							WPAD_SetMotionPlus(i, false);
+							usleep(500000); // 100ms delay for initialization
+							motionPlusState[i] = false;
+							printf("Motion plus disabled for controller\n");
+						}
 					}
 				}
 				else {
@@ -210,6 +220,15 @@ int main(int argc, char** argv) {
 						nax = wpad_data->exp.nunchuk.accel.x;
 						nay = wpad_data->exp.nunchuk.accel.y;
 						naz = wpad_data->exp.nunchuk.accel.z;
+					}
+					else {
+						// Have to choose between motion plus or nunchuck data. Enable motion plus if nunchuck is not connected and controller supports it.
+						if (!motionPlusState[i] && !motionPlusUnsupported[i]) {
+							WPAD_SetMotionPlus(i, true);
+							usleep(500000); // 100ms delay for initialization
+							motionPlusState[i] = true;
+							printf("Motion plus enabled for controller\n");
+						}
 					}
 				}
 
@@ -224,6 +243,7 @@ int main(int argc, char** argv) {
 
 
 				// Nunchuk accel (x, y, z) or zeros
+
 				if (nunchuk_connected) {
 					s16_to_little_endian(nax, ptr); ptr += 2;
 					s16_to_little_endian(nay, ptr); ptr += 2;
@@ -239,6 +259,14 @@ int main(int argc, char** argv) {
 					gx = wpad_data->exp.mp.rx;
 					gy = wpad_data->exp.mp.ry;
 					gz = wpad_data->exp.mp.rz;
+					
+					// Check that this device actually supports motion plus, otherwise add it to the unsupported list.
+					if (gx == 0 && gy == 0 && gz == 0 && !motionPlusUnsupported[i]) {
+						WPAD_SetMotionPlus(i, false);
+						usleep(100000); // 100ms delay for initialization
+						motionPlusUnsupported[i] = true;
+						printf("Motion plus marked as unsupported for controller\n");
+					}
 					s16_to_little_endian(gx, ptr); ptr += 2;
 					s16_to_little_endian(gy, ptr); ptr += 2;
 					s16_to_little_endian(gz, ptr); ptr += 2;

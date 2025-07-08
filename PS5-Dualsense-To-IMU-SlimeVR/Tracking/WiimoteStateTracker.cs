@@ -2,16 +2,18 @@
 using System.Numerics;
 using System.Collections.Generic;
 using Everything_To_IMU_SlimeVR.Tracking;
-
+using Everything_To_IMU_SlimeVR;
 public class WiimoteStateTracker {
-    private readonly VQFWrapper _vqf = new VQFWrapper(0.016); // or your desired timestep
+    private VQFWrapper _vqf; // or your desired timestep
     private readonly GyroPreprocessor _gyroPreprocessor = new GyroPreprocessor();
     private readonly List<Vector3> _calibrationSamples = new();
     private bool _isCalibrating = false;
 
     public WiimoteInfo ProcessPacket(WiimotePacket packet) {
         var info = new WiimoteInfo(packet);
-
+        if (_vqf == null) {
+            _vqf = new VQFWrapper(Configuration.Instance.WiiPollingRate / 1000f);
+        }
         if (_isCalibrating) {
             _calibrationSamples.Add(new Vector3(
                 info.WiimoteGyroX,

@@ -21,6 +21,7 @@ namespace Everything_To_IMU_SlimeVR {
             InitializeComponent();
             AutoScaleDimensions = new SizeF(96, 96);
             _configuration = Configuration.LoadConfig();
+            _configuration.WiiPollingRate = 64;
             if (_configuration.SwitchingSessions) {
                 _configuration.LastCalibration = DateTime.UtcNow;
             }
@@ -28,14 +29,10 @@ namespace Everything_To_IMU_SlimeVR {
             _genericControllerTranslator.OnTrackerError += _genericControllerTranslator_OnTrackerError;
             _genericControllerTranslator.PollingRate = _configuration.PollingRate;
 
-            wiimoteRate.Value = _configuration.WiiPollingRate;
-            wiimoteRateLabel.Text = "Wiimote Rate: " + _configuration.WiiPollingRate + "ms";
-
             _forwardedWiimoteManager = new ForwardedWiimoteManager();
             _forwarded3DSDataManager = new Forwarded3DSDataManager();
             _configuration.SwitchingSessions = false;
-            polllingRateLabel.Text = "Polling Rate: " + _configuration.PollingRate + "ms";
-            pollingRate.Value = _configuration.PollingRate;
+
             _configuration.SaveConfig();
         }
 
@@ -312,6 +309,15 @@ namespace Everything_To_IMU_SlimeVR {
                     errorLogText.Text += value + "\r\n";
                 }
                 _lastErrorLog = value;
+            }
+        }
+
+        private void lockInDetectedDevicesButton_Click(object sender, EventArgs e) {
+            GenericTrackerManager.lockInDetectedDevices = !GenericTrackerManager.lockInDetectedDevices;
+            if (!GenericTrackerManager.lockInDetectedDevices) {
+                lockInDetectedDevicesButton.Text = "Disable New Device Detection (Reduces Drift)";
+            } else {
+                lockInDetectedDevicesButton.Text = "Enable New Device Detection (Increases Drift)";
             }
         }
     }
