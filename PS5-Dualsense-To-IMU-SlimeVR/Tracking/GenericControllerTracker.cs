@@ -104,7 +104,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             if (_ready) {
                 _ = Task.Run(async () => {
                     try {
-                        _rotation = _sensorOrientation.CurrentOrientation;
+                        _rotation = Quaternion.Normalize(_sensorOrientation.CurrentOrientation);
                         if (GenericTrackerManager.DebugOpen || _yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
                             var trackerRotation = GetTrackerRotation(YawReferenceTypeValue);
                             _trackerEuler = trackerRotation.GetYawFromQuaternion();

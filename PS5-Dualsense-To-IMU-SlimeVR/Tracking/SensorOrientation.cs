@@ -1,6 +1,7 @@
 ﻿using Everything_To_IMU_SlimeVR.Utility;
 using System.Diagnostics;
 using System.Numerics;
+using static JSL;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class SensorOrientation : IDisposable {
@@ -28,6 +29,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private VQFWrapper _vqf;
         private JSL.EventCallback _callback;
         List<float> averageSampleTicks = new List<float>();
+        private static bool jslHandlerSet = false;
+
         public Quaternion CurrentOrientation { get => currentOrientation; set => currentOrientation = value; }
         public float YawRadians { get => yawRadians; set => yawRadians = value; }
         public float YawDegrees { get => yawDegrees; set => yawDegrees = value; }
@@ -35,6 +38,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public Vector3 Accelerometer { get => _accelerometer; set => _accelerometer = value; }
         public Vector3 Gyro { get => _gyro; set => _gyro = value; }
         public event EventHandler NewData;
+
+        public static event EventHandler<Tuple<int, JSL.JOY_SHOCK_STATE, JSL.JOY_SHOCK_STATE, JSL.IMU_STATE, JSL.IMU_STATE, float>> OnNewJSLData;
 
         public SensorOrientation(int index, SensorType sensorType) {
             // Apply AXES_OFFSET * rot
@@ -44,24 +49,33 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             _index = index;
             _sensorType = sensorType;
             stopwatch.Start();
-            if (_sensorType == SensorType.Bluetooth) {
+            if (!jslHandlerSet) {
                 _callback = new JSL.EventCallback(OnControllerEvent);
+                jslHandlerSet = true;
                 JSL.JslSetCallback(_callback);
             }
+            OnNewJSLData += SensorOrientation_OnNewJSLData;
         }
-        void OnControllerEvent(int deviceId, JSL.JOY_SHOCK_STATE state, JSL.JOY_SHOCK_STATE state2, JSL.IMU_STATE imuState, JSL.IMU_STATE imuState2, float delta) {
-            _accelerometer = new Vector3(imuState.accelX, imuState.accelY, imuState.accelZ) * 10 /* 9.80665f*/;
-            _gyro = (new Vector3(imuState.gyroX, imuState.gyroY, imuState.gyroZ)).ConvertDegreesToRadians();
-            if (_vqf == null) {
-                if (averageSampleTicks.Count < 100) {
-                    averageSampleTicks.Add(delta);
+
+        private void SensorOrientation_OnNewJSLData(object? sender, Tuple<int, JSL.JOY_SHOCK_STATE, JSL.JOY_SHOCK_STATE, JSL.IMU_STATE, JSL.IMU_STATE, float> e) {
+            if (e.Item1 == _index) {
+                _accelerometer = new Vector3(e.Item4.accelX, e.Item4.accelY, e.Item4.accelZ) * 10 /* 9.80665f*/;
+                _gyro = (new Vector3(e.Item4.gyroX, e.Item4.gyroY, e.Item4.gyroZ)).ConvertDegreesToRadians();
+                if (_vqf == null) {
+                    if (averageSampleTicks.Count < 100) {
+                        averageSampleTicks.Add(e.Item6);
+                    } else {
+                        _vqf = new VQFWrapper(averageSampleTicks.Average());
+                        averageSampleTicks.Clear();
+                    }
                 } else {
-                    _vqf = new VQFWrapper(averageSampleTicks.Average());
-                    averageSampleTicks.Clear();
+                    Update();
                 }
-            } else {
-                Update();
             }
+        }
+
+        static void OnControllerEvent(int deviceId, JSL.JOY_SHOCK_STATE state, JSL.JOY_SHOCK_STATE state2, JSL.IMU_STATE imuState, JSL.IMU_STATE imuState2, float delta) {
+            OnNewJSLData?.Invoke(new object(), new Tuple<int, JOY_SHOCK_STATE, JOY_SHOCK_STATE, IMU_STATE, IMU_STATE, float>(deviceId, state, state2, imuState, imuState2, delta));
         }
         //private JSL.IMU_STATE GetReleventMotionState() {
         //    switch (_sensorType) {

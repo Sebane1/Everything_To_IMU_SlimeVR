@@ -80,7 +80,7 @@ u32 finalTargetFrameMs = 32;
 #define MOTIONPLUS_DELAY_FRAMES 60
 #define DEFAULT_SERVER_IP "10.0.0.21"
 #define DEFAULT_SERVER_PORT 9909
-#define DATA_PER_CONTROLLER 26
+#define DATA_PER_CONTROLLER 17
 
 static char server_ip[32] = DEFAULT_SERVER_IP;
 static int server_port = DEFAULT_SERVER_PORT;
@@ -166,6 +166,8 @@ int main(int argc, char** argv) {
 	WPAD_SetIdleTimeout(36000);
 	uint8_t full_buffer[MAX_WIIMOTES * DATA_PER_CONTROLLER];
 	uint8_t* ptr;
+	bool nunchuckWasPluggedIn = false;
+	bool motionPlusJustEnabled = false;
 	while (1) {
 		u64 start = gettime();
 		WPAD_ScanPads();
@@ -208,18 +210,29 @@ int main(int argc, char** argv) {
 						if (motionPlusState[i]) {
 							WPAD_SetMotionPlus(i, false);
 							usleep(500000); // 100ms delay for initialization
+							WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC_IR);
 							motionPlusState[i] = false;
 							printf("Motion plus disabled for controller\n");
 						}
+						nunchuckWasPluggedIn = true;
 					}
 				}
 				else {
 					// Normal Nunchuck check when no MotionPlus
-					if (wpad_data->exp.type == WPAD_EXP_NUNCHUK) {
+					if (wpad_data->exp.type == WPAD_EXP_NUNCHUK || nunchuckWasPluggedIn) {
 						nunchuk_connected = 1;
 						nax = wpad_data->exp.nunchuk.accel.x;
 						nay = wpad_data->exp.nunchuk.accel.y;
 						naz = wpad_data->exp.nunchuk.accel.z;
+						// Have to choose between motion plus or nunchuck data. Disable motion plus if nunchuck is connected.
+						if (motionPlusState[i]) {
+							WPAD_SetMotionPlus(i, false);
+							usleep(500000); // 100ms delay for initialization
+							WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC_IR);
+							motionPlusState[i] = false;
+							printf("Motion plus disabled for controller\n");
+						}
+						nunchuckWasPluggedIn = false;
 					}
 					else {
 						// Have to choose between motion plus or nunchuck data. Enable motion plus if nunchuck is not connected and controller supports it.
@@ -227,13 +240,15 @@ int main(int argc, char** argv) {
 							WPAD_SetMotionPlus(i, true);
 							usleep(500000); // 100ms delay for initialization
 							motionPlusState[i] = true;
+							motionPlusJustEnabled = true;
 							printf("Motion plus enabled for controller\n");
 						}
 					}
 				}
 
-				uint32_t id_le = to_little_endian_u32(i);
-				memcpy(ptr, &id_le, 4); ptr += 4;
+				int8_t id_le = i;
+				*ptr = id_le;
+				ptr++;
 
 				// Wiimote accel (x, y, z)
 
@@ -242,7 +257,7 @@ int main(int argc, char** argv) {
 				s16_to_little_endian(z, ptr); ptr += 2;
 
 
-				// Nunchuk accel (x, y, z) or zeros
+				// Nunchuk accel (x, y, z), Or Gyro depending on mode.
 
 				if (nunchuk_connected) {
 					s16_to_little_endian(nax, ptr); ptr += 2;
@@ -250,30 +265,28 @@ int main(int argc, char** argv) {
 					s16_to_little_endian(naz, ptr); ptr += 2;
 				}
 				else {
-					memset(ptr, 0, 6);
-					ptr += 6;
-				}
+					if (has_motion_plus) {
+						s16 gx = 0, gy = 0, gz = 0;
+						gx = wpad_data->exp.mp.rx;
+						gy = wpad_data->exp.mp.ry;
+						gz = wpad_data->exp.mp.rz;
 
-				if (has_motion_plus) {
-					s16 gx = 0, gy = 0, gz = 0;
-					gx = wpad_data->exp.mp.rx;
-					gy = wpad_data->exp.mp.ry;
-					gz = wpad_data->exp.mp.rz;
-					
-					// Check that this device actually supports motion plus, otherwise add it to the unsupported list.
-					if (gx == 0 && gy == 0 && gz == 0 && !motionPlusUnsupported[i]) {
-						WPAD_SetMotionPlus(i, false);
-						usleep(100000); // 100ms delay for initialization
-						motionPlusUnsupported[i] = true;
-						printf("Motion plus marked as unsupported for controller\n");
+						// Check that this device actually supports motion plus, otherwise add it to the unsupported list.
+						if (gx == 0 && gy == 0 && gz == 0 && !motionPlusUnsupported[i] && !motionPlusJustEnabled) {
+							WPAD_SetMotionPlus(i, false);
+							usleep(100000); // 100ms delay for initialization
+							motionPlusUnsupported[i] = true;
+							printf("Motion plus marked as unsupported for controller\n");
+						}
+						motionPlusJustEnabled = false;
+						s16_to_little_endian(gx, ptr); ptr += 2;
+						s16_to_little_endian(gy, ptr); ptr += 2;
+						s16_to_little_endian(gz, ptr); ptr += 2;
 					}
-					s16_to_little_endian(gx, ptr); ptr += 2;
-					s16_to_little_endian(gy, ptr); ptr += 2;
-					s16_to_little_endian(gz, ptr); ptr += 2;
-				}
-				else {
-					memset(ptr, 0, 6);
-					ptr += 6;
+					else {
+						memset(ptr, 0, 6);
+						ptr += 6;
+					}
 				}
 
 				*ptr = nunchuk_connected;
@@ -290,8 +303,9 @@ int main(int argc, char** argv) {
 				ptr++;
 			}
 			else {
-				uint32_t id_le = to_little_endian_u32(-1);
-				memcpy(ptr, &id_le, 4); ptr += 4;
+				int8_t id_le = 255;
+				*ptr = id_le;
+				ptr++;
 
 				// Wiimote accel (x, y, z)
 
@@ -299,16 +313,10 @@ int main(int argc, char** argv) {
 				s16_to_little_endian(0, ptr); ptr += 2;
 				s16_to_little_endian(0, ptr); ptr += 2;
 
-
-				// Nunchuk accel (x, y, z) or zeros
+				// Nunchuk/Gyro accel (x, y, z) or zeros
 				memset(ptr, 0, 6);
 				ptr += 6;
 
-
-				// Gyro
-				memset(ptr, 0, 6);
-				ptr += 6;
-				
 				// Nunchuck connected
 				*ptr = 0;
 				ptr++;
@@ -347,8 +355,7 @@ bool has_motionplus(int chan) {
 	WPAD_Expansion(chan, &exp);
 
 	// Check for MotionPlus status
-	if (exp.type == EXP_MOTION_PLUS ||
-		(exp.type == EXP_NUNCHUK && exp.mp.status != 0)) {
+	if (exp.type == EXP_MOTION_PLUS) {
 		return true;
 	}
 

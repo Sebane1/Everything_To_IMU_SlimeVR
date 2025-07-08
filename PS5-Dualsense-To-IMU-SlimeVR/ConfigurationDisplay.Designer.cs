@@ -79,7 +79,7 @@
             controllerDeviceList.ItemHeight = 15;
             controllerDeviceList.Location = new Point(3, 22);
             controllerDeviceList.Name = "controllerDeviceList";
-            controllerDeviceList.Size = new Size(104, 244);
+            controllerDeviceList.Size = new Size(104, 379);
             controllerDeviceList.TabIndex = 0;
             controllerDeviceList.SelectedIndexChanged += selectedDevice_SelectedIndexChanged;
             // 
@@ -103,7 +103,7 @@
             tabOptions.Location = new Point(438, -2);
             tabOptions.Name = "tabOptions";
             tabOptions.SelectedIndex = 0;
-            tabOptions.Size = new Size(348, 267);
+            tabOptions.Size = new Size(348, 405);
             tabOptions.TabIndex = 2;
             // 
             // settingsPage
@@ -121,7 +121,7 @@
             settingsPage.Location = new Point(4, 24);
             settingsPage.Name = "settingsPage";
             settingsPage.Padding = new Padding(3);
-            settingsPage.Size = new Size(340, 239);
+            settingsPage.Size = new Size(340, 377);
             settingsPage.TabIndex = 0;
             settingsPage.Text = "Settings";
             settingsPage.UseVisualStyleBackColor = true;
@@ -253,7 +253,7 @@
             // trackerCalibrationButton
             // 
             trackerCalibrationButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            trackerCalibrationButton.Location = new Point(442, 270);
+            trackerCalibrationButton.Location = new Point(442, 408);
             trackerCalibrationButton.Name = "trackerCalibrationButton";
             trackerCalibrationButton.Size = new Size(212, 23);
             trackerCalibrationButton.TabIndex = 4;
@@ -267,7 +267,7 @@
             donateButton.BackColor = Color.RosyBrown;
             donateButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             donateButton.ForeColor = Color.Snow;
-            donateButton.Location = new Point(652, 270);
+            donateButton.Location = new Point(652, 408);
             donateButton.Name = "donateButton";
             donateButton.Size = new Size(127, 23);
             donateButton.TabIndex = 5;
@@ -282,7 +282,7 @@
             threeDsDeviceList.ItemHeight = 15;
             threeDsDeviceList.Location = new Point(113, 22);
             threeDsDeviceList.Name = "threeDsDeviceList";
-            threeDsDeviceList.Size = new Size(104, 244);
+            threeDsDeviceList.Size = new Size(104, 379);
             threeDsDeviceList.TabIndex = 8;
             threeDsDeviceList.SelectedIndexChanged += threeDsDeviceList_SelectedIndexChanged;
             // 
@@ -293,7 +293,7 @@
             wiimoteDeviceList.ItemHeight = 15;
             wiimoteDeviceList.Location = new Point(223, 22);
             wiimoteDeviceList.Name = "wiimoteDeviceList";
-            wiimoteDeviceList.Size = new Size(104, 244);
+            wiimoteDeviceList.Size = new Size(104, 379);
             wiimoteDeviceList.TabIndex = 9;
             wiimoteDeviceList.SelectedIndexChanged += wiimoteDeviceList_SelectedIndexChanged;
             // 
@@ -346,9 +346,9 @@
             hapticDeviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             hapticDeviceList.FormattingEnabled = true;
             hapticDeviceList.ItemHeight = 15;
-            hapticDeviceList.Location = new Point(332, 67);
+            hapticDeviceList.Location = new Point(332, 52);
             hapticDeviceList.Name = "hapticDeviceList";
-            hapticDeviceList.Size = new Size(104, 199);
+            hapticDeviceList.Size = new Size(104, 349);
             hapticDeviceList.TabIndex = 14;
             hapticDeviceList.SelectedIndexChanged += hapticDeviceList_SelectedIndexChanged;
             // 
@@ -362,7 +362,7 @@
             // newHapticCellphoneButton
             // 
             newHapticCellphoneButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            newHapticCellphoneButton.Location = new Point(331, -275);
+            newHapticCellphoneButton.Location = new Point(331, -137);
             newHapticCellphoneButton.Name = "newHapticCellphoneButton";
             newHapticCellphoneButton.Size = new Size(105, 23);
             newHapticCellphoneButton.TabIndex = 17;
@@ -373,7 +373,7 @@
             // testHaptics
             // 
             testHaptics.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            testHaptics.Location = new Point(442, 299);
+            testHaptics.Location = new Point(442, 437);
             testHaptics.Name = "testHaptics";
             testHaptics.Size = new Size(94, 23);
             testHaptics.TabIndex = 18;
@@ -405,7 +405,7 @@
             // lockInDetectedDevicesButton
             // 
             lockInDetectedDevicesButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            lockInDetectedDevicesButton.Location = new Point(7, 270);
+            lockInDetectedDevicesButton.Location = new Point(7, 408);
             lockInDetectedDevicesButton.Name = "lockInDetectedDevicesButton";
             lockInDetectedDevicesButton.Size = new Size(429, 52);
             lockInDetectedDevicesButton.TabIndex = 21;
@@ -417,7 +417,7 @@
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(790, 323);
+            ClientSize = new Size(790, 461);
             Controls.Add(lockInDetectedDevicesButton);
             Controls.Add(testHaptics);
             Controls.Add(newHapticCellphoneButton);
