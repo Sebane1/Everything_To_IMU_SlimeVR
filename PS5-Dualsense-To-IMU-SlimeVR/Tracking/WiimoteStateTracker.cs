@@ -1,34 +1,47 @@
 ﻿using static Everything_To_IMU_SlimeVR.Tracking.ForwardedWiimoteManager;
 using System.Numerics;
+using System.Collections.Generic;
+using Everything_To_IMU_SlimeVR.Tracking;
 
 public class WiimoteStateTracker {
-    private readonly StableOrientationFilter _filter = new();
+    private readonly VQFWrapper _vqf = new VQFWrapper(0.016); // or your desired timestep
+    private readonly GyroPreprocessor _gyroPreprocessor = new GyroPreprocessor();
     private readonly List<Vector3> _calibrationSamples = new();
     private bool _isCalibrating = false;
 
     public WiimoteInfo ProcessPacket(WiimotePacket packet) {
         var info = new WiimoteInfo(packet);
 
-        // Collect calibration samples if needed
         if (_isCalibrating) {
             _calibrationSamples.Add(new Vector3(
                 info.WiimoteGyroX,
                 info.WiimoteGyroY,
                 info.WiimoteGyroZ));
-
-            if (_calibrationSamples.Count >= 100) // Enough samples
-            {
-                _filter.Gyro.Calibrate(_calibrationSamples);
+            if (_calibrationSamples.Count >= 100) {
+                _gyroPreprocessor.Calibrate(_calibrationSamples);
                 _isCalibrating = false;
             }
         }
 
-        // Update filter
-        info.WiimoteFusedOrientation = _filter.Update(
-            info.WiimoteGravityOrientation,
-            info.WiimoteGyroX,
-            info.WiimoteGyroY,
-            info.WiimoteGyroZ);
+        // Convert raw accel (assuming 0–1024 scale) to m/s²
+        Vector3 accel = new Vector3(
+            (info.WiimoteAccelX - 512) / 200.0f,
+            (info.WiimoteAccelY - 512) / 200.0f,
+            (info.WiimoteAccelZ - 512) / 200.0f) * 9.80665f;
+
+        // Process gyro and convert degrees/sec to radians/sec
+        Vector3 gyroRaw = new Vector3(info.WiimoteGyroX, info.WiimoteGyroY, info.WiimoteGyroZ);
+        Vector3 gyroCalibrated = _gyroPreprocessor.ProcessRawGyro(info.WiimoteGyroX, info.WiimoteGyroY, info.WiimoteGyroZ);
+        Vector3 gyroRad = new Vector3(
+            gyroCalibrated.X,
+            gyroCalibrated.Y,
+            gyroCalibrated.Z);
+
+        // Update VQF filter
+        _vqf.Update((gyroRad).ToVQFDoubleArray(), accel.ToVQFDoubleArray());
+        var quatData = _vqf.GetQuat6D();
+        info.WiimoteFusedOrientation = new Quaternion(
+            (float)quatData[1], (float)quatData[2], (float)quatData[3], (float)quatData[0]);
 
         return info;
     }

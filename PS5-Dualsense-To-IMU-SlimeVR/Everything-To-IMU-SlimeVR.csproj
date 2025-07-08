@@ -25,6 +25,12 @@
     <None Update="JoyShockLibrary.lib">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="vqf.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="vqf.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

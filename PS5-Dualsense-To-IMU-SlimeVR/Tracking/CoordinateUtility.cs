@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Numerics;
 
 namespace Everything_To_IMU_SlimeVR.Tracking
@@ -11,10 +9,14 @@ namespace Everything_To_IMU_SlimeVR.Tracking
             double degrees = 180 / Math.PI * radians;
             return (float)degrees;
         }
-        public static float ConvertDegreesToRadians(this float degrees)
+        public static Vector3 ConvertRadiansToDegrees(this Vector3 radians) {
+            Vector3 degrees = (float)(180 / Math.PI) * radians;
+            return degrees;
+        }
+        public static Vector3 ConvertDegreesToRadians(this Vector3 degrees)
         {
-            double radians = degrees * (Math.PI / 180);
-            return (float)radians;
+            Vector3 radians = degrees * (float)(Math.PI / 180);
+            return radians;
         }
         public static double ConvertRadiansToDegrees(this double radians)
         {

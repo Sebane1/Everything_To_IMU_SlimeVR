@@ -87,8 +87,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     var value = Forwarded3DSDataManager.DeviceMap.ElementAt(_index);
                     _rotation = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
                     _euler = _rotation.QuaternionToEuler() + _rotationCalibration;
-                    _gyro = _sensorOrientation.GyroData;
-                    _acceleration = _sensorOrientation.AccelerometerData;
+                    _gyro = _sensorOrientation.Gyro;
+                    _acceleration = _sensorOrientation.Accelerometer;
 
                     if (GenericTrackerManager.DebugOpen) {
                         _debug =

@@ -88,6 +88,10 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         return OpenVRReader.GetTrackerRotation("waist");
                     case RotationReferenceType.ChestRotation:
                         return OpenVRReader.GetTrackerRotation("chest");
+                    case RotationReferenceType.LeftAnkleRotation:
+                        return OpenVRReader.GetTrackerRotation("left_foot");
+                    case RotationReferenceType.RightAnkleRotation:
+                        return OpenVRReader.GetTrackerRotation("right_foot");
                 }
             } catch {
             }

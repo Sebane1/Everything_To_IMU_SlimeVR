@@ -178,6 +178,7 @@ int main(int argc, char** argv) {
 					WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC_IR);
 					WPAD_SetMotionPlus(i, true);
 					usleep(100000); // 100ms delay for initialization
+
 					formatSet[i] = true;
 				}
 
@@ -190,13 +191,26 @@ int main(int argc, char** argv) {
 				s16 y = wpad_data->accel.y;
 				s16 z = wpad_data->accel.z;
 
+				bool has_motion_plus = has_motionplus(i);
 				u8 nunchuk_connected = 0;
 				s16 nax = 0, nay = 0, naz = 0;
-				if (wpad_data->exp.type == WPAD_EXP_NUNCHUK) {
-					nunchuk_connected = 1;
-					nax = wpad_data->exp.nunchuk.accel.x;
-					nay = wpad_data->exp.nunchuk.accel.y;
-					naz = wpad_data->exp.nunchuk.accel.z;
+				if (has_motion_plus) {
+					// When MotionPlus is active, check the extension type
+					if (wpad_data->exp.mp.ext == WPAD_EXP_NUNCHUK) {
+						nunchuk_connected = 1;
+						nax = wpad_data->exp.nunchuk.accel.x;
+						nay = wpad_data->exp.nunchuk.accel.y;
+						naz = wpad_data->exp.nunchuk.accel.z;
+					}
+				}
+				else {
+					// Normal Nunchuck check when no MotionPlus
+					if (wpad_data->exp.type == WPAD_EXP_NUNCHUK) {
+						nunchuk_connected = 1;
+						nax = wpad_data->exp.nunchuk.accel.x;
+						nay = wpad_data->exp.nunchuk.accel.y;
+						naz = wpad_data->exp.nunchuk.accel.z;
+					}
 				}
 
 				uint32_t id_le = to_little_endian_u32(i);
@@ -220,7 +234,6 @@ int main(int argc, char** argv) {
 					ptr += 6;
 				}
 
-				bool has_motion_plus = has_motionplus(i);
 				if (has_motion_plus) {
 					s16 gx = 0, gy = 0, gz = 0;
 					gx = wpad_data->exp.mp.rx;

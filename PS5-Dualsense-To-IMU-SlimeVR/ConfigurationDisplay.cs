@@ -57,40 +57,6 @@ namespace Everything_To_IMU_SlimeVR {
                 GenericTrackerManager.DebugOpen = false;
                 refreshTimer.Interval = 1000;
             }
-            controllerDeviceList.Items.Clear();
-            threeDsDeviceList.Items.Clear();
-            wiimoteDeviceList.Items.Clear();
-            hapticDeviceList.Items.Clear();
-            try {
-                foreach (var item in GenericTrackerManager.TrackersBluetooth) {
-                    controllerDeviceList.Items.Add(item.ToString());
-                }
-                foreach (var item in GenericTrackerManager.Trackers3ds) {
-                    threeDsDeviceList.Items.Add(item.ToString());
-                }
-                foreach (var item in GenericTrackerManager.TrackersWiimote) {
-                    wiimoteDeviceList.Items.Add(item.ToString());
-                }
-                foreach (var item in GenericTrackerManager.TrackersUdpHapticDevice) {
-                    hapticDeviceList.Items.Add(item.ToString());
-                }
-            } catch {
-
-            }
-            if (_currentTracker != null) {
-                rediscoverTrackerButton.Visible = true;
-                falseThighSimulationCheckBox.Visible = true;
-            } else {
-                falseThighSimulationCheckBox.Visible = false;
-                rediscoverTrackerButton.Visible = false;
-            }
-            if (errorQueue.Count > 0) {
-                var value = errorQueue.Dequeue();
-                if (_lastErrorLog != value) {
-                    errorLogText.Text += value + "\r\n";
-                }
-                _lastErrorLog = value;
-            }
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e) {
@@ -309,6 +275,43 @@ namespace Everything_To_IMU_SlimeVR {
                 _currentTracker.ExtensionYawReferenceTypeValue = (RotationReferenceType)extensionYawForSimulatedTracker.SelectedIndex;
                 _currentTrackerConfig.ExtensionYawReferenceTypeValue = (RotationReferenceType)extensionYawForSimulatedTracker.SelectedIndex;
                 _configuration.SaveConfig();
+            }
+        }
+
+        private void listRefreshTimer_Tick(object sender, EventArgs e) {
+            controllerDeviceList.Items.Clear();
+            threeDsDeviceList.Items.Clear();
+            wiimoteDeviceList.Items.Clear();
+            hapticDeviceList.Items.Clear();
+            try {
+                foreach (var item in GenericTrackerManager.TrackersBluetooth) {
+                    controllerDeviceList.Items.Add(item.ToString());
+                }
+                foreach (var item in GenericTrackerManager.Trackers3ds) {
+                    threeDsDeviceList.Items.Add(item.ToString());
+                }
+                foreach (var item in GenericTrackerManager.TrackersWiimote) {
+                    wiimoteDeviceList.Items.Add(item.ToString());
+                }
+                foreach (var item in GenericTrackerManager.TrackersUdpHapticDevice) {
+                    hapticDeviceList.Items.Add(item.ToString());
+                }
+            } catch {
+
+            }
+            if (_currentTracker != null) {
+                rediscoverTrackerButton.Visible = true;
+                falseThighSimulationCheckBox.Visible = true;
+            } else {
+                falseThighSimulationCheckBox.Visible = false;
+                rediscoverTrackerButton.Visible = false;
+            }
+            if (errorQueue.Count > 0) {
+                var value = errorQueue.Dequeue();
+                if (_lastErrorLog != value) {
+                    errorLogText.Text += value + "\r\n";
+                }
+                _lastErrorLog = value;
             }
         }
     }

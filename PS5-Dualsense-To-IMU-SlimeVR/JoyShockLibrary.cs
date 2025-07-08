@@ -67,12 +67,18 @@ public static class JSL
         public float gravX;
         public float gravY;
         public float gravZ;
-        public byte battery;
     }
 
 
-    public delegate void EventCallback(int handle, JOY_SHOCK_STATE state, JOY_SHOCK_STATE lastState,
-        IMU_STATE imuState, IMU_STATE lastImuState, float deltaTime);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void EventCallback(
+        int handle,
+        JOY_SHOCK_STATE state,
+        JOY_SHOCK_STATE lastState,
+        IMU_STATE imuState,
+        IMU_STATE lastImuState,
+        float deltaTime
+    );
 
     [DllImport("JoyShockLibrary")]
     public static extern int JslConnectDevices();
@@ -106,7 +112,7 @@ public static class JSL
     [DllImport("JoyShockLibrary")]
     public static extern void JslGetCalibrationOffset(int deviceId, float xOffset, float yOffset, float zOffset);
 
-    [DllImport("JoyShockLibrary")]
+    [DllImport("JoyShockLibrary", CallingConvention = CallingConvention.Cdecl)]
     public static extern void JslSetCallback(EventCallback callback);
     
     [DllImport("JoyShockLibrary")]

@@ -7,7 +7,9 @@ public static class QuaternionUtils {
         if (length == 0f) return new Vector3(0f, 0f, 0f);
         return new Vector3(x / length, y / length, z / length);
     }
-
+    public static double[] ToVQFDoubleArray(this Vector3 vector3) {
+        return new double[] { (double)vector3.X, (double)-vector3.Z, (double)vector3.Y };
+    }
     public static Quaternion QuatFromGravity(
         float x, float y, float z,
         float cx, float cy, float cz,

@@ -1,11 +1,12 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 
 public class AdaptiveComplementaryFilter {
+    Stopwatch stopwatch = new Stopwatch();
     // Filter parameters
-    private const float MinAlpha = 0.92f;  // Minimum gyro trust (slow movements)
+    private const float MinAlpha = 0.8f;  // Minimum gyro trust (slow movements)
     private const float MaxAlpha = 0.99f;  // Maximum gyro trust (fast movements)
-    private const float AccelNoiseThreshold = 0.15f; // Threshold for "steady" acceleration
-    private const float GyroThreshold = 15f; // Degrees/sec for motion detection
+    private const float GyroThreshold = 5f; // Degrees/sec for motion detection
 
     // State
     private Quaternion _orientation = Quaternion.Identity;
@@ -15,8 +16,8 @@ public class AdaptiveComplementaryFilter {
     public Quaternion Update(Quaternion accelOrientation, Vector3 gyroRates) {
         // Calculate time delta
         var now = DateTime.Now;
-        float deltaTime = (float)(now - _lastUpdateTime).TotalSeconds;
-        _lastUpdateTime = now;
+        float deltaTime = (float)(stopwatch.Elapsed).TotalSeconds;
+        stopwatch.Restart();
 
         if (deltaTime <= 0)
             return _orientation;

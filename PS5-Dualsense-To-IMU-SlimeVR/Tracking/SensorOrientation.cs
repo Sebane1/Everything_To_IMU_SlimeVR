@@ -5,8 +5,6 @@ using System.Numerics;
 namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class SensorOrientation : IDisposable {
         private Quaternion currentOrientation = Quaternion.Identity;
-        private Vector3 accelerometerData = Vector3.Zero;
-        private Vector3 gyroData = Vector3.Zero;
         private float _deltaTime = 0.02f; // Example time step (e.g., 50Hz)
         private float _previousTime;
         private bool _useCustomFusion;
@@ -16,8 +14,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private IBodyTracker _bodyTracker;
         private int _index;
         private SensorType _sensorType;
-        private Vector3 _accellerometerVectorCalibration;
-        private Vector3 _gyroVectorCalibration;
         Stopwatch stopwatch = new Stopwatch();
         bool _calibratedRotation = false;
         private bool disposed;
@@ -28,60 +24,69 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private float yawDegrees;
         private Vector3 _accelerometer;
         private Vector3 _gyro;
-
+        private byte _battery;
+        private VQFWrapper _vqf;
+        private JSL.EventCallback _callback;
+        List<float> averageSampleTicks = new List<float>();
         public Quaternion CurrentOrientation { get => currentOrientation; set => currentOrientation = value; }
-        public Vector3 AccelerometerData { get => accelerometerData; set => accelerometerData = value; }
-        public Vector3 GyroData { get => gyroData; set => gyroData = value; }
         public float YawRadians { get => yawRadians; set => yawRadians = value; }
         public float YawDegrees { get => yawDegrees; set => yawDegrees = value; }
+        public Quaternion AXES_OFFSET { get; internal set; }
+        public Vector3 Accelerometer { get => _accelerometer; set => _accelerometer = value; }
+        public Vector3 Gyro { get => _gyro; set => _gyro = value; }
+        public event EventHandler NewData;
 
         public SensorOrientation(int index, SensorType sensorType) {
+            // Apply AXES_OFFSET * rot
+            float angle = -MathF.PI / 2;
+
+            AXES_OFFSET = Quaternion.CreateFromAxisAngle(Vector3.UnitX, angle);
             _index = index;
             _sensorType = sensorType;
             stopwatch.Start();
             if (_sensorType == SensorType.Bluetooth) {
-                Task.Run(() => {
-                    while (!disposed) {
-                        Update();
-                        Thread.Sleep(16);
-                    }
-                });
+                _callback = new JSL.EventCallback(OnControllerEvent);
+                JSL.JslSetCallback(_callback);
             }
         }
-
-        private JSL.MOTION_STATE GetReleventMotionState() {
-            switch (_sensorType) {
-                case SensorType.Bluetooth:
-                    return JSL.JslGetMotionState(_index);
-                case SensorType.ThreeDs:
-                    return Forwarded3DSDataManager.DeviceMap.ElementAt(_index).Value;
+        void OnControllerEvent(int deviceId, JSL.JOY_SHOCK_STATE state, JSL.JOY_SHOCK_STATE state2, JSL.IMU_STATE imuState, JSL.IMU_STATE imuState2, float delta) {
+            _accelerometer = new Vector3(imuState.accelX, imuState.accelY, imuState.accelZ) * 10 /* 9.80665f*/;
+            _gyro = (new Vector3(imuState.gyroX, imuState.gyroY, imuState.gyroZ)).ConvertDegreesToRadians();
+            if (_vqf == null) {
+                if (averageSampleTicks.Count < 100) {
+                    averageSampleTicks.Add(delta);
+                } else {
+                    _vqf = new VQFWrapper(averageSampleTicks.Average());
+                    averageSampleTicks.Clear();
+                }
+            } else {
+                Update();
             }
-            return new JSL.MOTION_STATE();
         }
+        //private JSL.IMU_STATE GetReleventMotionState() {
+        //    switch (_sensorType) {
+        //        case SensorType.Bluetooth:
+        //            return JSL.JslGetIMUState(_index);
+        //        case SensorType.ThreeDs:
+        //            return Forwarded3DSDataManager.DeviceMap.ElementAt(_index).Value;
+        //    }
+        //    return new JSL.IMU_STATE();
+        //}
         public enum SensorType {
             Bluetooth = 0,
             ThreeDs = 1,
             Wiimote = 2,
             Nunchuck = 3
         }
-        private void RefreshSensorData() {
-            var sensorData = GetReleventMotionState();
-            _accelerometer = new Vector3(sensorData.gravX, sensorData.gravY, sensorData.gravZ);
-            _gyro = new Vector3(sensorData.accelX, sensorData.accelY, sensorData.accelZ);
-        }
-
-        public void Recalibrate() {
-            RefreshSensorData();
-            //_accellerometerVectorCalibration = -(_accelerometer);
-            //_gyroVectorCalibration = -(_gyro);
-        }
         // Update method to simulate gyroscope and accelerometer data fusion
-        public void Update() {
+        public async void Update() {
             if (!disposed) {
                 switch (_sensorType) {
                     case SensorType.Bluetooth:
-                        var motionState = JSL.JslGetMotionState(_index);
-                        currentOrientation = new Quaternion(-motionState.quatX, motionState.quatZ, motionState.quatY, motionState.quatW);
+                        _vqf.Update(_gyro.ToVQFDoubleArray(), _accelerometer.ToVQFDoubleArray());
+                        var vfqData = _vqf.GetQuat6D();
+                        currentOrientation = new Quaternion((float)vfqData[1], (float)vfqData[2], (float)vfqData[3], (float)vfqData[0]);
+                        NewData?.Invoke(this, EventArgs.Empty);
                         break;
                 }
             }

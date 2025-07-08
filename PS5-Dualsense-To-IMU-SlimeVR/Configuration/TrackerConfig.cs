@@ -14,7 +14,9 @@
             HmdRotation = 0,
             WaistRotation = 1,
             ChestRotation = 2,
-            TrustDeviceYaw = 3
+            LeftAnkleRotation = 3,
+            RightAnkleRotation = 4,
+            TrustDeviceYaw = 5,
         }
     }
 }

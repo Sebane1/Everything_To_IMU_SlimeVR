@@ -14,6 +14,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private static CVRSystem _vrSystem;
         private static TrackedDevicePose_t[] _poseArray;
         private static Stopwatch _stopwatch  = new Stopwatch();
+        private static Stopwatch _steamVRCheckCooldown = new Stopwatch();
+        private static bool _steamVRWasDetected;
 
         public static Stopwatch Stopwatch { get => _stopwatch; set => _stopwatch = value; }
 
@@ -196,8 +198,15 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         }
         public static bool IsSteamVRRunning() {
-            Process[] processes = Process.GetProcessesByName("vrserver");
-            return processes.Length > 0;
+            if (!_steamVRCheckCooldown.IsRunning) {
+                _steamVRCheckCooldown.Start();
+            }
+            if (!_steamVRWasDetected && _steamVRCheckCooldown.ElapsedMilliseconds > 10000) {
+                Process[] processes = Process.GetProcessesByName("vrserver");
+                _steamVRWasDetected = processes.Length > 0;
+                _steamVRCheckCooldown.Restart();
+            }
+            return _steamVRWasDetected;
         }
     }
 }

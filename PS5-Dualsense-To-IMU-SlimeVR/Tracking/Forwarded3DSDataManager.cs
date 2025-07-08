@@ -4,13 +4,14 @@ using System.Runtime.InteropServices;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Numerics;
+using System.Threading;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     public class Forwarded3DSDataManager {
         const int listenPort = 9305;
-        private static ConcurrentDictionary<string, JSL.MOTION_STATE> _deviceMap = new ConcurrentDictionary<string, JSL.MOTION_STATE>();
+        private static ConcurrentDictionary<string, ThreeDSState> _deviceMap = new ConcurrentDictionary<string, ThreeDSState>();
 
-        public static ConcurrentDictionary<string, JSL.MOTION_STATE> DeviceMap { get => _deviceMap; set => _deviceMap = value; }
+        public static ConcurrentDictionary<string, ThreeDSState> DeviceMap { get => _deviceMap; set => _deviceMap = value; }
         static Stopwatch calibrationTimer = new Stopwatch();
         public Forwarded3DSDataManager() {
             Task.Run(() => {
@@ -40,7 +41,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
         static async void Initialize() {
             UdpClient udpClient = new UdpClient(listenPort); // Match port from 3DS
-            _deviceMap = new ConcurrentDictionary<string, JSL.MOTION_STATE>();
+            _deviceMap = new ConcurrentDictionary<string, ThreeDSState>();
             int nextId = 1;
 
             Console.WriteLine("Listening for IMU data...");
@@ -68,11 +69,11 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         ApplyDeadzone((float)value.ay * divisionValue, accelDeadzone), 
                         ApplyDeadzone((float)value.az * divisionValue, accelDeadzone));
                     var orientation = GetOrientationFromGravity(gravity);
-                    _deviceMap[ip] = new JSL.MOTION_STATE {
-                        gravX = gravity.X, 
-                        gravY = gravity.Y, 
-                        gravZ = gravity.Z,
-                        accelX = value.gx, accelY = value.gy, accelZ = value.gz,
+                    _deviceMap[ip] = new ThreeDSState {
+                        accelX = gravity.X, 
+                        accelY = gravity.Y, 
+                        accelZ = gravity.Z,
+                        gyroX = value.gx, gyroY = value.gy, gyroZ = value.gz,
                         quatX = orientation.X, quatY = orientation.Y, quatZ = orientation.Z, quatW = orientation.W
                     };
                     handle.Free();

@@ -71,7 +71,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                 _allTrackers.Add(newTracker);
                                 _trackerInfo[i] = new KeyValuePair<int, bool>(info.Key, true);
                             }
-                            Thread.Sleep(handshakeDelay);
                         }
                         for (int i = 0; i < Forwarded3DSDataManager.DeviceMap.Count; i++) {
                             // Track whether or not we've seen this controller before this session.
@@ -100,7 +99,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                 _allTrackers.Add(newTracker);
                                 _trackerInfo3ds[i] = new KeyValuePair<int, bool>(info.Key, true);
                             }
-                            Thread.Sleep(handshakeDelay);
                         }
                         for (int i = 0; i < ForwardedWiimoteManager.Wiimotes.Count; i++) {
                             // Track whether or not we've seen this controller before this session.
@@ -131,9 +129,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                 _allTrackers.Add(newTracker);
                                 _trackerInfoWiimote[key] = new KeyValuePair<string, bool>(key, true);
                             }
-                            Thread.Sleep(handshakeDelay);
                         }
-                        Thread.Sleep(200);
+                        Thread.Sleep(10000);
                     } catch (Exception e) {
                         OnTrackerError?.Invoke(this, e.Message);
                     }
@@ -151,9 +148,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             _trackersBluetooth.RemoveAt(i);
                             i = 0;
                             tracker.Dispose();
-                        } else {
-                            // Update tracker.
-                            await tracker.Update();
                         }
                     }
                     for (int i = 0; i < _trackers3ds.Count; i++) {
@@ -165,12 +159,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             _trackers3ds.RemoveAt(i);
                             i = 0;
                             tracker.Dispose();
-                        } else {
-                            // Update tracker.
-                            await tracker.Update();
                         }
                     }
-                    Thread.Sleep(pollingRate);
+                    Thread.Sleep(10000);
                 }
             });
         }

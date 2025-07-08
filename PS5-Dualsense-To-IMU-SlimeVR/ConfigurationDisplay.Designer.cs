@@ -29,6 +29,9 @@
             falseThighSimulationCheckBox = new CheckBox();
             tabOptions = new TabControl();
             settingsPage = new TabPage();
+            label7 = new Label();
+            label6 = new Label();
+            label5 = new Label();
             extensionYawForSimulatedTracker = new ComboBox();
             hapticJointAssignment = new ComboBox();
             indentifyButton = new Button();
@@ -56,9 +59,10 @@
             testHaptics = new Button();
             wiimoteRateLabel = new Label();
             wiimoteRate = new TrackBar();
-            label5 = new Label();
-            label6 = new Label();
-            label7 = new Label();
+            timer1 = new System.Windows.Forms.Timer(components);
+            timer2 = new System.Windows.Forms.Timer(components);
+            timer3 = new System.Windows.Forms.Timer(components);
+            listRefreshTimer = new System.Windows.Forms.Timer(components);
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
@@ -128,6 +132,33 @@
             settingsPage.UseVisualStyleBackColor = true;
             settingsPage.Click += tabPage1_Click;
             // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Location = new Point(10, 168);
+            label7.Name = "label7";
+            label7.Size = new Size(248, 15);
+            label7.TabIndex = 11;
+            label7.Text = "Haptic Joint Assignment (bHaptics Over OSC)";
+            // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Location = new Point(10, 113);
+            label6.Name = "label6";
+            label6.Size = new Size(222, 15);
+            label6.TabIndex = 10;
+            label6.Text = "Extension Yaw Source (IE: Wii Nunchuck)";
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(10, 60);
+            label5.Name = "label5";
+            label5.Size = new Size(111, 15);
+            label5.TabIndex = 9;
+            label5.Text = "Primary Yaw Source";
+            // 
             // extensionYawForSimulatedTracker
             // 
             extensionYawForSimulatedTracker.FormattingEnabled = true;
@@ -161,7 +192,7 @@
             // yawForSimulatedTracker
             // 
             yawForSimulatedTracker.FormattingEnabled = true;
-            yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
+            yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Left Ankle Tracker Yaw (Ankle Tracker Drift)", "Right Ankle Tracker Yaw (Ankle Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
             yawForSimulatedTracker.Location = new Point(10, 78);
             yawForSimulatedTracker.Name = "yawForSimulatedTracker";
             yawForSimulatedTracker.Size = new Size(319, 23);
@@ -399,32 +430,26 @@
             wiimoteRate.Value = 8;
             wiimoteRate.Scroll += wiimoteRate_Scroll;
             // 
-            // label5
+            // timer1
             // 
-            label5.AutoSize = true;
-            label5.Location = new Point(10, 60);
-            label5.Name = "label5";
-            label5.Size = new Size(111, 15);
-            label5.TabIndex = 9;
-            label5.Text = "Primary Yaw Source";
+            timer1.Enabled = true;
+            timer1.Interval = 500;
             // 
-            // label6
+            // timer2
             // 
-            label6.AutoSize = true;
-            label6.Location = new Point(10, 113);
-            label6.Name = "label6";
-            label6.Size = new Size(222, 15);
-            label6.TabIndex = 10;
-            label6.Text = "Extension Yaw Source (IE: Wii Nunchuck)";
+            timer2.Enabled = true;
+            timer2.Interval = 500;
             // 
-            // label7
+            // timer3
             // 
-            label7.AutoSize = true;
-            label7.Location = new Point(10, 168);
-            label7.Name = "label7";
-            label7.Size = new Size(248, 15);
-            label7.TabIndex = 11;
-            label7.Text = "Haptic Joint Assignment (bHaptics Over OSC)";
+            timer3.Enabled = true;
+            timer3.Interval = 500;
+            // 
+            // listRefreshTimer
+            // 
+            listRefreshTimer.Enabled = true;
+            listRefreshTimer.Interval = 15000;
+            listRefreshTimer.Tick += listRefreshTimer_Tick;
             // 
             // ConfigurationDisplay
             // 
@@ -449,6 +474,7 @@
             Controls.Add(trackerCalibrationButton);
             Controls.Add(tabOptions);
             Controls.Add(controllerDeviceList);
+            DoubleBuffered = true;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             Name = "ConfigurationDisplay";
@@ -504,5 +530,9 @@
         private Label label7;
         private Label label6;
         private Label label5;
+        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Timer timer2;
+        private System.Windows.Forms.Timer timer3;
+        private System.Windows.Forms.Timer listRefreshTimer;
     }
 }
