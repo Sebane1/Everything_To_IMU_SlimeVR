@@ -67,11 +67,11 @@ public class ThreeDsStateTracker {
             } else {
 
                 // Process gyro and convert degrees/sec to radians/sec
-                Vector3 gyroCalibrated = _gyroPreprocessor.ProcessRawGyro(packet.gx, packet.gy, packet.gz, 0.00175f);
+                Vector3 gyroCalibrated = _gyroPreprocessor.ProcessRawGyro(packet.gx, packet.gy, packet.gz, 0.00125f);
                 Vector3 gyroRad = new Vector3(
-                    gyroCalibrated.X,
-                    gyroCalibrated.Z,
-                    gyroCalibrated.Y);
+                    -gyroCalibrated.X,
+                    -gyroCalibrated.Y,
+                    -gyroCalibrated.Z);
 
                 // Update VQF filter
                 _vqf.Update(gyroRad.ToVQFDoubleArray(), accel.ToVQFDoubleArray());
