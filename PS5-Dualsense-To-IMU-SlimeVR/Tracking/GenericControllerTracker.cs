@@ -80,33 +80,13 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             return false;
         }
 
-        private Quaternion GetTrackerRotation(RotationReferenceType yawReferenceType) {
-            try {
-                switch (yawReferenceType) {
-                    case RotationReferenceType.HmdRotation:
-                        return OpenVRReader.GetHMDRotation();
-                    case RotationReferenceType.WaistRotation:
-                        return OpenVRReader.GetTrackerRotation("waist");
-                    case RotationReferenceType.ChestRotation:
-                        return OpenVRReader.GetTrackerRotation("chest");
-                    case RotationReferenceType.LeftAnkleRotation:
-                        return OpenVRReader.GetTrackerRotation("left_foot");
-                    case RotationReferenceType.RightAnkleRotation:
-                        return OpenVRReader.GetTrackerRotation("right_foot");
-                }
-            } catch {
-
-            }
-            return Quaternion.Identity;
-        }
-
         public async Task<bool> Update() {
             if (_ready) {
                 _ = Task.Run(async () => {
                     try {
                         _rotation = Quaternion.Normalize(_sensorOrientation.CurrentOrientation);
                         if (GenericTrackerManager.DebugOpen || _yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
-                            var trackerRotation = GetTrackerRotation(YawReferenceTypeValue);
+                            var trackerRotation = OpenVRReader.GetTrackerRotation(YawReferenceTypeValue);
                             _trackerEuler = trackerRotation.GetYawFromQuaternion();
                             _lastEulerPositon = -_trackerEuler;
                             _euler = _rotation.QuaternionToEuler();

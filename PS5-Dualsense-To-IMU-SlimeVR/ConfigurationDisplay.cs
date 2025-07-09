@@ -18,6 +18,7 @@ namespace Everything_To_IMU_SlimeVR {
         private readonly Forwarded3DSDataManager _forwarded3DSDataManager;
 
         public ConfigurationDisplay() {
+            falseThighSimulationCheckBox.Checked = Configuration.Instance.SimulatesThighs;
             InitializeComponent();
             AutoScaleDimensions = new SizeF(96, 96);
             _configuration = Configuration.LoadConfig();
@@ -104,8 +105,7 @@ namespace Everything_To_IMU_SlimeVR {
         void RefreshTracker() {
             if (_currentTracker != null) {
                 _suppressCheckBoxEvent = true;
-                falseThighSimulationCheckBox.Checked = _currentTrackerConfig.SimulatesThighs;
-                _currentTracker.SimulateThighs = _currentTrackerConfig.SimulatesThighs;
+                falseThighSimulationCheckBox.Checked = Configuration.Instance.SimulatesThighs;
 
                 yawForSimulatedTracker.SelectedIndex = (int)_currentTrackerConfig.YawReferenceTypeValue;
                 _currentTracker.YawReferenceTypeValue = _currentTrackerConfig.YawReferenceTypeValue;
@@ -128,8 +128,7 @@ namespace Everything_To_IMU_SlimeVR {
         private void falseThighSimulationCheckBox_CheckedChanged(object sender, EventArgs e) {
             //yawForSimulatedTracker.Enabled = falseThighSimulationCheckBox.Checked;
             if (!_suppressCheckBoxEvent) {
-                _currentTracker.SimulateThighs = falseThighSimulationCheckBox.Checked;
-                _currentTrackerConfig.SimulatesThighs = falseThighSimulationCheckBox.Checked;
+                Configuration.Instance.SimulatesThighs = falseThighSimulationCheckBox.Checked;
                 _configuration.SaveConfig();
             }
         }

@@ -27,6 +27,7 @@ namespace Everything_To_IMU_SlimeVR {
         public bool SwitchingSessions { get => _switchingSessions; set => _switchingSessions = value; }
         public static Configuration? Instance { get; private set; }
         public byte WiiPollingRate { get => _wiiPollingRate; set => _wiiPollingRate = value; }
+        public bool SimulatesThighs { get; internal set; }
 
         public void SaveConfig() {
             _lastConfigSave = DateTime.UtcNow;

@@ -9,7 +9,7 @@
 #include <3ds/services/apt.h>
 
 #define SERVER_PORT 9305
-#define CONFIG_PATH "/config/imu_stream.cfg"
+#define CONFIG_PATH "3ds/IMU_Over_UDP/imu_stream.cfg"
 #define DEFAULT_SERVER_IP "10.0.0.21"
 
 typedef struct {

@@ -6,8 +6,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         string MacSpoof { get; set; }
         Vector3 Euler { get; set; }
         float LastHmdPositon { get; set; }
-        bool SimulateThighs { get; set; }
-
         bool Ready {  get; set; }
         HapticNodeBinding HapticNodeBinding { get; set; }
         public Vector3 RotationCalibration { get; set; }

@@ -5,3 +5,7 @@ PS5-Dualsense-To-IMU-SlimeVR/obj
 *.elf
 *.zip
 PS5-Dualsense-To-IMU-SlimeVR/WiiClient/application/build
+PS5-Dualsense-To-IMU-SlimeVR/3DSClient/application/3DS-2DS Client
+*.cfg
+*.3dsx
+*.smdh

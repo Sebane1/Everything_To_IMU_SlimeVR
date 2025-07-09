@@ -6,6 +6,7 @@ using System.Text;
 using Valve.VR;
 using static OVRSharp.Overlay;
 using System.Collections.Concurrent;
+using static Everything_To_IMU_SlimeVR.TrackerConfig;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class OpenVRReader {
@@ -207,6 +208,25 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 _steamVRCheckCooldown.Restart();
             }
             return _steamVRWasDetected;
+        }
+        public static Quaternion GetTrackerRotation(RotationReferenceType yawReferenceType) {
+            try {
+                switch (yawReferenceType) {
+                    case RotationReferenceType.HmdRotation:
+                        return GetHMDRotation();
+                    case RotationReferenceType.WaistRotation:
+                        return GetTrackerRotation("waist");
+                    case RotationReferenceType.ChestRotation:
+                        return GetTrackerRotation("chest");
+                    case RotationReferenceType.LeftAnkleRotation:
+                        return GetTrackerRotation("left_foot");
+                    case RotationReferenceType.RightAnkleRotation:
+                        return GetTrackerRotation("right_foot");
+                }
+            } catch {
+
+            }
+            return Quaternion.Identity;
         }
     }
 }

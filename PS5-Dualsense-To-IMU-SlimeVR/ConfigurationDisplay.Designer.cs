@@ -86,7 +86,7 @@
             // falseThighSimulationCheckBox
             // 
             falseThighSimulationCheckBox.AutoSize = true;
-            falseThighSimulationCheckBox.Location = new Point(10, 32);
+            falseThighSimulationCheckBox.Location = new Point(545, 439);
             falseThighSimulationCheckBox.Name = "falseThighSimulationCheckBox";
             falseThighSimulationCheckBox.Size = new Size(236, 19);
             falseThighSimulationCheckBox.TabIndex = 1;
@@ -117,7 +117,6 @@
             settingsPage.Controls.Add(yawForSimulatedTracker);
             settingsPage.Controls.Add(rediscoverTrackerButton);
             settingsPage.Controls.Add(trackerConfigLabel);
-            settingsPage.Controls.Add(falseThighSimulationCheckBox);
             settingsPage.Location = new Point(4, 24);
             settingsPage.Name = "settingsPage";
             settingsPage.Padding = new Padding(3);
@@ -219,7 +218,7 @@
             debugPage.Location = new Point(4, 24);
             debugPage.Name = "debugPage";
             debugPage.Padding = new Padding(3);
-            debugPage.Size = new Size(340, 239);
+            debugPage.Size = new Size(340, 377);
             debugPage.TabIndex = 1;
             debugPage.Text = "Debug";
             debugPage.UseVisualStyleBackColor = true;
@@ -237,7 +236,7 @@
             errorLog.Controls.Add(errorLogText);
             errorLog.Location = new Point(4, 24);
             errorLog.Name = "errorLog";
-            errorLog.Size = new Size(340, 239);
+            errorLog.Size = new Size(340, 377);
             errorLog.TabIndex = 2;
             errorLog.Text = "Error Log";
             errorLog.UseVisualStyleBackColor = true;
@@ -427,6 +426,7 @@
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
+            Controls.Add(falseThighSimulationCheckBox);
             Controls.Add(wiimoteDeviceList);
             Controls.Add(threeDsDeviceList);
             Controls.Add(donateButton);

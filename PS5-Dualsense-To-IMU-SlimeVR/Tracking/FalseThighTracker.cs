@@ -4,11 +4,13 @@ using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows;
+using static Everything_To_IMU_SlimeVR.TrackerConfig;
 
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     internal class FalseThighTracker : IDisposable {
-        private IBodyTracker _tracker;
+        public RotationReferenceType YawReferenceTypeValue { get; private set; }
+
         private string _macSpoof;
         private UDPHandler _udpHandler;
         private bool _ready;
@@ -16,6 +18,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private string _debug;
         private bool _isClamped;
         private float _smoothedLegBend;
+        private float _trackerEuler;
+        private float _lastEulerPositon;
 
         public bool IsActive {
             get {
@@ -29,15 +33,15 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public UDPHandler UdpHandler { get => _udpHandler; set => _udpHandler = value; }
         public bool IsClamped { get => _isClamped; set => _isClamped = value; }
 
-        public FalseThighTracker(IBodyTracker dualsenseTracker) {
-            Initialize(dualsenseTracker);
+        public FalseThighTracker(RotationReferenceType rotationReferenceType) {
+            Initialize(rotationReferenceType);
         }
 
-        public async void Initialize(IBodyTracker tracker) {
+        public async void Initialize(RotationReferenceType rotationReferenceType) {
             Task.Run(async () => {
-                _tracker = tracker;
-                _macSpoof = HashUtility.CalculateMD5Hash(tracker.MacSpoof);
-                _udpHandler = new UDPHandler("FalseTracker",
+                YawReferenceTypeValue = rotationReferenceType;
+                _macSpoof = HashUtility.CalculateMD5Hash(rotationReferenceType.ToString());
+                _udpHandler = new UDPHandler("FalseTracker_" + rotationReferenceType.ToString(),
                  new byte[] { (byte)_macSpoof[0], (byte)_macSpoof[1], (byte)_macSpoof[2],
                      (byte) _macSpoof[3], (byte) _macSpoof[4], (byte) _macSpoof[5] }, 1);
                 _ready = true;
@@ -58,13 +62,16 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
         public async Task<bool> Update() {
             if (_ready) {
+                var trackerRotation = OpenVRReader.GetTrackerRotation(YawReferenceTypeValue);
+                _trackerEuler = trackerRotation.GetYawFromQuaternion();
+                _lastEulerPositon = -_trackerEuler;
                 var hmdHeight = OpenVRReader.GetHMDHeight();
                 var hmdHeightToQuadrants = (_calibratedHeight / 4f);
                 var legDifferenceToSubtract = hmdHeightToQuadrants * 3;
                 var legCalibratedHmdHeight = _calibratedHeight - legDifferenceToSubtract;
                 var legHmdHeight = hmdHeight - legDifferenceToSubtract;
                 bool sitting = hmdHeight < _calibratedHeight / 2 && hmdHeight > OpenVRReader.GetWaistTrackerHeight();
-                Vector3 euler = _tracker.Euler + _tracker.RotationCalibration;
+                Vector3 euler = trackerRotation.QuaternionToEuler();
                 if (GenericTrackerManager.DebugOpen) {
                     _debug =
                 $"Device Id: {_macSpoof}\r\n" +
@@ -85,7 +92,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 float finalX = sitting && -euler.X > -94 ? -newX + 180 : newX;
                 float finalY = euler.Y;
                 float finalZ = !_isClamped ? -euler.Z : euler.Z;
-                await _udpHandler.SetSensorRotation(new Vector3(finalX, finalY, finalZ + _tracker.LastHmdPositon).ToQuaternion(), 0);
+                await _udpHandler.SetSensorRotation(new Vector3(finalX, finalY, finalZ + _lastEulerPositon).ToQuaternion(), 0);
             }
             return _ready;
         }

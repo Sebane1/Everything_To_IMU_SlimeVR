@@ -64,7 +64,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                     if (i > _configuration.TrackerConfigs.Count - 1) {
                                         _configuration.TrackerConfigs.Add(new TrackerConfig());
                                     }
-                                    newTracker.SimulateThighs = _configuration.TrackerConfigs[i].SimulatesThighs;
                                     newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
                                     newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigs[i].YawReferenceTypeValue;
                                     newTracker.HapticNodeBinding = _configuration.TrackerConfigs[i].HapticNodeBinding;
@@ -94,7 +93,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                     if (i > _configuration.TrackerConfigs3ds.Count - 1) {
                                         _configuration.TrackerConfigs3ds.Add(new TrackerConfig());
                                     }
-                                    newTracker.SimulateThighs = _configuration.TrackerConfigs3ds[i].SimulatesThighs;
                                     newTracker.YawReferenceTypeValue = _configuration.TrackerConfigs3ds[i].YawReferenceTypeValue;
                                     newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigs3ds[i].YawReferenceTypeValue;
                                     _trackers3ds.Add(newTracker);
@@ -123,7 +121,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                     if (!_configuration.TrackerConfigWiimote.ContainsKey(key)) {
                                         _configuration.TrackerConfigWiimote.Add(key, new TrackerConfig());
                                     }
-                                    newTracker.SimulateThighs = _configuration.TrackerConfigWiimote[key].SimulatesThighs;
                                     newTracker.YawReferenceTypeValue = _configuration.TrackerConfigWiimote[key].YawReferenceTypeValue;
                                     newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigWiimote[key].ExtensionYawReferenceTypeValue;
                                     newTracker.HapticNodeBinding = _configuration.TrackerConfigWiimote[key].HapticNodeBinding;
@@ -192,7 +189,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 if (!_configuration.TrackerConfigUdpHaptics.ContainsKey(ip)) {
                     _configuration.TrackerConfigUdpHaptics.Add(ip, new TrackerConfig());
                 }
-                newTracker.SimulateThighs = _configuration.TrackerConfigUdpHaptics[ip].SimulatesThighs;
                 newTracker.YawReferenceTypeValue = _configuration.TrackerConfigUdpHaptics[ip].YawReferenceTypeValue;
                 newTracker.HapticNodeBinding = _configuration.TrackerConfigUdpHaptics[ip].HapticNodeBinding;
                 _trackersUdpHapticDevice.Add(newTracker);

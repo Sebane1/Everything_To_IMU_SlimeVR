@@ -60,31 +60,11 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             }
         }
 
-
-        private Quaternion GetTrackerRotation(RotationReferenceType yawReferenceType) {
-            try {
-                switch (yawReferenceType) {
-                    case RotationReferenceType.HmdRotation:
-                        return OpenVRReader.GetHMDRotation();
-                    case RotationReferenceType.WaistRotation:
-                        return OpenVRReader.GetTrackerRotation("waist");
-                    case RotationReferenceType.ChestRotation:
-                        return OpenVRReader.GetTrackerRotation("chest");
-                    case RotationReferenceType.LeftAnkleRotation:
-                        return OpenVRReader.GetTrackerRotation("left_foot");
-                    case RotationReferenceType.RightAnkleRotation:
-                        return OpenVRReader.GetTrackerRotation("right_foot");
-                }
-            } catch {
-            }
-            return Quaternion.Identity;
-        }
-
         public async Task<bool> Update() {
             if (_ready) {
                 try {
                     var hmdHeight = OpenVRReader.GetHMDHeight();
-                    var trackerRotation = GetTrackerRotation(RotationReferenceType.WaistRotation);
+                    var trackerRotation = OpenVRReader.GetTrackerRotation(RotationReferenceType.WaistRotation);
                     float trackerEuler = trackerRotation.GetYawFromQuaternion();
                     var value = Forwarded3DSDataManager.DeviceMap[_ip];
                     _rotation = new Quaternion(value.quatX, value.quatY, value.quatZ, value.quatW);

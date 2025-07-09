@@ -1,4 +1,5 @@
-main.o: C:/devkitPro/examples/3ds/templates/application/source/main.c \
+main.o: \
+ I:/Slime_Software/PS5-Dualsense-To-IMU-SlimeVR/PS5-Dualsense-To-IMU-SlimeVR/3DSClient/application/source/main.c \
  C:/devkitPro/libctru/include/3ds.h \
  C:/devkitPro/libctru/include/3ds/types.h \
  C:/devkitPro/libctru/include/3ds/result.h \
