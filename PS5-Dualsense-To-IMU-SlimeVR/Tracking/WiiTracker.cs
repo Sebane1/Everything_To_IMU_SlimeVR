@@ -6,6 +6,7 @@ using System.Numerics;
 using Everything_To_IMU_SlimeVR.Utility;
 using static Everything_To_IMU_SlimeVR.TrackerConfig;
 using static Everything_To_IMU_SlimeVR.Tracking.ForwardedWiimoteManager;
+using System.Threading.Tasks;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     public class WiiTracker : IDisposable, IBodyTracker {
@@ -69,14 +70,18 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                      new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] }, 2);
                     udpHandler.Active = true;
                     Recalibrate();
-                    ForwardedWiimoteManager.NewPacketReceived += delegate {
-                        Update();
-                    };
+                    ForwardedWiimoteManager.NewPacketReceived += NewPacketReceived;
                     _ready = true;
                 } catch (Exception e) {
                     OnTrackerError?.Invoke(this, e.Message);
                 }
             });
+        }
+
+        private async void NewPacketReceived(object reference, string ip) {
+            if (_wiimoteClient == ip) {
+                await Update();
+            }
         }
 
         private Quaternion GetTrackerRotation(RotationReferenceType yawReferenceType) {

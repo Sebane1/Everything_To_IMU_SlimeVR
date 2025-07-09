@@ -9,7 +9,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private static List<WiiTracker> _trackersNunchuck = new List<WiiTracker>();
         private static List<UDPHapticDevice> _trackersUdpHapticDevice = new List<UDPHapticDevice>();
         private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfo = new Dictionary<int, KeyValuePair<int, bool>>();
-        private static Dictionary<int, KeyValuePair<int, bool>> _trackerInfo3ds = new Dictionary<int, KeyValuePair<int, bool>>();
+        private static Dictionary<int, KeyValuePair<string, bool>> _trackerInfo3ds = new Dictionary<int, KeyValuePair<string, bool>>();
         private static Dictionary<string, KeyValuePair<string, bool>> _trackerInfoWiimote = new Dictionary<string, KeyValuePair<string, bool>>();
         private static Dictionary<string, KeyValuePair<int, bool>> _trackerInfoUdpHapticDevice = new Dictionary<string, KeyValuePair<int, bool>>();
         public static bool lockInDetectedDevices = false;
@@ -74,9 +74,10 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                 }
                             }
                             for (int i = 0; i < Forwarded3DSDataManager.DeviceMap.Count; i++) {
+                                string key = Forwarded3DSDataManager.DeviceMap.ElementAt(i).Key;
                                 // Track whether or not we've seen this controller before this session.
                                 if (!_trackerInfo3ds.ContainsKey(i)) {
-                                    _trackerInfo3ds[i] = new KeyValuePair<int, bool>(_trackerInfo3ds.Count, false);
+                                    _trackerInfo3ds[i] = new KeyValuePair<string, bool>(key, false);
                                 }
 
                                 // Get this controllers information.
@@ -85,7 +86,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                 // Have we dealt with setting up this controller tracker yet?
                                 if (!info.Value) {
                                     // Set up the controller tracker.
-                                    var newTracker = new ThreeDsControllerTracker(info.Key);
+                                    var newTracker = new ThreeDsControllerTracker(key);
                                     while (!newTracker.Ready) {
                                         Thread.Sleep(100);
                                     }
@@ -98,7 +99,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                                     newTracker.ExtensionYawReferenceTypeValue = _configuration.TrackerConfigs3ds[i].YawReferenceTypeValue;
                                     _trackers3ds.Add(newTracker);
                                     _allTrackers.Add(newTracker);
-                                    _trackerInfo3ds[i] = new KeyValuePair<int, bool>(info.Key, true);
+                                    _trackerInfo3ds[i] = new KeyValuePair<string, bool>(key, true);
                                 }
                             }
                             for (int i = 0; i < ForwardedWiimoteManager.Wiimotes.Count; i++) {
@@ -157,7 +158,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         // Remove tracker if its been disconnected.
                         if (tracker.Disconnected) {
                             var info = _trackerInfo3ds[i];
-                            _trackerInfo3ds[i] = new KeyValuePair<int, bool>(info.Key, false);
+                            _trackerInfo3ds[i] = new KeyValuePair<string, bool>(info.Key, false);
                             _trackers3ds.RemoveAt(i);
                             i = 0;
                             tracker.Dispose();
@@ -214,7 +215,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public int PollingRate { get => pollingRate; set => pollingRate = value; }
         public static bool DebugOpen { get; set; }
         public static List<ThreeDsControllerTracker> Trackers3ds { get => _trackers3ds; set => _trackers3ds = value; }
-        public Dictionary<int, KeyValuePair<int, bool>> TrackerInfo3ds { get => _trackerInfo3ds; set => _trackerInfo3ds = value; }
+        public Dictionary<int, KeyValuePair<string, bool>> TrackerInfo3ds { get => _trackerInfo3ds; set => _trackerInfo3ds = value; }
         public static List<WiiTracker> TrackersWiimote { get => _trackersWiimote; set => _trackersWiimote = value; }
         public static List<WiiTracker> TrackersNunchuck { get => _trackersNunchuck; set => _trackersNunchuck = value; }
         public Dictionary<string, KeyValuePair<string, bool>> TrackerInfoWiimote { get => _trackerInfoWiimote; set => _trackerInfoWiimote = value; }

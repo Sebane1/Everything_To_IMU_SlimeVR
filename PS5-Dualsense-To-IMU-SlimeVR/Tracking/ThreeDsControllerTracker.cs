@@ -19,7 +19,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private string _lastDualSenseId;
         private bool _simulateThighs = true;
         private bool _useWaistTrackerForYaw;
-        private FalseThighTracker _falseThighTracker;
         private float _lastEulerPositon;
         private Quaternion _rotation;
         private Vector3 _euler;
@@ -27,6 +26,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private Vector3 _acceleration;
         private bool _waitForRelease;
         private string _rememberedStringId;
+        private string _ip;
         private RotationReferenceType _yawReferenceTypeValue = RotationReferenceType.WaistRotation;
         Stopwatch buttonPressTimer = new Stopwatch();
         private HapticNodeBinding _hapticNodeBinding;
@@ -34,30 +34,32 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         public event EventHandler<string> OnTrackerError;
 
-        public ThreeDsControllerTracker(int index) {
-            Initialize(index);
+        public ThreeDsControllerTracker(string id) {
+            Initialize(id);
         }
-        public async void Initialize(int index) {
+        public async void Initialize(string id) {
             Task.Run(async () => {
-                try {
-                    _index = index;
-                    _id = index + 1;
-                    _rememberedStringId = Forwarded3DSDataManager.DeviceMap.Keys.ElementAt(index).ToString();
-                    macSpoof = _rememberedStringId + "3DS_Tracker";
-                    _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.ThreeDs);
-                    if (_simulateThighs) {
-                        _falseThighTracker = new FalseThighTracker(this);
-                    }
-                    udpHandler = new UDPHandler("3DS_Tracker" + _rememberedStringId,
+                try {;
+                    _ip = id;
+                    macSpoof = id + "3DS_Tracker";
+                    udpHandler = new UDPHandler("3DS_Tracker" + id,
                      new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] }, 1);
                     udpHandler.Active = true;
                     Recalibrate();
+                    Forwarded3DSDataManager.NewPacketReceived += NewPacketReceived;
                     _ready = true;
                 } catch (Exception e) {
                     OnTrackerError?.Invoke(this, e.Message);
                 }
             });
         }
+
+        private async void NewPacketReceived(object reference, string ip) {
+            if (_ip == ip) {
+                await Update();
+            }
+        }
+
 
         private Quaternion GetTrackerRotation(RotationReferenceType yawReferenceType) {
             try {
@@ -68,6 +70,10 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         return OpenVRReader.GetTrackerRotation("waist");
                     case RotationReferenceType.ChestRotation:
                         return OpenVRReader.GetTrackerRotation("chest");
+                    case RotationReferenceType.LeftAnkleRotation:
+                        return OpenVRReader.GetTrackerRotation("left_foot");
+                    case RotationReferenceType.RightAnkleRotation:
+                        return OpenVRReader.GetTrackerRotation("right_foot");
                 }
             } catch {
             }
@@ -78,37 +84,30 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             if (_ready) {
                 try {
                     var hmdHeight = OpenVRReader.GetHMDHeight();
-                    bool isClamped = !_falseThighTracker.IsClamped;
                     var trackerRotation = GetTrackerRotation(RotationReferenceType.WaistRotation);
                     float trackerEuler = trackerRotation.GetYawFromQuaternion();
-                    if (!isClamped || YawReferenceTypeValue != RotationReferenceType.HmdRotation) {
-                        _lastEulerPositon = -trackerEuler;
-                    }
-                    var value = Forwarded3DSDataManager.DeviceMap.ElementAt(_index);
-                    _rotation = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
-                    _euler = _rotation.QuaternionToEuler() + _rotationCalibration;
-                    _gyro = _sensorOrientation.Gyro;
-                    _acceleration = _sensorOrientation.Accelerometer;
+                    var value = Forwarded3DSDataManager.DeviceMap[_ip];
+                    _rotation = new Quaternion(value.quatX, value.quatY, value.quatZ, value.quatW);
+                    _euler = _rotation.QuaternionToEuler();
 
                     if (GenericTrackerManager.DebugOpen) {
                         _debug =
                         $"Device Id: {macSpoof}\r\n" +
                         $"Euler Rotation:\r\n" +
-                        $"X:{_euler.X}, Y:{_euler.Y}, Z:{_euler.Z}" +
-                        $"\r\nGyro:\r\n" +
-                        $"X:{_gyro.X}, Y:{_gyro.Y}, Z:{_gyro.Z}" +
-                        $"\r\nAcceleration:\r\n" +
-                        $"X:{_acceleration.X}, Y:{_acceleration.Y}, Z:{_acceleration.Z}\r\n" +
+                        $"X:{_euler.X}, Y:{_euler.Y}, Z:{_euler.Z}\r\n" +
+                        $"Accelerometer:\r\n" +
+                        $"X:{value.accelX}, Y:{value.accelY}, Z:{value.accelZ}\r\n" +
+                        $"Gyro:\r\n" +
+                        $"X:{value.gyroX}, Y:{value.gyroY}, Z:{value.gyroZ}\r\n" +
                         $"Yaw Reference Rotation:\r\n" +
-                        $"Y:{trackerEuler}\r\n"
-                        + _falseThighTracker.Debug;
+                        $"Y:{trackerEuler}\r\n";
                     }
                     //await udpHandler.SetSensorBattery(100);
-                    await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion(), 0);
-                    if (!_simulateThighs) {
-                        await _falseThighTracker.Update();
+                    if (RotationReferenceType.TrustDeviceYaw != _yawReferenceTypeValue) {
+                        await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion(), 0);
+                    } else {
+                        await udpHandler.SetSensorRotation(_rotation, 0);
                     }
-                    _falseThighTracker.IsActive = _simulateThighs;
                 } catch (Exception e) {
                     OnTrackerError.Invoke(this, e.StackTrace + "\r\n" + e.Message);
                 }
@@ -121,19 +120,14 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             var value = Forwarded3DSDataManager.DeviceMap.ElementAt(_index);
             _rotation = new Quaternion(value.Value.quatX, value.Value.quatY, value.Value.quatZ, value.Value.quatW);
             _rotationCalibration = GetCalibration();
-            _falseThighTracker.Recalibrate();
         }
         public void Rediscover() {
             udpHandler.Initialize();
-            if (SimulateThighs) {
-                _falseThighTracker.UdpHandler.Initialize();
-            }
         }
 
         public void Dispose() {
             _ready = false;
             _disconnected = true;
-            _falseThighTracker?.Dispose();
         }
 
         public Vector3 GetCalibration() {
@@ -162,7 +156,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public string Debug { get => _debug; set => _debug = value; }
         public bool Ready { get => _ready; set => _ready = value; }
         public bool Disconnected { get => _disconnected; set => _disconnected = value; }
-        public int Id { get => _id; set => _id = value; }
+        public int  Id { get => _id; set => _id = value; }
         public string MacSpoof { get => macSpoof; set => macSpoof = value; }
         public Vector3 Euler { get => _euler; set => _euler = value; }
         public Vector3 Gyro { get => _gyro; set => _gyro = value; }

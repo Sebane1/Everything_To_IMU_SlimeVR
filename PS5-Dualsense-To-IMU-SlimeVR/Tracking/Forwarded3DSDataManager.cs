@@ -10,9 +10,10 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
     public class Forwarded3DSDataManager {
         const int listenPort = 9305;
         private static ConcurrentDictionary<string, ThreeDSState> _deviceMap = new ConcurrentDictionary<string, ThreeDSState>();
-
+        private static ConcurrentDictionary<string, ThreeDsStateTracker> _stateTracker = new ConcurrentDictionary<string, ThreeDsStateTracker>();
+        public static EventHandler<string> NewPacketReceived;
         public static ConcurrentDictionary<string, ThreeDSState> DeviceMap { get => _deviceMap; set => _deviceMap = value; }
-        static Stopwatch calibrationTimer = new Stopwatch();
+
         public Forwarded3DSDataManager() {
             Task.Run(() => {
                 Initialize();
@@ -24,13 +25,6 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             public short ax, ay, az;
             public short gx, gy, gz;
         }
-
-        const float accelDeadzone = 1.5f; // Play with this, maybe 0.1–0.3
-        const float gyroDeadzone = 1.0f;
-
-        static float ApplyDeadzone(float value, float threshold) {
-            return Math.Abs(value) < threshold ? 0 : value;
-        }
         public static Quaternion GetOrientationFromGravity(Vector3 gravity) {
             gravity = Vector3.Normalize(gravity);
             float pitch = MathF.Asin(-gravity.X);
@@ -39,45 +33,29 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             Quaternion qRoll = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, roll);
             return Quaternion.Normalize(Quaternion.Concatenate(qRoll, qPitch));
         }
-        static async void Initialize() {
+        async void Initialize() {
             UdpClient udpClient = new UdpClient(listenPort); // Match port from 3DS
             _deviceMap = new ConcurrentDictionary<string, ThreeDSState>();
-            int nextId = 1;
-
             Console.WriteLine("Listening for IMU data...");
-            float accumulatedY = 0;
-            int calibrationSamples = 0;
-            float divisionValue = 0;
-            calibrationTimer.Restart();
             while (true) {
                 IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
                 byte[] data = udpClient.Receive(ref remoteEP);
 
                 // Identify by IP
-                string ip = remoteEP.Address.ToString();
+                Task.Run(() => {
+                    string ip = remoteEP.Address.ToString();
 
-                if (data.Length == Marshal.SizeOf(typeof(ImuPacket))) {
-                    GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-                    var value = (ImuPacket)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(ImuPacket));
-                    var y = Math.Abs(value.ay);
-                    if (calibrationTimer.ElapsedMilliseconds < 10000) {
-                        accumulatedY += y;
-                        calibrationSamples++;
-                        divisionValue = 9.8f / (accumulatedY / calibrationSamples);
+                    if (data.Length == Marshal.SizeOf(typeof(ImuPacket))) {
+                        GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+                        var value = (ImuPacket)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(ImuPacket));
+                        if (!_stateTracker.ContainsKey(ip)) {
+                            _stateTracker[ip] = new ThreeDsStateTracker();
+                        }
+                        _deviceMap[ip] = _stateTracker[ip].ProcessPacket(value);
+                        handle.Free();
+                        NewPacketReceived?.Invoke(this, ip);
                     }
-                    var gravity = new Vector3(ApplyDeadzone((float)value.ax * divisionValue, accelDeadzone), 
-                        ApplyDeadzone((float)value.ay * divisionValue, accelDeadzone), 
-                        ApplyDeadzone((float)value.az * divisionValue, accelDeadzone));
-                    var orientation = GetOrientationFromGravity(gravity);
-                    _deviceMap[ip] = new ThreeDSState {
-                        accelX = gravity.X, 
-                        accelY = gravity.Y, 
-                        accelZ = gravity.Z,
-                        gyroX = value.gx, gyroY = value.gy, gyroZ = value.gz,
-                        quatX = orientation.X, quatY = orientation.Y, quatZ = orientation.Z, quatW = orientation.W
-                    };
-                    handle.Free();
-                }
+                });
             }
         }
     }

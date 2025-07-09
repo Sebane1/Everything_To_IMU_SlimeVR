@@ -14,7 +14,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
 
         private static List<string> _wiimoteIds = new();
-        public static EventHandler NewPacketReceived;
+        public static EventHandler<string> NewPacketReceived;
         public static EventHandler LegacyClientDetected;
         Stopwatch _timeBetweenRequests = new Stopwatch();
         Stopwatch _memoryWipeTimer = new Stopwatch();
@@ -97,8 +97,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
                     await stream.WriteAsync(_rumbleState[baseIp], 0, _rumbleState[baseIp].Length);
                     await stream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1);
-                    NewPacketReceived?.Invoke(this, EventArgs.Empty);
-
+                    NewPacketReceived?.Invoke(this, baseIp);
                 } catch (Exception ex) {
                     Console.WriteLine($"❌ Handler error from {endpoint}: {ex.Message}");
                     await stream.WriteAsync(_rumbleState[baseIp], 0, _rumbleState[baseIp].Length);

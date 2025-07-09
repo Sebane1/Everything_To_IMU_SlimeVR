@@ -32,8 +32,7 @@ public class WiimoteStateTracker {
             (info.WiimoteAccelZ - 512) / 200.0f) * 9.80665f;
 
         // Process gyro and convert degrees/sec to radians/sec
-        Vector3 gyroRaw = new Vector3(info.WiimoteGyroX, info.WiimoteGyroY, info.WiimoteGyroZ);
-        Vector3 gyroCalibrated = _gyroPreprocessor.ProcessRawGyro(info.WiimoteGyroX, info.WiimoteGyroY, info.WiimoteGyroZ);
+        Vector3 gyroCalibrated = _gyroPreprocessor.ProcessRawGyro(info.WiimoteGyroX, info.WiimoteGyroY, info.WiimoteGyroZ, 0.001065f);
         Vector3 gyroRad = new Vector3(
             gyroCalibrated.X,
             gyroCalibrated.Y,

@@ -7,9 +7,8 @@ public class GyroPreprocessor {
 
     // Wii Remote specific constants
     private const int GyroCenter = 0; // Raw zero-rate level
-    private const float ScaleFactor = 0.001065f; // Verified scale for MotionPlus
 
-    public Vector3 ProcessRawGyro(short x, short y, short z) {
+    public Vector3 ProcessRawGyro(short x, short y, short z, float scaleFactor) {
         // 1. Remove offsets and center
         Vector3 calibrated = new Vector3(
             x - GyroCenter - _offsets.X,
@@ -17,7 +16,7 @@ public class GyroPreprocessor {
             z - GyroCenter - _offsets.Z);
 
         // 2. Scale to radians/sec
-        return calibrated * ScaleFactor;
+        return calibrated * scaleFactor;
     }
 
     public void Calibrate(IEnumerable<Vector3> samples) {
