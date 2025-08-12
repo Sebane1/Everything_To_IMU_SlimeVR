@@ -1,5 +1,5 @@
 ﻿using Everything_To_IMU_SlimeVR.Osc;
-using Everything_To_IMU_SlimeVR.SlimeVR;
+using SlimeImuProtocol.SlimeVR;
 using System.Net.Sockets;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {

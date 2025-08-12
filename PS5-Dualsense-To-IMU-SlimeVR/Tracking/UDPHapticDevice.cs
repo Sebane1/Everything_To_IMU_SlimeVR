@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Reflection;
 using System.Windows.Forms;
 using static Everything_To_IMU_SlimeVR.TrackerConfig;
-using Everything_To_IMU_SlimeVR.SlimeVR;
+using SlimeImuProtocol.SlimeVR;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     public class UDPHapticDevice : IBodyTracker {
