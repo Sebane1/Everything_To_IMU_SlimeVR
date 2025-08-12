@@ -1,7 +1,7 @@
 // Implementation borrowed from https://github.com/ButterscotchV/AXSlime
 using LucHeart.CoreOSC;
 
-namespace AxSlime.Osc {
+namespace Everything_To_IMU_SlimeVR.Osc {
     public class bHaptics : HapticsSource {
         public static readonly string bHapticsPrefix = "bOSC_v1_";
         public static readonly string bHapticsPrefix2 = "bHapticsOSC_";

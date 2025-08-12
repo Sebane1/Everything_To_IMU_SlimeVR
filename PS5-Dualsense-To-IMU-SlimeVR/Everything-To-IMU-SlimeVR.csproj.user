@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_LastSelectedProfileId>C:\Users\stel9\source\repos\PS5-Dualsense-To-IMU-SlimeVR\PS5-Dualsense-To-IMU-SlimeVR\Properties\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
+    <_LastSelectedProfileId>I:\Slime_Software\PS5-Dualsense-To-IMU-SlimeVR\PS5-Dualsense-To-IMU-SlimeVR\Properties\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="ConfigurationDisplay.cs">

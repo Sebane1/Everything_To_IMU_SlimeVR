@@ -62,7 +62,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 _accelerometer = new Vector3(e.Item4.accelX, e.Item4.accelY, e.Item4.accelZ) * 10 /* 9.80665f*/;
                 _gyro = (new Vector3(e.Item4.gyroX, e.Item4.gyroY, e.Item4.gyroZ)).ConvertDegreesToRadians();
                 if (_vqf == null) {
-                    if (averageSampleTicks.Count < 100) {
+                    if (averageSampleTicks.Count < 1000) {
                         averageSampleTicks.Add(e.Item6);
                     } else {
                         _vqf = new VQFWrapper(averageSampleTicks.Average());

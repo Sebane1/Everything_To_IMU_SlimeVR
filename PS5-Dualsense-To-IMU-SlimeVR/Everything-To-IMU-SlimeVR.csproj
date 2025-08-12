@@ -8,7 +8,10 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
-    <Version>0.0.1.2</Version>
+    <Version>0.0.1.3</Version>
+    <PackageProjectUrl>https://github.com/Sebane1/Everything_To_IMU_SlimeVR</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Sebane1/Everything_To_IMU_SlimeVR</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +19,10 @@
     <PackageReference Include="LucHeart.CoreOSC" Version="1.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OVRSharp" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SlimeImuProtocol\SlimeImuProtocol.csproj" />
   </ItemGroup>
 
   <ItemGroup>

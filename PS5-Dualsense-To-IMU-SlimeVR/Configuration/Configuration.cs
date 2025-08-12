@@ -10,11 +10,11 @@ namespace Everything_To_IMU_SlimeVR {
         private Dictionary<string, Vector3> _calibrationConfigurations = new Dictionary<string, Vector3>();
         private DateTime _lastConfigSave = new DateTime();
         private bool _switchingSessions = false;
-        private bool _enableHaptics = true;
 
         private int _pollingRate = 8;
         private byte _wiiPollingRate = 32;
         private Dictionary<string, TrackerConfig> _trackerConfigUdpHaptics = new Dictionary<string, TrackerConfig>();
+        private bool _simulatesThighs;
 
         public List<TrackerConfig> TrackerConfigs { get => _trackerConfigs; set => _trackerConfigs = value; }
         public List<TrackerConfig> TrackerConfigs3ds { get => _trackerConfig3ds; set => _trackerConfig3ds = value; }
@@ -27,7 +27,7 @@ namespace Everything_To_IMU_SlimeVR {
         public bool SwitchingSessions { get => _switchingSessions; set => _switchingSessions = value; }
         public static Configuration? Instance { get; private set; }
         public byte WiiPollingRate { get => _wiiPollingRate; set => _wiiPollingRate = value; }
-        public bool SimulatesThighs { get; internal set; }
+        public bool SimulatesThighs { get => _simulatesThighs; set => _simulatesThighs = value; }
 
         public void SaveConfig() {
             _lastConfigSave = DateTime.UtcNow;

@@ -10,6 +10,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private int _id;
         private string macSpoof;
         private SensorOrientation _sensorOrientation;
+        private byte[] _macAddressBytes;
         private UDPHandler udpHandler;
         private Vector3 _rotationCalibration;
         private float _calibratedHeight;
@@ -35,8 +36,13 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private bool updatingAlready;
         private RotationReferenceType _extensionYawReferenceTypeValue;
 
+        public bool SupportsHaptics => true;
+        public bool SupportsIMU => true;
+
         public event EventHandler<string> OnTrackerError;
         Stopwatch holdTimer = new Stopwatch();
+        private DateTime _hapticEndTime;
+
         public GenericControllerTracker(int index, Color colour) {
             Initialize(index, colour);
         }
@@ -51,8 +57,10 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     macSpoof = _rememberedStringId + "GenericController";
                     _sensorOrientation = new SensorOrientation(index, SensorOrientation.SensorType.Bluetooth);
                     _sensorOrientation.NewData += async delegate { await Update(); };
-                    udpHandler = new UDPHandler("GenericController" + _rememberedStringId,
-                     new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] }, 1);
+                    _macAddressBytes = new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] };
+                    udpHandler = new UDPHandler("GenericController" + _rememberedStringId, _macAddressBytes
+                     ,
+                 FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, 1);
                     udpHandler.Active = true;
                     Recalibrate();
                     _ready = true;
@@ -85,7 +93,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 _ = Task.Run(async () => {
                     try {
                         _rotation = Quaternion.Normalize(_sensorOrientation.CurrentOrientation);
-                        if (GenericTrackerManager.DebugOpen || _yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
+                        if (GenericTrackerManager.DebugOpen || _yawReferenceTypeValue != RotationReferenceType.TrustDeviceYaw) {
                             var trackerRotation = OpenVRReader.GetTrackerRotation(YawReferenceTypeValue);
                             _trackerEuler = trackerRotation.GetYawFromQuaternion();
                             _lastEulerPositon = -_trackerEuler;
@@ -93,7 +101,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             _gyro = _sensorOrientation.Gyro;
                             _acceleration = _sensorOrientation.Accelerometer;
                         }
-                        //await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.Accelerometer.X, _sensorOrientation.Accelerometer.Y, _sensorOrientation.Accelerometer.Z) / 10, 0)
+                        await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.Accelerometer.X, _sensorOrientation.Accelerometer.Y, _sensorOrientation.Accelerometer.Z) / 10, 0);
                         if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
                             await udpHandler.SetSensorRotation(_rotation, 0);
                         } else {
@@ -121,7 +129,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             buttonPressTimer.Reset();
                         }
                         if (buttonPressTimer.ElapsedMilliseconds >= 3000) {
-                            udpHandler.SendButton(HapticNodeBinding);
+                            //udpHandler.SendButton(HapticNodeBinding);
                             buttonPressTimer.Reset();
                         }
                     } catch (Exception e) {
@@ -138,7 +146,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             await udpHandler.SendButton(FirmwareConstants.UserActionType.RESET_FULL);
         }
         public void Rediscover() {
-            udpHandler.Initialize();
+            udpHandler.Initialize(
+                 FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, _macAddressBytes);
         }
 
         public void Dispose() {
@@ -156,16 +165,16 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             identifying = false;
         }
 
-        public void EngageHaptics(int duration, float intensity, bool timed = true) {
+        public void EngageHaptics(int duration, float intensity) {
+            _hapticEndTime = DateTime.Now.AddMilliseconds(duration);
             if (!isAlreadyVibrating) {
                 isAlreadyVibrating = true;
                 Task.Run(() => {
                     JSL.JslSetRumble(_index, (int)(100 * intensity), (int)(intensity * 100f));
-                    if (timed) {
-                        Thread.Sleep(duration);
-                        JSL.JslSetRumble(_index, 0, 0);
-                        isAlreadyVibrating = false;
+                    while (DateTime.Now < _hapticEndTime) {
+                        Thread.Sleep(10);
                     }
+                    JSL.JslSetRumble(_index, 0, 0);
                     isAlreadyVibrating = false;
                     identifying = false;
                 });

@@ -19,6 +19,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private bool _nunchuck;
         private ConcurrentDictionary<string, WiimoteInfo> _motionStateList;
         private string macSpoof;
+        private byte[] _macAddressBytes;
         private UDPHandler udpHandler;
         private Vector3 _wiimoteRotationCalibration;
         private Vector3 _nunchuckRotationCalibration;
@@ -45,6 +46,10 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private Vector3Short _previousAccelValue;
         private Vector3Short _previousWiimoteAccelValue;
         private Vector3Short _previousNunchuckAccelValue;
+        private DateTime _hapticEndTime;
+
+        public bool SupportsHaptics => true;
+        public bool SupportsIMU => true;
 
         public event EventHandler<string> OnTrackerError;
 
@@ -60,10 +65,11 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     _wiimoteId = id;
                     _rememberedStringId = _wiimoteClient + ":" + _id.ToString();
                     macSpoof = HashUtility.CalculateMD5Hash(_rememberedStringId + "Wiimote_Tracker");
+                    _macAddressBytes = new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] };
                     _firmwareId = "Wiimote_Tracker" + _rememberedStringId;
                     _motionStateList = ForwardedWiimoteManager.Wiimotes;
-                    udpHandler = new UDPHandler(_firmwareId,
-                     new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] }, 2);
+                    udpHandler = new UDPHandler(_firmwareId, _macAddressBytes,
+                 FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, 2);
                     udpHandler.Active = true;
                     Recalibrate();
                     ForwardedWiimoteManager.NewPacketReceived += NewPacketReceived;
@@ -89,7 +95,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     if (value.ButtonUp) {
                         if (!_waitForRelease) {
                             _waitForRelease = true;
-                            udpHandler.SendButton(HapticNodeBinding);
+                            //udpHandler.SendButton();
                         }
                     } else if (!_isAlreadyUpdating) {
                         _isAlreadyUpdating = true;
@@ -124,7 +130,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         float finalY = euler.Y;
                         float finalZ = 0;
 
-                        await udpHandler.SetSensorBattery(Math.Clamp(value.BatteryLevel / 100f, 0f, 1f));
+                        await udpHandler.SetSensorBattery(Math.Clamp(value.BatteryLevel / 100f, 0f, 1f), 3.7f);
                         var shortVector = new Vector3Short(value.WiimoteAccelZ, value.WiimoteAccelY, value.WiimoteAccelZ);
                         await udpHandler.SetSensorAcceleration(new Vector3(
     (value.WiimoteAccelX / 512f) * accelerationMultiplier,
@@ -176,7 +182,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                         _isAlreadyUpdating = false;
                     }
                 } catch (Exception e) {
-                    OnTrackerError.Invoke(this, e.StackTrace + "\r\n" + e.Message);
+                    OnTrackerError?.Invoke(this, e.StackTrace + "\r\n" + e.Message);
                 }
             }
 
@@ -198,7 +204,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             await udpHandler.SendButton(FirmwareConstants.UserActionType.RESET_FULL);
         }
         public void Rediscover() {
-            udpHandler.Initialize();
+            udpHandler.Initialize(FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, _macAddressBytes);
         }
 
         public void Dispose() {
@@ -225,17 +231,17 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             _hasTrackedFirstAccel = true;
             return true; // Always accept if no previous data
         }
-        public void EngageHaptics(int duration, float intensity, bool timed = true) {
-            if (!isAlreadyVibrating || !timed) {
+        public void EngageHaptics(int duration, float intensity) {
+            _hapticEndTime = DateTime.Now.AddMilliseconds(duration);
+            if (!isAlreadyVibrating) {
                 isAlreadyVibrating = true;
                 Task.Run(() => {
                     ForwardedWiimoteManager.RumbleState[_wiimoteClient][_id] = 1;
-                    if (timed) {
-                        Thread.Sleep(duration);
-                        ForwardedWiimoteManager.RumbleState[_wiimoteClient][_id] = 0;
-                        isAlreadyVibrating = false;
+                    while (DateTime.Now < _hapticEndTime) {
+                        Thread.Sleep(10);
                     }
-
+                    ForwardedWiimoteManager.RumbleState[_wiimoteClient][_id] = 0;
+                    isAlreadyVibrating = false;
                     identifying = false;
                 });
             }

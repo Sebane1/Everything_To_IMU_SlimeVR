@@ -7,7 +7,7 @@ using System.Text;
 using Everything_To_IMU_SlimeVR.Osc;
 using LucHeart.CoreOSC;
 
-namespace AxSlime.Osc {
+namespace Everything_To_IMU_SlimeVR.Osc {
     public class OscHandler : IDisposable {
         public static readonly string BundleAddress = "#bundle\0";
         public static readonly byte[] BundleAddressBytes = Encoding.ASCII.GetBytes(BundleAddress);
@@ -23,6 +23,7 @@ namespace AxSlime.Osc {
         private readonly bHaptics _bHaptics;
 
         private readonly HapticsSource[] _hapticsSources;
+        private readonly VRCHapticLogManager _vrcHapticLogManager;
 
         public OscHandler() {
             _oscClient = new UdpClient(9001);
@@ -32,6 +33,7 @@ namespace AxSlime.Osc {
 
             _hapticsSources = [_axHaptics, _bHaptics];
 
+            _vrcHapticLogManager = new VRCHapticLogManager();
 
             Task.Run(() => {
                 _oscReceiveTask = OscReceiveTask(_cancelTokenSource.Token);
@@ -113,9 +115,9 @@ namespace AxSlime.Osc {
             foreach (var hapticEvent in events) {
                 HapticsManager.SetNodeVibration(hapticEvent.Node, 300, (float)hapticEvent.Intensity);
             }
-            if (events.Length == 0 && HapticsManager.HapticsEngaged) {
-                HapticsManager.StopNodeVibrations();
-            }
+            //if (events.Length == 0 && HapticsManager.HapticsEngaged) {
+            //    HapticsManager.StopNodeVibrations();
+            //}
         }
 
         private HapticEvent[] ComputeEvents(OscMessage message) {

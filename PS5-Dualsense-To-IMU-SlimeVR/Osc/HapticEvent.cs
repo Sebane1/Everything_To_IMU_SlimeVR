@@ -1,6 +1,6 @@
 // Implementation borrowed from https://github.com/ButterscotchV/AXSlime
 
-namespace AxSlime.Osc
+namespace Everything_To_IMU_SlimeVR.Osc
 {
     public struct HapticEvent
     {

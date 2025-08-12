@@ -3,6 +3,8 @@
 namespace Everything_To_IMU_SlimeVR.Tracking {
     public interface IBodyTracker {
         int Id { get; set; }
+        public bool SupportsHaptics { get;}
+        public bool SupportsIMU {  get; }
         string MacSpoof { get; set; }
         Vector3 Euler { get; set; }
         float LastHmdPositon { get; set; }
@@ -19,7 +21,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         void Identify();
 
-        public void EngageHaptics(int duration, float intensity, bool timed = true);
+        public void EngageHaptics(int duration, float intensity);
         public void DisableHaptics();
 
         public string ToString();

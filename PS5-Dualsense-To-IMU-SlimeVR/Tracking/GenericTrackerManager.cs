@@ -1,4 +1,6 @@
-﻿using AxSlime.Osc;
+﻿using Everything_To_IMU_SlimeVR.Osc;
+using Everything_To_IMU_SlimeVR.SlimeVR;
+using System.Net.Sockets;
 
 namespace Everything_To_IMU_SlimeVR.Tracking {
     public class GenericTrackerManager {
@@ -29,11 +31,16 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private static int _controllerCount;
         private Configuration _configuration;
         private OscHandler _oscHandler;
+        private FalseThighTracker _falseThighTrackerLeft;
+        private FalseThighTracker _falseThighTrackerRight;
         private int _pollingRatePerTracker;
 
         public GenericTrackerManager(Configuration configuration) {
             _configuration = configuration;
             _oscHandler = new OscHandler();
+            _falseThighTrackerLeft = new FalseThighTracker(TrackerConfig.RotationReferenceType.LeftAnkleRotation);
+            _falseThighTrackerRight = new FalseThighTracker(TrackerConfig.RotationReferenceType.RightAnkleRotation);
+            UDPHandler.Endpoint = "127.0.0.1";
             int handshakeDelay = _configuration.SwitchingSessions ? 10 : 100;
             Task.Run(async () => {
                 foreach (var item in _configuration.TrackerConfigUdpHaptics) {
@@ -217,5 +224,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public Dictionary<string, KeyValuePair<string, bool>> TrackerInfoWiimote { get => _trackerInfoWiimote; set => _trackerInfoWiimote = value; }
         public static List<IBodyTracker> AllTrackers { get => _allTrackers; set => _allTrackers = value; }
         public static List<UDPHapticDevice> TrackersUdpHapticDevice { get => _trackersUdpHapticDevice; set => _trackersUdpHapticDevice = value; }
+        internal FalseThighTracker FalseThighTrackerLeft { get => _falseThighTrackerLeft; set => _falseThighTrackerLeft = value; }
+        internal FalseThighTracker FalseThighTrackerRight { get => _falseThighTrackerRight; set => _falseThighTrackerRight = value; }
     }
 }

@@ -18,7 +18,6 @@ namespace Everything_To_IMU_SlimeVR {
         private readonly Forwarded3DSDataManager _forwarded3DSDataManager;
 
         public ConfigurationDisplay() {
-            falseThighSimulationCheckBox.Checked = Configuration.Instance.SimulatesThighs;
             InitializeComponent();
             AutoScaleDimensions = new SizeF(96, 96);
             _configuration = Configuration.LoadConfig();
@@ -33,7 +32,7 @@ namespace Everything_To_IMU_SlimeVR {
             _forwardedWiimoteManager = new ForwardedWiimoteManager();
             _forwarded3DSDataManager = new Forwarded3DSDataManager();
             _configuration.SwitchingSessions = false;
-
+            falseThighSimulationCheckBox.Checked = _configuration.SimulatesThighs;
             _configuration.SaveConfig();
         }
 
@@ -116,6 +115,19 @@ namespace Everything_To_IMU_SlimeVR {
                 hapticJointAssignment.SelectedIndex = (int)_currentTracker.HapticNodeBinding;
                 _currentTracker.HapticNodeBinding = _currentTrackerConfig.HapticNodeBinding;
 
+                identifyButton.Visible = _currentTracker.SupportsHaptics;
+                hapticJointAssignment.Visible = _currentTracker.SupportsHaptics;
+                yawForSimulatedTracker.Visible = _currentTracker.SupportsIMU;
+                extensionYawForSimulatedTracker.Visible = _currentTracker.SupportsIMU;
+                rediscoverTrackerButton.Visible = _currentTracker.SupportsIMU;
+
+                yawSourceDisclaimer1.Visible = _currentTracker.SupportsIMU;
+                yawSourceDisclaimer2.Visible = _currentTracker.SupportsIMU;
+                yawSourceLabel.Visible = _currentTracker.SupportsIMU;
+                extensionSourceLabel.Visible = _currentTracker.SupportsIMU;
+                extensionYawForSimulatedTracker.Visible = _currentTracker.SupportsIMU;
+                hapticJointAssignmentLabel.Visible = _currentTracker.SupportsHaptics;
+
                 trackerConfigLabel.Text = $"{_currentTracker.ToString()} Config";
                 _suppressCheckBoxEvent = false;
                 refreshTimer.Start();
@@ -128,7 +140,7 @@ namespace Everything_To_IMU_SlimeVR {
         private void falseThighSimulationCheckBox_CheckedChanged(object sender, EventArgs e) {
             //yawForSimulatedTracker.Enabled = falseThighSimulationCheckBox.Checked;
             if (!_suppressCheckBoxEvent) {
-                Configuration.Instance.SimulatesThighs = falseThighSimulationCheckBox.Checked;
+                _configuration.SimulatesThighs = falseThighSimulationCheckBox.Checked;
                 _configuration.SaveConfig();
             }
         }
@@ -297,9 +309,7 @@ namespace Everything_To_IMU_SlimeVR {
             }
             if (_currentTracker != null) {
                 rediscoverTrackerButton.Visible = true;
-                falseThighSimulationCheckBox.Visible = true;
             } else {
-                falseThighSimulationCheckBox.Visible = false;
                 rediscoverTrackerButton.Visible = false;
             }
             if (errorQueue.Count > 0) {
@@ -318,6 +328,14 @@ namespace Everything_To_IMU_SlimeVR {
             } else {
                 lockInDetectedDevicesButton.Text = "Enable New Device Detection (Increases Drift)";
             }
+        }
+
+        private void label10_Click(object sender, EventArgs e) {
+
+        }
+
+        private void label7_Click(object sender, EventArgs e) {
+
         }
     }
 }

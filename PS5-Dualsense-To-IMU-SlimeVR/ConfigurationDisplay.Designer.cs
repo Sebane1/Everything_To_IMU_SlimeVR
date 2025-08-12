@@ -29,12 +29,14 @@
             falseThighSimulationCheckBox = new CheckBox();
             tabOptions = new TabControl();
             settingsPage = new TabPage();
-            label7 = new Label();
-            label6 = new Label();
-            label5 = new Label();
+            yawSourceDisclaimer2 = new Label();
+            yawSourceDisclaimer1 = new Label();
+            hapticJointAssignmentLabel = new Label();
+            extensionSourceLabel = new Label();
+            yawSourceLabel = new Label();
             extensionYawForSimulatedTracker = new ComboBox();
             hapticJointAssignment = new ComboBox();
-            indentifyButton = new Button();
+            identifyButton = new Button();
             yawForSimulatedTracker = new ComboBox();
             rediscoverTrackerButton = new Button();
             trackerConfigLabel = new Label();
@@ -60,6 +62,7 @@
             timer3 = new System.Windows.Forms.Timer(components);
             listRefreshTimer = new System.Windows.Forms.Timer(components);
             lockInDetectedDevicesButton = new Button();
+            label10 = new Label();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
@@ -108,12 +111,14 @@
             // 
             // settingsPage
             // 
-            settingsPage.Controls.Add(label7);
-            settingsPage.Controls.Add(label6);
-            settingsPage.Controls.Add(label5);
+            settingsPage.Controls.Add(yawSourceDisclaimer2);
+            settingsPage.Controls.Add(yawSourceDisclaimer1);
+            settingsPage.Controls.Add(hapticJointAssignmentLabel);
+            settingsPage.Controls.Add(extensionSourceLabel);
+            settingsPage.Controls.Add(yawSourceLabel);
             settingsPage.Controls.Add(extensionYawForSimulatedTracker);
             settingsPage.Controls.Add(hapticJointAssignment);
-            settingsPage.Controls.Add(indentifyButton);
+            settingsPage.Controls.Add(identifyButton);
             settingsPage.Controls.Add(yawForSimulatedTracker);
             settingsPage.Controls.Add(rediscoverTrackerButton);
             settingsPage.Controls.Add(trackerConfigLabel);
@@ -126,38 +131,57 @@
             settingsPage.UseVisualStyleBackColor = true;
             settingsPage.Click += tabPage1_Click;
             // 
-            // label7
+            // yawSourceDisclaimer2
             // 
-            label7.AutoSize = true;
-            label7.Location = new Point(10, 168);
-            label7.Name = "label7";
-            label7.Size = new Size(248, 15);
-            label7.TabIndex = 11;
-            label7.Text = "Haptic Joint Assignment (bHaptics Over OSC)";
+            yawSourceDisclaimer2.AutoSize = true;
+            yawSourceDisclaimer2.Location = new Point(10, 62);
+            yawSourceDisclaimer2.Name = "yawSourceDisclaimer2";
+            yawSourceDisclaimer2.Size = new Size(322, 15);
+            yawSourceDisclaimer2.TabIndex = 13;
+            yawSourceDisclaimer2.Text = "Device Tracker Yaw has more mounting flexibility, but drifts.";
             // 
-            // label6
+            // yawSourceDisclaimer1
             // 
-            label6.AutoSize = true;
-            label6.Location = new Point(10, 113);
-            label6.Name = "label6";
-            label6.Size = new Size(222, 15);
-            label6.TabIndex = 10;
-            label6.Text = "Extension Yaw Source (IE: Wii Nunchuck)";
+            yawSourceDisclaimer1.AutoSize = true;
+            yawSourceDisclaimer1.Location = new Point(10, 43);
+            yawSourceDisclaimer1.Name = "yawSourceDisclaimer1";
+            yawSourceDisclaimer1.Size = new Size(321, 15);
+            yawSourceDisclaimer1.TabIndex = 12;
+            yawSourceDisclaimer1.Text = "Yaw sources will require front or back mounting in SlimeVR.";
             // 
-            // label5
+            // hapticJointAssignmentLabel
             // 
-            label5.AutoSize = true;
-            label5.Location = new Point(10, 60);
-            label5.Name = "label5";
-            label5.Size = new Size(111, 15);
-            label5.TabIndex = 9;
-            label5.Text = "Primary Yaw Source";
+            hapticJointAssignmentLabel.AutoSize = true;
+            hapticJointAssignmentLabel.Location = new Point(10, 198);
+            hapticJointAssignmentLabel.Name = "hapticJointAssignmentLabel";
+            hapticJointAssignmentLabel.Size = new Size(248, 15);
+            hapticJointAssignmentLabel.TabIndex = 11;
+            hapticJointAssignmentLabel.Text = "Haptic Joint Assignment (bHaptics Over OSC)";
+            hapticJointAssignmentLabel.Click += label7_Click;
+            // 
+            // extensionSourceLabel
+            // 
+            extensionSourceLabel.AutoSize = true;
+            extensionSourceLabel.Location = new Point(10, 143);
+            extensionSourceLabel.Name = "extensionSourceLabel";
+            extensionSourceLabel.Size = new Size(222, 15);
+            extensionSourceLabel.TabIndex = 10;
+            extensionSourceLabel.Text = "Extension Yaw Source (IE: Wii Nunchuck)";
+            // 
+            // yawSourceLabel
+            // 
+            yawSourceLabel.AutoSize = true;
+            yawSourceLabel.Location = new Point(10, 90);
+            yawSourceLabel.Name = "yawSourceLabel";
+            yawSourceLabel.Size = new Size(111, 15);
+            yawSourceLabel.TabIndex = 9;
+            yawSourceLabel.Text = "Primary Yaw Source";
             // 
             // extensionYawForSimulatedTracker
             // 
             extensionYawForSimulatedTracker.FormattingEnabled = true;
             extensionYawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
-            extensionYawForSimulatedTracker.Location = new Point(10, 131);
+            extensionYawForSimulatedTracker.Location = new Point(10, 161);
             extensionYawForSimulatedTracker.Name = "extensionYawForSimulatedTracker";
             extensionYawForSimulatedTracker.Size = new Size(319, 23);
             extensionYawForSimulatedTracker.TabIndex = 8;
@@ -167,27 +191,27 @@
             // 
             hapticJointAssignment.FormattingEnabled = true;
             hapticJointAssignment.Items.AddRange(new object[] { "Right Thigh Haptics", "Right Calf Haptics", "Left Thigh Haptics", "Left Calf Haptics", "Right Upper Arm Haptics", "Right Fore Arm Haptics", "Left Upper Arm Haptics", "Left Fore Arm Haptics", "Chest Haptics", "Right Foot Haptics", "Left Foot Haptics", "Right Hand Haptics", "Left Hand Haptics", "Right Shoulder Haptics", "Left Shoulder Haptics", "Head Haptics", "Hips Haptics", "Chest Front Haptics", "Hips Front Haptics", "Chest Back Haptics", "Hips Back Haptics", "Chest And Hips Haptics", "Chest And Hips Front Haptics", "Chest And Hips Back Haptics" });
-            hapticJointAssignment.Location = new Point(10, 186);
+            hapticJointAssignment.Location = new Point(10, 216);
             hapticJointAssignment.Name = "hapticJointAssignment";
             hapticJointAssignment.Size = new Size(319, 23);
             hapticJointAssignment.TabIndex = 7;
             hapticJointAssignment.SelectedIndexChanged += hapticJointAssignment_SelectedIndexChanged;
             // 
-            // indentifyButton
+            // identifyButton
             // 
-            indentifyButton.Location = new Point(165, 213);
-            indentifyButton.Name = "indentifyButton";
-            indentifyButton.Size = new Size(164, 23);
-            indentifyButton.TabIndex = 6;
-            indentifyButton.Text = "Rumble Identification";
-            indentifyButton.UseVisualStyleBackColor = true;
-            indentifyButton.Click += identifyButton_Click;
+            identifyButton.Location = new Point(165, 243);
+            identifyButton.Name = "identifyButton";
+            identifyButton.Size = new Size(164, 23);
+            identifyButton.TabIndex = 6;
+            identifyButton.Text = "Rumble Identification";
+            identifyButton.UseVisualStyleBackColor = true;
+            identifyButton.Click += identifyButton_Click;
             // 
             // yawForSimulatedTracker
             // 
             yawForSimulatedTracker.FormattingEnabled = true;
             yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Left Ankle Tracker Yaw (Ankle Tracker Drift)", "Right Ankle Tracker Yaw (Ankle Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
-            yawForSimulatedTracker.Location = new Point(10, 78);
+            yawForSimulatedTracker.Location = new Point(10, 108);
             yawForSimulatedTracker.Name = "yawForSimulatedTracker";
             yawForSimulatedTracker.Size = new Size(319, 23);
             yawForSimulatedTracker.TabIndex = 5;
@@ -195,7 +219,7 @@
             // 
             // rediscoverTrackerButton
             // 
-            rediscoverTrackerButton.Location = new Point(10, 213);
+            rediscoverTrackerButton.Location = new Point(10, 243);
             rediscoverTrackerButton.Name = "rediscoverTrackerButton";
             rediscoverTrackerButton.Size = new Size(149, 23);
             rediscoverTrackerButton.TabIndex = 3;
@@ -335,9 +359,9 @@
             label4.AutoSize = true;
             label4.Location = new Point(332, 2);
             label4.Name = "label4";
-            label4.Size = new Size(99, 15);
+            label4.Size = new Size(104, 15);
             label4.TabIndex = 15;
-            label4.Text = "Haptic Cellphone";
+            label4.Text = "Haptic Wifi Device";
             label4.Click += label4_Click;
             // 
             // hapticDeviceList
@@ -345,9 +369,9 @@
             hapticDeviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             hapticDeviceList.FormattingEnabled = true;
             hapticDeviceList.ItemHeight = 15;
-            hapticDeviceList.Location = new Point(332, 52);
+            hapticDeviceList.Location = new Point(332, 82);
             hapticDeviceList.Name = "hapticDeviceList";
-            hapticDeviceList.Size = new Size(104, 349);
+            hapticDeviceList.Size = new Size(104, 319);
             hapticDeviceList.TabIndex = 14;
             hapticDeviceList.SelectedIndexChanged += hapticDeviceList_SelectedIndexChanged;
             // 
@@ -361,7 +385,7 @@
             // newHapticCellphoneButton
             // 
             newHapticCellphoneButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            newHapticCellphoneButton.Location = new Point(331, -137);
+            newHapticCellphoneButton.Location = new Point(332, 51);
             newHapticCellphoneButton.Name = "newHapticCellphoneButton";
             newHapticCellphoneButton.Size = new Size(105, 23);
             newHapticCellphoneButton.TabIndex = 17;
@@ -404,19 +428,30 @@
             // lockInDetectedDevicesButton
             // 
             lockInDetectedDevicesButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            lockInDetectedDevicesButton.Location = new Point(7, 408);
+            lockInDetectedDevicesButton.Location = new Point(7, 423);
             lockInDetectedDevicesButton.Name = "lockInDetectedDevicesButton";
-            lockInDetectedDevicesButton.Size = new Size(429, 52);
+            lockInDetectedDevicesButton.Size = new Size(429, 37);
             lockInDetectedDevicesButton.TabIndex = 21;
             lockInDetectedDevicesButton.Text = "Disable New Device Detection (Reduces Drift)";
             lockInDetectedDevicesButton.UseVisualStyleBackColor = true;
             lockInDetectedDevicesButton.Click += lockInDetectedDevicesButton_Click;
+            // 
+            // label10
+            // 
+            label10.AutoSize = true;
+            label10.Location = new Point(12, 404);
+            label10.Name = "label10";
+            label10.Size = new Size(387, 15);
+            label10.TabIndex = 14;
+            label10.Text = "Disable new device detection once you've connected all desired devices.";
+            label10.Click += label10_Click;
             // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
             ClientSize = new Size(790, 461);
+            Controls.Add(label10);
             Controls.Add(lockInDetectedDevicesButton);
             Controls.Add(testHaptics);
             Controls.Add(newHapticCellphoneButton);
@@ -437,7 +472,7 @@
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             Name = "ConfigurationDisplay";
-            Text = "Configuration Display";
+            Text = "Everything To IMU";
             Load += ConfigurationDisplay_Load;
             tabOptions.ResumeLayout(false);
             settingsPage.ResumeLayout(false);
@@ -475,7 +510,7 @@
         private Label label3;
         private Label label4;
         private System.Windows.Forms.Timer memoryResetTimer;
-        private Button indentifyButton;
+        private Button identifyButton;
         private ComboBox hapticJointAssignment;
         private ListBox hapticDeviceList;
         private TextBox newIpFeild;
@@ -484,13 +519,16 @@
         private Label wiimoteRateLabel;
         private TrackBar wiimoteRate;
         private ComboBox extensionYawForSimulatedTracker;
-        private Label label7;
-        private Label label6;
-        private Label label5;
+        private Label hapticJointAssignmentLabel;
+        private Label extensionSourceLabel;
+        private Label yawSourceLabel;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Timer timer2;
         private System.Windows.Forms.Timer timer3;
         private System.Windows.Forms.Timer listRefreshTimer;
         private Button lockInDetectedDevicesButton;
+        private Label yawSourceDisclaimer1;
+        private Label yawSourceDisclaimer2;
+        private Label label10;
     }
 }

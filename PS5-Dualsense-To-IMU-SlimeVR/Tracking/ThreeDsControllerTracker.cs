@@ -10,6 +10,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private int _index;
         private int _id;
         private string macSpoof;
+        private byte[] _macAddressBytes;
         private SensorOrientation _sensorOrientation;
         private UDPHandler udpHandler;
         private Vector3 _rotationCalibration;
@@ -32,6 +33,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private HapticNodeBinding _hapticNodeBinding;
         private RotationReferenceType _extensionYawReferenceTypeValue;
 
+        public bool SupportsHaptics => false;
+        public bool SupportsIMU => true;
         public event EventHandler<string> OnTrackerError;
 
         public ThreeDsControllerTracker(string id) {
@@ -42,8 +45,9 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 try {;
                     _ip = id;
                     macSpoof = id + "3DS_Tracker";
-                    udpHandler = new UDPHandler("3DS_Tracker" + id,
-                     new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] }, 1);
+                    _macAddressBytes = new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] };
+                    udpHandler = new UDPHandler("3DS_Tracker" + id, _macAddressBytes,
+                 FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, 1);
                     udpHandler.Active = true;
                     Recalibrate();
                     Forwarded3DSDataManager.NewPacketReceived += NewPacketReceived;
@@ -64,7 +68,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             if (_ready) {
                 try {
                     var hmdHeight = OpenVRReader.GetHMDHeight();
-                    var trackerRotation = OpenVRReader.GetTrackerRotation(RotationReferenceType.WaistRotation);
+                    var trackerRotation = OpenVRReader.GetTrackerRotation(YawReferenceTypeValue);
                     float trackerEuler = trackerRotation.GetYawFromQuaternion();
                     var value = Forwarded3DSDataManager.DeviceMap[_ip];
                     _rotation = new Quaternion(value.quatX, value.quatY, value.quatZ, value.quatW);
@@ -84,7 +88,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     }
                     //await udpHandler.SetSensorBattery(100);
                     if (RotationReferenceType.TrustDeviceYaw != _yawReferenceTypeValue) {
-                        await udpHandler.SetSensorRotation(new Vector3(_euler.Y, _euler.Z, _lastEulerPositon).ToQuaternion(), 0);
+                        await udpHandler.SetSensorRotation(new Vector3(_euler.X, _euler.Y, trackerEuler).ToQuaternion(), 0);
                     } else {
                         await udpHandler.SetSensorRotation(_rotation, 0);
                     }
@@ -102,7 +106,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             _rotationCalibration = GetCalibration();
         }
         public void Rediscover() {
-            udpHandler.Initialize();
+            udpHandler.Initialize(FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, _macAddressBytes);
         }
 
         public void Dispose() {
@@ -123,7 +127,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             //throw new NotImplementedException();
         }
 
-        public void EngageHaptics(int duration, float intensity, bool timed = true) {
+        public void EngageHaptics(int duration, float intensity) {
             //throw new NotImplementedException();
         }
 
