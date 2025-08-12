@@ -63,10 +63,16 @@
             listRefreshTimer = new System.Windows.Forms.Timer(components);
             lockInDetectedDevicesButton = new Button();
             label10 = new Label();
+            tabControl1 = new TabControl();
+            tabPage1 = new TabPage();
+            tabPage2 = new TabPage();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
             errorLog.SuspendLayout();
+            tabControl1.SuspendLayout();
+            tabPage1.SuspendLayout();
+            tabPage2.SuspendLayout();
             SuspendLayout();
             // 
             // refreshTimer
@@ -77,19 +83,19 @@
             // 
             // controllerDeviceList
             // 
-            controllerDeviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             controllerDeviceList.FormattingEnabled = true;
             controllerDeviceList.ItemHeight = 15;
-            controllerDeviceList.Location = new Point(3, 22);
+            controllerDeviceList.Location = new Point(0, 26);
             controllerDeviceList.Name = "controllerDeviceList";
-            controllerDeviceList.Size = new Size(104, 379);
+            controllerDeviceList.Size = new Size(104, 244);
             controllerDeviceList.TabIndex = 0;
             controllerDeviceList.SelectedIndexChanged += selectedDevice_SelectedIndexChanged;
             // 
             // falseThighSimulationCheckBox
             // 
+            falseThighSimulationCheckBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             falseThighSimulationCheckBox.AutoSize = true;
-            falseThighSimulationCheckBox.Location = new Point(545, 439);
+            falseThighSimulationCheckBox.Location = new Point(545, 437);
             falseThighSimulationCheckBox.Name = "falseThighSimulationCheckBox";
             falseThighSimulationCheckBox.Size = new Size(236, 19);
             falseThighSimulationCheckBox.TabIndex = 1;
@@ -99,14 +105,13 @@
             // 
             // tabOptions
             // 
-            tabOptions.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tabOptions.Controls.Add(settingsPage);
             tabOptions.Controls.Add(debugPage);
             tabOptions.Controls.Add(errorLog);
-            tabOptions.Location = new Point(438, -2);
+            tabOptions.Location = new Point(231, 2);
             tabOptions.Name = "tabOptions";
             tabOptions.SelectedIndex = 0;
-            tabOptions.Size = new Size(348, 405);
+            tabOptions.Size = new Size(341, 298);
             tabOptions.TabIndex = 2;
             // 
             // settingsPage
@@ -125,7 +130,7 @@
             settingsPage.Location = new Point(4, 24);
             settingsPage.Name = "settingsPage";
             settingsPage.Padding = new Padding(3);
-            settingsPage.Size = new Size(340, 377);
+            settingsPage.Size = new Size(333, 270);
             settingsPage.TabIndex = 0;
             settingsPage.Text = "Settings";
             settingsPage.UseVisualStyleBackColor = true;
@@ -134,67 +139,74 @@
             // yawSourceDisclaimer2
             // 
             yawSourceDisclaimer2.AutoSize = true;
-            yawSourceDisclaimer2.Location = new Point(10, 62);
+            yawSourceDisclaimer2.Location = new Point(0, 62);
             yawSourceDisclaimer2.Name = "yawSourceDisclaimer2";
             yawSourceDisclaimer2.Size = new Size(322, 15);
             yawSourceDisclaimer2.TabIndex = 13;
             yawSourceDisclaimer2.Text = "Device Tracker Yaw has more mounting flexibility, but drifts.";
+            yawSourceDisclaimer2.Visible = false;
             // 
             // yawSourceDisclaimer1
             // 
             yawSourceDisclaimer1.AutoSize = true;
-            yawSourceDisclaimer1.Location = new Point(10, 43);
+            yawSourceDisclaimer1.Location = new Point(0, 43);
             yawSourceDisclaimer1.Name = "yawSourceDisclaimer1";
             yawSourceDisclaimer1.Size = new Size(321, 15);
             yawSourceDisclaimer1.TabIndex = 12;
             yawSourceDisclaimer1.Text = "Yaw sources will require front or back mounting in SlimeVR.";
+            yawSourceDisclaimer1.Visible = false;
             // 
             // hapticJointAssignmentLabel
             // 
             hapticJointAssignmentLabel.AutoSize = true;
-            hapticJointAssignmentLabel.Location = new Point(10, 198);
+            hapticJointAssignmentLabel.Location = new Point(1, 198);
             hapticJointAssignmentLabel.Name = "hapticJointAssignmentLabel";
-            hapticJointAssignmentLabel.Size = new Size(248, 15);
+            hapticJointAssignmentLabel.Size = new Size(267, 15);
             hapticJointAssignmentLabel.TabIndex = 11;
-            hapticJointAssignmentLabel.Text = "Haptic Joint Assignment (bHaptics Over OSC)";
+            hapticJointAssignmentLabel.Text = "Haptic Joint Assignment (bHaptics compatibility)";
+            hapticJointAssignmentLabel.Visible = false;
             hapticJointAssignmentLabel.Click += label7_Click;
             // 
             // extensionSourceLabel
             // 
             extensionSourceLabel.AutoSize = true;
-            extensionSourceLabel.Location = new Point(10, 143);
+            extensionSourceLabel.Location = new Point(0, 143);
             extensionSourceLabel.Name = "extensionSourceLabel";
             extensionSourceLabel.Size = new Size(222, 15);
             extensionSourceLabel.TabIndex = 10;
             extensionSourceLabel.Text = "Extension Yaw Source (IE: Wii Nunchuck)";
+            extensionSourceLabel.Visible = false;
             // 
             // yawSourceLabel
             // 
             yawSourceLabel.AutoSize = true;
-            yawSourceLabel.Location = new Point(10, 90);
+            yawSourceLabel.Location = new Point(0, 90);
             yawSourceLabel.Name = "yawSourceLabel";
             yawSourceLabel.Size = new Size(111, 15);
             yawSourceLabel.TabIndex = 9;
             yawSourceLabel.Text = "Primary Yaw Source";
+            yawSourceLabel.Visible = false;
             // 
             // extensionYawForSimulatedTracker
             // 
             extensionYawForSimulatedTracker.FormattingEnabled = true;
             extensionYawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
-            extensionYawForSimulatedTracker.Location = new Point(10, 161);
+            extensionYawForSimulatedTracker.Location = new Point(0, 161);
             extensionYawForSimulatedTracker.Name = "extensionYawForSimulatedTracker";
-            extensionYawForSimulatedTracker.Size = new Size(319, 23);
+            extensionYawForSimulatedTracker.Size = new Size(329, 23);
             extensionYawForSimulatedTracker.TabIndex = 8;
+            extensionYawForSimulatedTracker.Visible = false;
             extensionYawForSimulatedTracker.SelectedIndexChanged += extensionYawForSimulatedTracker_SelectedIndexChanged;
             // 
             // hapticJointAssignment
             // 
             hapticJointAssignment.FormattingEnabled = true;
             hapticJointAssignment.Items.AddRange(new object[] { "Right Thigh Haptics", "Right Calf Haptics", "Left Thigh Haptics", "Left Calf Haptics", "Right Upper Arm Haptics", "Right Fore Arm Haptics", "Left Upper Arm Haptics", "Left Fore Arm Haptics", "Chest Haptics", "Right Foot Haptics", "Left Foot Haptics", "Right Hand Haptics", "Left Hand Haptics", "Right Shoulder Haptics", "Left Shoulder Haptics", "Head Haptics", "Hips Haptics", "Chest Front Haptics", "Hips Front Haptics", "Chest Back Haptics", "Hips Back Haptics", "Chest And Hips Haptics", "Chest And Hips Front Haptics", "Chest And Hips Back Haptics" });
-            hapticJointAssignment.Location = new Point(10, 216);
+            hapticJointAssignment.Location = new Point(0, 216);
             hapticJointAssignment.Name = "hapticJointAssignment";
-            hapticJointAssignment.Size = new Size(319, 23);
+            hapticJointAssignment.Size = new Size(329, 23);
             hapticJointAssignment.TabIndex = 7;
+            hapticJointAssignment.Visible = false;
             hapticJointAssignment.SelectedIndexChanged += hapticJointAssignment_SelectedIndexChanged;
             // 
             // identifyButton
@@ -205,32 +217,35 @@
             identifyButton.TabIndex = 6;
             identifyButton.Text = "Rumble Identification";
             identifyButton.UseVisualStyleBackColor = true;
+            identifyButton.Visible = false;
             identifyButton.Click += identifyButton_Click;
             // 
             // yawForSimulatedTracker
             // 
             yawForSimulatedTracker.FormattingEnabled = true;
             yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Left Ankle Tracker Yaw (Ankle Tracker Drift)", "Right Ankle Tracker Yaw (Ankle Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
-            yawForSimulatedTracker.Location = new Point(10, 108);
+            yawForSimulatedTracker.Location = new Point(-1, 108);
             yawForSimulatedTracker.Name = "yawForSimulatedTracker";
-            yawForSimulatedTracker.Size = new Size(319, 23);
+            yawForSimulatedTracker.Size = new Size(330, 23);
             yawForSimulatedTracker.TabIndex = 5;
+            yawForSimulatedTracker.Visible = false;
             yawForSimulatedTracker.SelectedIndexChanged += yawForSimulatedTracker_SelectedIndexChanged;
             // 
             // rediscoverTrackerButton
             // 
-            rediscoverTrackerButton.Location = new Point(10, 243);
+            rediscoverTrackerButton.Location = new Point(0, 243);
             rediscoverTrackerButton.Name = "rediscoverTrackerButton";
-            rediscoverTrackerButton.Size = new Size(149, 23);
+            rediscoverTrackerButton.Size = new Size(159, 23);
             rediscoverTrackerButton.TabIndex = 3;
             rediscoverTrackerButton.Text = "Rediscover Tracker";
             rediscoverTrackerButton.UseVisualStyleBackColor = true;
+            rediscoverTrackerButton.Visible = false;
             rediscoverTrackerButton.Click += rediscoverTrackerButton_Clicked;
             // 
             // trackerConfigLabel
             // 
             trackerConfigLabel.AutoSize = true;
-            trackerConfigLabel.Location = new Point(6, 3);
+            trackerConfigLabel.Location = new Point(3, 3);
             trackerConfigLabel.Name = "trackerConfigLabel";
             trackerConfigLabel.Size = new Size(121, 15);
             trackerConfigLabel.TabIndex = 2;
@@ -242,7 +257,7 @@
             debugPage.Location = new Point(4, 24);
             debugPage.Name = "debugPage";
             debugPage.Padding = new Padding(3);
-            debugPage.Size = new Size(340, 377);
+            debugPage.Size = new Size(333, 270);
             debugPage.TabIndex = 1;
             debugPage.Text = "Debug";
             debugPage.UseVisualStyleBackColor = true;
@@ -252,7 +267,7 @@
             debugText.Location = new Point(6, 6);
             debugText.Multiline = true;
             debugText.Name = "debugText";
-            debugText.Size = new Size(323, 471);
+            debugText.Size = new Size(331, 268);
             debugText.TabIndex = 0;
             // 
             // errorLog
@@ -260,7 +275,7 @@
             errorLog.Controls.Add(errorLogText);
             errorLog.Location = new Point(4, 24);
             errorLog.Name = "errorLog";
-            errorLog.Size = new Size(340, 377);
+            errorLog.Size = new Size(333, 270);
             errorLog.TabIndex = 2;
             errorLog.Text = "Error Log";
             errorLog.UseVisualStyleBackColor = true;
@@ -275,24 +290,24 @@
             // 
             // trackerCalibrationButton
             // 
-            trackerCalibrationButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            trackerCalibrationButton.Location = new Point(442, 408);
+            trackerCalibrationButton.Anchor = AnchorStyles.Bottom;
+            trackerCalibrationButton.Location = new Point(5, 301);
             trackerCalibrationButton.Name = "trackerCalibrationButton";
-            trackerCalibrationButton.Size = new Size(212, 23);
+            trackerCalibrationButton.Size = new Size(223, 23);
             trackerCalibrationButton.TabIndex = 4;
-            trackerCalibrationButton.Text = "Recalibrate Controller Trackers";
+            trackerCalibrationButton.Text = "Recalibrate";
             trackerCalibrationButton.UseVisualStyleBackColor = true;
             trackerCalibrationButton.Click += trackerCalibrationButton_Click;
             // 
             // donateButton
             // 
-            donateButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            donateButton.Anchor = AnchorStyles.Bottom;
             donateButton.BackColor = Color.RosyBrown;
             donateButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             donateButton.ForeColor = Color.Snow;
-            donateButton.Location = new Point(652, 408);
+            donateButton.Location = new Point(5, 330);
             donateButton.Name = "donateButton";
-            donateButton.Size = new Size(127, 23);
+            donateButton.Size = new Size(223, 25);
             donateButton.TabIndex = 5;
             donateButton.Text = "Donate";
             donateButton.UseVisualStyleBackColor = false;
@@ -300,30 +315,28 @@
             // 
             // threeDsDeviceList
             // 
-            threeDsDeviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             threeDsDeviceList.FormattingEnabled = true;
             threeDsDeviceList.ItemHeight = 15;
-            threeDsDeviceList.Location = new Point(113, 22);
+            threeDsDeviceList.Location = new Point(4, 25);
             threeDsDeviceList.Name = "threeDsDeviceList";
-            threeDsDeviceList.Size = new Size(104, 379);
+            threeDsDeviceList.Size = new Size(104, 244);
             threeDsDeviceList.TabIndex = 8;
             threeDsDeviceList.SelectedIndexChanged += threeDsDeviceList_SelectedIndexChanged;
             // 
             // wiimoteDeviceList
             // 
-            wiimoteDeviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             wiimoteDeviceList.FormattingEnabled = true;
             wiimoteDeviceList.ItemHeight = 15;
-            wiimoteDeviceList.Location = new Point(223, 22);
+            wiimoteDeviceList.Location = new Point(114, 25);
             wiimoteDeviceList.Name = "wiimoteDeviceList";
-            wiimoteDeviceList.Size = new Size(104, 379);
+            wiimoteDeviceList.Size = new Size(104, 244);
             wiimoteDeviceList.TabIndex = 9;
             wiimoteDeviceList.SelectedIndexChanged += wiimoteDeviceList_SelectedIndexChanged;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(7, 2);
+            label1.Location = new Point(5, 6);
             label1.Name = "label1";
             label1.Size = new Size(90, 15);
             label1.TabIndex = 11;
@@ -333,16 +346,17 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(113, 2);
+            label2.Location = new Point(4, 5);
             label2.Name = "label2";
             label2.Size = new Size(96, 15);
             label2.TabIndex = 12;
             label2.Text = "Remote 3DS/2DS";
+            label2.Click += label2_Click;
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(223, 2);
+            label3.Location = new Point(114, 5);
             label3.Name = "label3";
             label3.Size = new Size(96, 15);
             label3.TabIndex = 13;
@@ -357,7 +371,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(332, 2);
+            label4.Location = new Point(107, 6);
             label4.Name = "label4";
             label4.Size = new Size(104, 15);
             label4.TabIndex = 15;
@@ -366,26 +380,26 @@
             // 
             // hapticDeviceList
             // 
-            hapticDeviceList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             hapticDeviceList.FormattingEnabled = true;
             hapticDeviceList.ItemHeight = 15;
-            hapticDeviceList.Location = new Point(332, 82);
+            hapticDeviceList.Location = new Point(109, 86);
             hapticDeviceList.Name = "hapticDeviceList";
-            hapticDeviceList.Size = new Size(104, 319);
+            hapticDeviceList.Size = new Size(104, 184);
             hapticDeviceList.TabIndex = 14;
             hapticDeviceList.SelectedIndexChanged += hapticDeviceList_SelectedIndexChanged;
             // 
             // newIpFeild
             // 
-            newIpFeild.Location = new Point(331, 22);
+            newIpFeild.Location = new Point(108, 26);
             newIpFeild.Name = "newIpFeild";
             newIpFeild.Size = new Size(105, 23);
             newIpFeild.TabIndex = 16;
+            newIpFeild.TextChanged += newIpFeild_TextChanged;
             // 
             // newHapticCellphoneButton
             // 
-            newHapticCellphoneButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            newHapticCellphoneButton.Location = new Point(332, 51);
+            newHapticCellphoneButton.Anchor = AnchorStyles.Top;
+            newHapticCellphoneButton.Location = new Point(106, 55);
             newHapticCellphoneButton.Name = "newHapticCellphoneButton";
             newHapticCellphoneButton.Size = new Size(105, 23);
             newHapticCellphoneButton.TabIndex = 17;
@@ -395,10 +409,10 @@
             // 
             // testHaptics
             // 
-            testHaptics.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            testHaptics.Location = new Point(442, 437);
+            testHaptics.Anchor = AnchorStyles.Bottom;
+            testHaptics.Location = new Point(234, 301);
             testHaptics.Name = "testHaptics";
-            testHaptics.Size = new Size(94, 23);
+            testHaptics.Size = new Size(329, 24);
             testHaptics.TabIndex = 18;
             testHaptics.Text = "Test Haptics";
             testHaptics.UseVisualStyleBackColor = true;
@@ -422,15 +436,15 @@
             // listRefreshTimer
             // 
             listRefreshTimer.Enabled = true;
-            listRefreshTimer.Interval = 15000;
+            listRefreshTimer.Interval = 3000;
             listRefreshTimer.Tick += listRefreshTimer_Tick;
             // 
             // lockInDetectedDevicesButton
             // 
-            lockInDetectedDevicesButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            lockInDetectedDevicesButton.Location = new Point(7, 423);
+            lockInDetectedDevicesButton.Anchor = AnchorStyles.Bottom;
+            lockInDetectedDevicesButton.Location = new Point(235, 331);
             lockInDetectedDevicesButton.Name = "lockInDetectedDevicesButton";
-            lockInDetectedDevicesButton.Size = new Size(429, 37);
+            lockInDetectedDevicesButton.Size = new Size(328, 24);
             lockInDetectedDevicesButton.TabIndex = 21;
             lockInDetectedDevicesButton.Text = "Disable New Device Detection (Reduces Drift)";
             lockInDetectedDevicesButton.UseVisualStyleBackColor = true;
@@ -438,41 +452,74 @@
             // 
             // label10
             // 
+            label10.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             label10.AutoSize = true;
-            label10.Location = new Point(12, 404);
+            label10.Location = new Point(12, 403);
             label10.Name = "label10";
             label10.Size = new Size(387, 15);
             label10.TabIndex = 14;
             label10.Text = "Disable new device detection once you've connected all desired devices.";
             label10.Click += label10_Click;
             // 
+            // tabControl1
+            // 
+            tabControl1.Controls.Add(tabPage1);
+            tabControl1.Controls.Add(tabPage2);
+            tabControl1.Location = new Point(5, 2);
+            tabControl1.Name = "tabControl1";
+            tabControl1.SelectedIndex = 0;
+            tabControl1.Size = new Size(227, 298);
+            tabControl1.TabIndex = 14;
+            // 
+            // tabPage1
+            // 
+            tabPage1.Controls.Add(label1);
+            tabPage1.Controls.Add(controllerDeviceList);
+            tabPage1.Controls.Add(label4);
+            tabPage1.Controls.Add(hapticDeviceList);
+            tabPage1.Controls.Add(newHapticCellphoneButton);
+            tabPage1.Controls.Add(newIpFeild);
+            tabPage1.Location = new Point(4, 24);
+            tabPage1.Name = "tabPage1";
+            tabPage1.Padding = new Padding(3);
+            tabPage1.Size = new Size(219, 270);
+            tabPage1.TabIndex = 0;
+            tabPage1.Text = "Common Devices";
+            tabPage1.UseVisualStyleBackColor = true;
+            tabPage1.Click += tabPage1_Click_1;
+            // 
+            // tabPage2
+            // 
+            tabPage2.Controls.Add(threeDsDeviceList);
+            tabPage2.Controls.Add(wiimoteDeviceList);
+            tabPage2.Controls.Add(label2);
+            tabPage2.Controls.Add(label3);
+            tabPage2.Location = new Point(4, 24);
+            tabPage2.Name = "tabPage2";
+            tabPage2.Padding = new Padding(3);
+            tabPage2.Size = new Size(219, 270);
+            tabPage2.TabIndex = 1;
+            tabPage2.Text = "Experimental";
+            tabPage2.UseVisualStyleBackColor = true;
+            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(790, 461);
+            ClientSize = new Size(566, 355);
+            Controls.Add(tabControl1);
             Controls.Add(label10);
             Controls.Add(lockInDetectedDevicesButton);
             Controls.Add(testHaptics);
-            Controls.Add(newHapticCellphoneButton);
-            Controls.Add(newIpFeild);
-            Controls.Add(label4);
-            Controls.Add(hapticDeviceList);
-            Controls.Add(label3);
-            Controls.Add(label2);
-            Controls.Add(label1);
             Controls.Add(falseThighSimulationCheckBox);
-            Controls.Add(wiimoteDeviceList);
-            Controls.Add(threeDsDeviceList);
             Controls.Add(donateButton);
             Controls.Add(trackerCalibrationButton);
             Controls.Add(tabOptions);
-            Controls.Add(controllerDeviceList);
             DoubleBuffered = true;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             Name = "ConfigurationDisplay";
-            Text = "Everything To IMU";
+            Text = "Everything To IMU And Haptics";
             Load += ConfigurationDisplay_Load;
             tabOptions.ResumeLayout(false);
             settingsPage.ResumeLayout(false);
@@ -481,6 +528,11 @@
             debugPage.PerformLayout();
             errorLog.ResumeLayout(false);
             errorLog.PerformLayout();
+            tabControl1.ResumeLayout(false);
+            tabPage1.ResumeLayout(false);
+            tabPage1.PerformLayout();
+            tabPage2.ResumeLayout(false);
+            tabPage2.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -530,5 +582,8 @@
         private Label yawSourceDisclaimer1;
         private Label yawSourceDisclaimer2;
         private Label label10;
+        private TabControl tabControl1;
+        private TabPage tabPage1;
+        private TabPage tabPage2;
     }
 }

@@ -308,7 +308,7 @@ namespace Everything_To_IMU_SlimeVR {
 
             }
             if (_currentTracker != null) {
-                rediscoverTrackerButton.Visible = true;
+                rediscoverTrackerButton.Visible = _currentTracker.SupportsIMU;
             } else {
                 rediscoverTrackerButton.Visible = false;
             }
@@ -335,6 +335,18 @@ namespace Everything_To_IMU_SlimeVR {
         }
 
         private void label7_Click(object sender, EventArgs e) {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e) {
+
+        }
+
+        private void newIpFeild_TextChanged(object sender, EventArgs e) {
+
+        }
+
+        private void tabPage1_Click_1(object sender, EventArgs e) {
 
         }
     }

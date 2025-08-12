@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices;
-using System.Windows;
-
+﻿using System.Runtime.InteropServices;
 namespace Everything_To_IMU_SlimeVR.Osc {
 
     public static class ExplorerFolderRefresher {
@@ -43,7 +36,7 @@ namespace Everything_To_IMU_SlimeVR.Osc {
         private CancellationTokenSource? _cts;
         private Task? _tailTask;
         private string? _currentLogFile;
-
+        Dictionary<string, bool> loopingPatterns = new Dictionary<string, bool>();
         public VRCHapticLogManager() {
             _localLowPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).Replace("Roaming", "LocalLow");
             _vrcPath = Path.Combine(_localLowPath, @"VRChat\VRChat");
@@ -128,35 +121,29 @@ namespace Everything_To_IMU_SlimeVR.Osc {
                     case "[bLog]":
                         switch (args[1]) {
                             case "Play":
-                                CheckForHapticAndTrigger(args[2], 300);
+                                CheckForHapticAndTrigger(args[2], 1, 300);
                                 break;
                             case "PlayParam":
-                                CheckForHapticAndTrigger("_chest", 300);
+                                CheckForHapticAndTrigger("_chest", 1, 300);
                                 break;
                             case "PlayLoop":
-                                CheckForHapticAndTrigger("_chest", 100000);
-                                CheckForHapticAndTrigger("_head", 100000);
-                                CheckForHapticAndTrigger("_foot_l", 100000);
-                                CheckForHapticAndTrigger("_foot_r", 100000);
-                                break;
-                            case "Stop":
-                                CheckForHapticAndStop(args[2]);
-                                break;
-                        }
-                        break;
-                    case "[somaticvr]":
-                        switch (args[1]) {
-                            case "Play":
-                                CheckForHapticAndTrigger(args[2], 300);
-                                break;
-                            case "PlayParam":
-                                CheckForHapticAndTrigger("_allchest", 300);
-                                break;
-                            case "PlayLoop":
-                                CheckForHapticAndTrigger("_chest", 100000);
-                                CheckForHapticAndTrigger("_head", 100000);
-                                CheckForHapticAndTrigger("_foot_l", 100000);
-                                CheckForHapticAndTrigger("_foot_r", 100000);
+                                Task.Run(delegate {
+                                    loopingPatterns[args[2]] = true;
+                                    while (loopingPatterns[args[2]]) {
+                                        CheckForHapticAndTrigger("_head", 1, 30);
+                                        Thread.Sleep(40);
+                                        CheckForHapticAndTrigger("_chest", 1, 30);
+                                        CheckForHapticAndTrigger("_shoulder_r", 1, 30);
+                                        CheckForHapticAndTrigger("_shoulder_l", 1, 30);
+                                        Thread.Sleep(40);
+                                        CheckForHapticAndTrigger("_arm_r", 1, 30);
+                                        CheckForHapticAndTrigger("_arm_l", 1, 30);
+                                        Thread.Sleep(40);
+                                        CheckForHapticAndTrigger("_foot_l", 1, 30);
+                                        CheckForHapticAndTrigger("_foot_r", 1, 30);
+                                        Thread.Sleep(40);
+                                    }
+                                });
                                 break;
                             case "Stop":
                                 CheckForHapticAndStop(args[2]);
@@ -168,65 +155,65 @@ namespace Everything_To_IMU_SlimeVR.Osc {
                 // ignore malformed lines
             }
         }
-        private void CheckForHapticAndTrigger(string value, int duration) {
+        private void CheckForHapticAndTrigger(string value, float intensity, int duration) {
             List<HapticEvent> events = new List<HapticEvent>();
             if (value.EndsWith("_head")) {
-                events.Add(new HapticEvent(HapticNodeBinding.Head, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.Head, intensity, duration));
             } else if (value.EndsWith("_allchest")) {
-                events.Add(new HapticEvent(HapticNodeBinding.Chest, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsFront, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsBack, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.ChestFront, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.ChestBack, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.Hips, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.HipsFront, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.HipsBack, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.Chest, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsFront, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsBack, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.ChestFront, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.ChestBack, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.Hips, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.HipsFront, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.HipsBack, intensity, duration));
             } else if (value.EndsWith("_chest")) {
-                events.Add(new HapticEvent(HapticNodeBinding.Chest, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsFront, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsBack, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.ChestFront, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.ChestBack, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.Chest, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsFront, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsBack, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.ChestFront, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.ChestBack, intensity, duration));
             } else if (value.EndsWith("_hips")) {
-                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsFront, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsBack, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.Hips, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.HipsFront, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.HipsBack, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsFront, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.ChestAndHipsBack, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.Hips, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.HipsFront, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.HipsBack, intensity, duration));
             } else if (value.EndsWith("_shoulder_r")) {
-                events.Add(new HapticEvent(HapticNodeBinding.RightShoulder, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.RightShoulder, intensity, duration));
             } else if (value.EndsWith("_shoulder_l")) {
-                events.Add(new HapticEvent(HapticNodeBinding.LeftShoulder, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.LeftShoulder, intensity, duration));
             } else if (value.EndsWith("_arm_r")) {
-                events.Add(new HapticEvent(HapticNodeBinding.RightUpperArm, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.RightForeArm, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.RightUpperArm, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.RightForeArm, intensity, duration));
             } else if (value.EndsWith("_arm_l")) {
-                events.Add(new HapticEvent(HapticNodeBinding.LeftUpperArm, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.LeftForeArm, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.LeftUpperArm, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.LeftForeArm, intensity, duration));
             } else if (value.EndsWith("_thigh_r")) {
-                events.Add(new HapticEvent(HapticNodeBinding.RightThigh, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.RightThigh, intensity, duration));
             } else if (value.EndsWith("_thigh_l")) {
-                events.Add(new HapticEvent(HapticNodeBinding.LeftThigh, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.LeftThigh, intensity, duration));
             } else if (value.EndsWith("_calf_r")) {
-                events.Add(new HapticEvent(HapticNodeBinding.RightCalf, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.RightCalf, intensity, duration));
             } else if (value.EndsWith("_calf_l")) {
-                events.Add(new HapticEvent(HapticNodeBinding.LeftCalf, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.LeftCalf, intensity, duration));
             } else if (value.EndsWith("_foot_r")) {
-                events.Add(new HapticEvent(HapticNodeBinding.RightThigh, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.RightCalf, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.RightFoot, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.RightThigh, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.RightCalf, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.RightFoot, intensity, duration));
             } else if (value.EndsWith("_foot_l")) {
-                events.Add(new HapticEvent(HapticNodeBinding.LeftThigh, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.LeftCalf, 1, duration));
-                events.Add(new HapticEvent(HapticNodeBinding.LeftFoot, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.LeftThigh, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.LeftCalf, intensity, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.LeftFoot, intensity, duration));
             } else if (value.EndsWith("_r")) {
-                events.Add(new HapticEvent(HapticNodeBinding.RightHand, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.RightHand, intensity, duration));
             } else if (value.EndsWith("_l")) {
-                events.Add(new HapticEvent(HapticNodeBinding.LeftHand, 1, duration));
+                events.Add(new HapticEvent(HapticNodeBinding.LeftHand, intensity, duration));
             } else {
                 var enumList = Enum.GetValues(typeof(HapticNodeBinding)).Cast<HapticNodeBinding>().ToList();
                 foreach (var enumValue in enumList) {
-                    events.Add(new HapticEvent(enumValue, 1, duration));
+                    events.Add(new HapticEvent(enumValue, intensity, duration));
                 }
             }
             foreach (var eventItem in events) {
@@ -295,9 +282,14 @@ namespace Everything_To_IMU_SlimeVR.Osc {
                     events.Add(new HapticEvent(enumValue, 1));
                 }
             }
-            foreach (var eventItem in events) {
-                HapticsManager.StopNodeVibration(eventItem.Node);
+            if (loopingPatterns.ContainsKey(value)) {
+                if (loopingPatterns[value]) {
+                    loopingPatterns[value] = false;
+                }
             }
+            //foreach (var eventItem in events) {
+            //    HapticsManager.StopNodeVibration(eventItem.Node);
+            //}
         }
     }
 }

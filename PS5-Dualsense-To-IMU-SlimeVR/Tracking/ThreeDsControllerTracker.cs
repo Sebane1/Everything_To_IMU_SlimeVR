@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
-using Everything_To_IMU_SlimeVR.SlimeVR;
+using SlimeImuProtocol.SlimeVR;
 using System.Diagnostics;
 using System.Numerics;
 using static Everything_To_IMU_SlimeVR.TrackerConfig;
@@ -47,7 +47,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     macSpoof = id + "3DS_Tracker";
                     _macAddressBytes = new byte[] { (byte)macSpoof[0], (byte)macSpoof[1], (byte)macSpoof[2], (byte)macSpoof[3], (byte)macSpoof[4], (byte)macSpoof[5] };
                     udpHandler = new UDPHandler("3DS_Tracker" + id, _macAddressBytes,
-                 FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, 1);
+                 FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, FirmwareConstants.MagnetometerStatus.NOT_SUPPORTED,1);
                     udpHandler.Active = true;
                     Recalibrate();
                     Forwarded3DSDataManager.NewPacketReceived += NewPacketReceived;
@@ -106,7 +106,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             _rotationCalibration = GetCalibration();
         }
         public void Rediscover() {
-            udpHandler.Initialize(FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, _macAddressBytes);
+            udpHandler.Initialize(FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, FirmwareConstants.MagnetometerStatus.NOT_SUPPORTED, _macAddressBytes);
         }
 
         public void Dispose() {

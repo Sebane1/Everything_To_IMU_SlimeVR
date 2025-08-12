@@ -1,5 +1,5 @@
 ﻿using OVRSharp.Math;
-using Everything_To_IMU_SlimeVR.Utility;
+using SlimeImuProtocol.Utility;
 using System.Diagnostics;
 using System.Numerics;
 using System.Text;

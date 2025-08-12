@@ -1,5 +1,5 @@
-﻿using Everything_To_IMU_SlimeVR.SlimeVR;
-using Everything_To_IMU_SlimeVR.Utility;
+﻿using SlimeImuProtocol.SlimeVR;
+using SlimeImuProtocol.Utility;
 using System.Configuration;
 using System.Numerics;
 using System.Security.Cryptography;
@@ -45,7 +45,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                 _udpHandler = new UDPHandler("FalseTracker_" + rotationReferenceType.ToString(),
                  new byte[] { (byte)_macSpoof[0], (byte)_macSpoof[1], (byte)_macSpoof[2],
                      (byte) _macSpoof[3], (byte) _macSpoof[4], (byte) _macSpoof[5] },
-                 FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, 1);
+                 FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, FirmwareConstants.MagnetometerStatus.NOT_SUPPORTED,1);
                 IsActive = Configuration.Instance.SimulatesThighs;
 
                 _ready = true;
