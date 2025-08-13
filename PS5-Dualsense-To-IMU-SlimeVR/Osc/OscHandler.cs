@@ -36,8 +36,8 @@ namespace Everything_To_IMU_SlimeVR.Osc {
 
             _vrcHapticLogManager = new VRCHapticLogManager();
             var monitor = new Everything_To_IMU_SlimeVR.AudioHaptics.DesktopAudioHapticMonitor(
-                          new SlimeVrHapticsAdapter(),fftSize: 1024, lowBandMaxHz: 300f,highBandMinHz: 4000f,
-                                                   onThresholdDb: -28f,offThresholdDb: -38f,stereoDbBias: 3f);
+                          new SlimeVrHapticsAdapter(),fftSize: 1024, lowBandMaxHz: 200f,highBandMinHz: 1000f,
+                                                   onThresholdDb: -24f,offThresholdDb: -38f,stereoDbBias: 3f);
             monitor.Start();
 
             Task.Run(() => {

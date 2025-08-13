@@ -24,10 +24,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Everything_To_IMU_SlimeVR.Osc;
 using NAudio.CoreAudioApi;
+using NAudio.CoreAudioApi.Interfaces;
 using NAudio.Dsp;
 using NAudio.Wave;
 using Complex = NAudio.Dsp.Complex;
@@ -76,7 +78,25 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
             }
         }
     }
+    public class DefaultDeviceWatcher : IMMNotificationClient {
+        public event Action<DeviceStateChangedEventArgs> DefaultDeviceChanged;
 
+        public void OnDefaultDeviceChanged(DataFlow dataFlow, Role deviceRole, string defaultDeviceId) {
+            if (dataFlow == DataFlow.Render && deviceRole == Role.Multimedia) {
+                DefaultDeviceChanged?.Invoke(new DeviceStateChangedEventArgs(defaultDeviceId));
+            }
+        }
+
+        public void OnDeviceAdded(string pwstrDeviceId) { }
+        public void OnDeviceRemoved(string deviceId) { }
+        public void OnDeviceStateChanged(string deviceId, DeviceState newState) { }
+        public void OnPropertyValueChanged(string pwstrDeviceId, PropertyKey key) { }
+    }
+
+    public class DeviceStateChangedEventArgs : EventArgs {
+        public string DeviceId { get; }
+        public DeviceStateChangedEventArgs(string id) => DeviceId = id;
+    }
     public class DesktopAudioHapticMonitor : IDisposable {
         // Config
         private readonly int _fftSize;
@@ -92,6 +112,8 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
         private WasapiLoopbackCapture? _capture;
         private readonly object _bufferLock = new object();
         private float[] _ring; // interleaved stereo float samples
+        private MMDeviceEnumerator _enumerator;
+        private DefaultDeviceWatcher _deviceWatcher;
         private int _ringWrite;
         private int _ringCount; // in samples (per-channel interleaved)
 
@@ -101,6 +123,7 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
 
         private Task? _worker;
         private CancellationTokenSource? _cts;
+        private object _lock;
 
         public DesktopAudioHapticMonitor(
             IHaptics haptics,
@@ -124,6 +147,35 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
             _stereoDbBias = stereoDbBias;
 
             _ring = new float[fftSize * 20 * 2]; // ~20 frames of stereo
+            CoInitializeEx(IntPtr.Zero, COINIT_APARTMENTTHREADED);
+
+            _enumerator = new MMDeviceEnumerator();
+
+            _deviceWatcher = new DefaultDeviceWatcher();
+
+            // Listen for default device changes
+            _deviceWatcher.DefaultDeviceChanged += (e) =>
+            {
+                Console.WriteLine("Default device changed → restarting capture");
+                RestartCapture();
+            };
+            _enumerator.RegisterEndpointNotificationCallback(_deviceWatcher);
+
+        }
+        [DllImport("ole32.dll")]
+        private static extern int CoInitializeEx(IntPtr pvReserved, uint dwCoInit);
+
+        private const uint COINIT_APARTMENTTHREADED = 0x2; // STA
+
+        private void RestartCapture() {
+          
+                _capture?.StopRecording();
+
+                var device = _enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+                _capture = new WasapiLoopbackCapture(device);
+                _capture.DataAvailable += OnData;
+                _capture.StartRecording();
+          
         }
 
         public void Start() {
@@ -132,7 +184,6 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
 
             _capture = new WasapiLoopbackCapture();
             _capture.DataAvailable += OnData;
-            _capture.RecordingStopped += (s, e) => { /* handle if needed */ };
             _capture.StartRecording();
 
             _worker = Task.Run(() => WorkerLoop(_cts.Token));
