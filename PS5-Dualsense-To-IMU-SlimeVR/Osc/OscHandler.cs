@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Everything_To_IMU_SlimeVR.AudioHaptics;
 using Everything_To_IMU_SlimeVR.Osc;
 using LucHeart.CoreOSC;
 
@@ -34,6 +35,10 @@ namespace Everything_To_IMU_SlimeVR.Osc {
             _hapticsSources = [_axHaptics, _bHaptics];
 
             _vrcHapticLogManager = new VRCHapticLogManager();
+            var monitor = new Everything_To_IMU_SlimeVR.AudioHaptics.DesktopAudioHapticMonitor(
+                          new SlimeVrHapticsAdapter(),fftSize: 1024, lowBandMaxHz: 300f,highBandMinHz: 4000f,
+                                                   onThresholdDb: -28f,offThresholdDb: -38f,stereoDbBias: 3f);
+            monitor.Start();
 
             Task.Run(() => {
                 _oscReceiveTask = OscReceiveTask(_cancelTokenSource.Token);
