@@ -42,7 +42,7 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
     }
 
     // Example adapter you can swap with your own implementation
-    public class SlimeVrHapticsAdapter : IHaptics {
+    public class AudioHapticsAdapter : IHaptics {
         public void SetBinary(HapticSide side, bool on) {
             int intensity = on ? 1 : 0; // map to your desired intensity
             int durationMs = on ? 200 : 0; // when turning on, you can re-trigger periodically in your app
@@ -249,7 +249,6 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
         }
 
         private void WorkerLoop(CancellationToken token) {
-            // Buffers per analysis
             float[] left = new float[_fftSize];
             float[] right = new float[_fftSize];
             float[] window = HannWindow(_fftSize);
@@ -259,8 +258,11 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
             int binsLowMax = (int)Math.Floor(_lowBandMaxHz * _fftSize / (double)sampleRate);
             int binsHighMin = (int)Math.Ceiling(_highBandMinHz * _fftSize / (double)sampleRate);
 
+            // Transient detection state
+            double prevMonoRms = 0;
+            double transientThreshold = 0.25; // Adjust to sensitivity
+
             while (!token.IsCancellationRequested) {
-                // Wait for enough data
                 if (!TryDequeueFrame(left, right)) {
                     Thread.Sleep(5);
                     continue;
@@ -272,18 +274,18 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
                     right[i] *= window[i];
                 }
 
-                // Mix to mono for spectral trigger
+                // Mix to mono
+                float[] mono = new float[_fftSize];
+                for (int i = 0; i < _fftSize; i++) mono[i] = 0.5f * (left[i] + right[i]);
+
+                // FFT spectral energy outside speech band
                 for (int i = 0; i < _fftSize; i++) {
-                    float mono = 0.5f * (left[i] + right[i]);
-                    fft[i].X = mono;
+                    fft[i].X = mono[i];
                     fft[i].Y = 0f;
                 }
-
                 FastFourierTransform.FFT(true, _fftPower, fft);
 
-                // Spectral energy outside speech band
                 double lowSum = 0, highSum = 0;
-                // skip DC (bin 0)
                 for (int bin = 1; bin <= binsLowMax && bin < _fftSize / 2; bin++) {
                     double re = fft[bin].X; double im = fft[bin].Y;
                     lowSum += re * re + im * im;
@@ -292,11 +294,10 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
                     double re = fft[bin].X; double im = fft[bin].Y;
                     highSum += re * re + im * im;
                 }
-
                 double bandPower = lowSum + highSum;
-                double db = 10.0 * Math.Log10(Math.Max(bandPower, 1e-12)); // dBFS-ish
+                double db = 10.0 * Math.Log10(Math.Max(bandPower, 1e-12));
 
-                // Stereo direction from time-domain RMS (fast & stable)
+                // RMS for stereo
                 double lRms = Rms(left);
                 double rRms = Rms(right);
                 double lDb = 20.0 * Math.Log10(Math.Max(lRms, 1e-9));
@@ -306,20 +307,24 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
                 if (lDb - rDb > _stereoDbBias) side = HapticSide.Left;
                 else if (rDb - lDb > _stereoDbBias) side = HapticSide.Right;
 
-                // Hysteresis
-                if (!_isOn && db >= _onThresholdDb) {
+                // Transient detection
+                double monoRms = Rms(mono);
+                bool isTransient = (monoRms - prevMonoRms) > transientThreshold;
+                prevMonoRms = monoRms;
+
+                bool trigger = db >= _onThresholdDb || isTransient;
+
+                // Hysteresis and transient handling
+                if (!_isOn && trigger) {
                     _isOn = true;
                     _lastSide = side;
                     _haptics.SetBinary(side, true);
                 } else if (_isOn && db <= _offThresholdDb) {
                     _isOn = false;
                     _haptics.SetBinary(_lastSide, false);
-                } else if (_isOn) {
-                    // Optionally update side while ON if direction changes a lot
-                    if (side != _lastSide) {
-                        _lastSide = side;
-                        _haptics.SetBinary(side, true);
-                    }
+                } else if (_isOn && side != _lastSide) {
+                    _lastSide = side;
+                    _haptics.SetBinary(side, true);
                 }
             }
         }
