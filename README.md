@@ -1,5 +1,4 @@
-A very rough and experimental attempt to make most controllers work as SlimeVR trackers.
-Also added experimental support for Wii Remotes connected to a homebrewed Wii.
+A very rough and experimental attempt to make most devices work as SlimeVR trackers, and as haptics devices.
 
 Also thanks to the JoyShock library, PS4 Dualshock, Switch Pro Controllers, Joycons, and potentially other gyro based controllers are compatible with the project but largely untested by me personally.
 
