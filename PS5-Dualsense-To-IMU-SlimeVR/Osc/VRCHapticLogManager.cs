@@ -114,7 +114,7 @@ namespace Everything_To_IMU_SlimeVR.Osc {
 
                 switch (args[0]) {
                     case "[Behaviour] ":
-                        if (args[1] == "Destroying") {
+                        if (args[1] == "Requesting") {
                             HapticsManager.StopNodeVibrations();
                         }
                         break;

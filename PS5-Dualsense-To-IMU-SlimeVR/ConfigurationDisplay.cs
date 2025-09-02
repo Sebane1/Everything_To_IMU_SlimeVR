@@ -127,6 +127,7 @@ namespace Everything_To_IMU_SlimeVR {
                 extensionSourceLabel.Visible = _currentTracker.SupportsIMU;
                 extensionYawForSimulatedTracker.Visible = _currentTracker.SupportsIMU;
                 hapticJointAssignmentLabel.Visible = _currentTracker.SupportsHaptics;
+                intensityTestButton.Visible = _currentTracker.SupportsHaptics;
 
                 trackerConfigLabel.Text = $"{_currentTracker.ToString()} Config";
                 _suppressCheckBoxEvent = false;
@@ -348,6 +349,15 @@ namespace Everything_To_IMU_SlimeVR {
 
         private void tabPage1_Click_1(object sender, EventArgs e) {
 
+        }
+
+        private void intensityTestButton_Click(object sender, EventArgs e) {
+            _currentTracker.HapticIntensityTest();
+        }
+
+        private void audioHapticsActive_CheckedChanged(object sender, EventArgs e) {
+            Configuration.Instance.AudioHapticsActive = audioHapticsActive.Checked;
+            Configuration.Instance.SaveConfig();
         }
     }
 }

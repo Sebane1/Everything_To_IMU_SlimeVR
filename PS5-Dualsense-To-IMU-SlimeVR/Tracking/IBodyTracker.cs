@@ -21,6 +21,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         void Identify();
 
+        void HapticIntensityTest();
+
         public void EngageHaptics(int duration, float intensity);
         public void DisableHaptics();
 

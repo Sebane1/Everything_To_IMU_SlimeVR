@@ -21,6 +21,8 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private bool isAlreadyVibrating;
         private RotationReferenceType _extensionYawReferenceTypeValue;
         DateTime _hapticEndTime;
+        private float _lastIntensity;
+
         public UDPHapticDevice(string ipAddress) {
             _packetBuilder = new PacketBuilder("");
             // Set up UDP server
@@ -41,7 +43,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public HapticNodeBinding HapticNodeBinding { get => _hapticNodeBinding; set => _hapticNodeBinding = value; }
         public TrackerConfig.RotationReferenceType YawReferenceTypeValue { get; set; }
 
-        public string Debug => "Use owotrack to get SlimeVR Tracking on cellphones. Only haptics are provided by this application.";
+        public string Debug => "Wifi haptic devices do not provide tracking data to this software.";
 
         public bool Ready { get; set; }
         public RotationReferenceType ExtensionYawReferenceTypeValue { get => _extensionYawReferenceTypeValue; set => _extensionYawReferenceTypeValue = value; }
@@ -59,16 +61,21 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         public void EngageHaptics(int duration, float intensity) {
             _hapticEndTime = DateTime.Now.AddMilliseconds(duration);
-            if (!isAlreadyVibrating) {
-                isAlreadyVibrating = true;
+            if (!isAlreadyVibrating || intensity != _lastIntensity) {
                 Task.Run(() => {
                     var data = _packetBuilder.BuildHapticPacket(intensity, duration);
                     _udpServer.Send(data, data.Length);
+                });
+                _lastIntensity = intensity;
+            }
+            if (!isAlreadyVibrating) {
+                isAlreadyVibrating = true;
+                Task.Run(() => {
                     while (DateTime.Now < _hapticEndTime) {
                         Thread.Sleep(10);
                     }
                     isAlreadyVibrating = false;
-                    data = _packetBuilder.BuildHapticPacket(0, 0);
+                    var data = _packetBuilder.BuildHapticPacket(0, 0);
                     _udpServer.Send(data, data.Length);
                 });
             }
@@ -76,6 +83,13 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         public Vector3 GetCalibration() {
             return new Vector3();
+        }
+
+        public void HapticIntensityTest() {
+            for (byte i = 0; i < 255; i++) {
+                EngageHaptics(50, i / 255f);
+                Thread.Sleep(45);
+            }
         }
 
         public void Identify() {

@@ -35,11 +35,10 @@ namespace Everything_To_IMU_SlimeVR.Osc {
             _hapticsSources = [_axHaptics, _bHaptics];
 
             _vrcHapticLogManager = new VRCHapticLogManager();
-            var monitor = new Everything_To_IMU_SlimeVR.AudioHaptics.DesktopAudioHapticMonitor(
-                          new AudioHapticsAdapter(),fftSize: 1024, lowBandMaxHz: 200f,highBandMinHz: 1000f,
+            var monitor = new DesktopAudioHapticMonitor(
+                          new AudioHapticsAdapter(),fftSize: 1024, lowBandMaxHz: 200f,highBandMinHz: 5000f,
                                                    onThresholdDb: -24f,offThresholdDb: -38f,stereoDbBias: 3f);
             monitor.Start();
-
             Task.Run(() => {
                 _oscReceiveTask = OscReceiveTask(_cancelTokenSource.Token);
             });

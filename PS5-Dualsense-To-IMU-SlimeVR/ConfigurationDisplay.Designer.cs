@@ -29,6 +29,7 @@
             falseThighSimulationCheckBox = new CheckBox();
             tabOptions = new TabControl();
             settingsPage = new TabPage();
+            intensityTestButton = new Button();
             yawSourceDisclaimer2 = new Label();
             yawSourceDisclaimer1 = new Label();
             hapticJointAssignmentLabel = new Label();
@@ -66,6 +67,7 @@
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
             tabPage2 = new TabPage();
+            audioHapticsActive = new CheckBox();
             tabOptions.SuspendLayout();
             settingsPage.SuspendLayout();
             debugPage.SuspendLayout();
@@ -116,6 +118,7 @@
             // 
             // settingsPage
             // 
+            settingsPage.Controls.Add(intensityTestButton);
             settingsPage.Controls.Add(yawSourceDisclaimer2);
             settingsPage.Controls.Add(yawSourceDisclaimer1);
             settingsPage.Controls.Add(hapticJointAssignmentLabel);
@@ -135,6 +138,17 @@
             settingsPage.Text = "Settings";
             settingsPage.UseVisualStyleBackColor = true;
             settingsPage.Click += tabPage1_Click;
+            // 
+            // intensityTestButton
+            // 
+            intensityTestButton.Location = new Point(161, 243);
+            intensityTestButton.Name = "intensityTestButton";
+            intensityTestButton.Size = new Size(166, 23);
+            intensityTestButton.TabIndex = 14;
+            intensityTestButton.Text = "Intensity Test";
+            intensityTestButton.UseVisualStyleBackColor = true;
+            intensityTestButton.Visible = false;
+            intensityTestButton.Click += intensityTestButton_Click;
             // 
             // yawSourceDisclaimer2
             // 
@@ -211,11 +225,11 @@
             // 
             // identifyButton
             // 
-            identifyButton.Location = new Point(165, 243);
+            identifyButton.Location = new Point(82, 243);
             identifyButton.Name = "identifyButton";
-            identifyButton.Size = new Size(164, 23);
+            identifyButton.Size = new Size(73, 23);
             identifyButton.TabIndex = 6;
-            identifyButton.Text = "Rumble Identification";
+            identifyButton.Text = "Identify";
             identifyButton.UseVisualStyleBackColor = true;
             identifyButton.Visible = false;
             identifyButton.Click += identifyButton_Click;
@@ -235,9 +249,10 @@
             // 
             rediscoverTrackerButton.Location = new Point(0, 243);
             rediscoverTrackerButton.Name = "rediscoverTrackerButton";
-            rediscoverTrackerButton.Size = new Size(159, 23);
+            rediscoverTrackerButton.RightToLeft = RightToLeft.Yes;
+            rediscoverTrackerButton.Size = new Size(76, 23);
             rediscoverTrackerButton.TabIndex = 3;
-            rediscoverTrackerButton.Text = "Rediscover Tracker";
+            rediscoverTrackerButton.Text = "Rediscover";
             rediscoverTrackerButton.UseVisualStyleBackColor = true;
             rediscoverTrackerButton.Visible = false;
             rediscoverTrackerButton.Click += rediscoverTrackerButton_Clicked;
@@ -410,9 +425,9 @@
             // testHaptics
             // 
             testHaptics.Anchor = AnchorStyles.Bottom;
-            testHaptics.Location = new Point(234, 301);
+            testHaptics.Location = new Point(396, 301);
             testHaptics.Name = "testHaptics";
-            testHaptics.Size = new Size(329, 24);
+            testHaptics.Size = new Size(167, 24);
             testHaptics.TabIndex = 18;
             testHaptics.Text = "Test Haptics";
             testHaptics.UseVisualStyleBackColor = true;
@@ -502,11 +517,25 @@
             tabPage2.Text = "Experimental";
             tabPage2.UseVisualStyleBackColor = true;
             // 
+            // audioHapticsActive
+            // 
+            audioHapticsActive.AutoSize = true;
+            audioHapticsActive.Checked = true;
+            audioHapticsActive.CheckState = CheckState.Checked;
+            audioHapticsActive.Location = new Point(238, 304);
+            audioHapticsActive.Name = "audioHapticsActive";
+            audioHapticsActive.Size = new Size(137, 19);
+            audioHapticsActive.TabIndex = 22;
+            audioHapticsActive.Text = "Audio Haptics Active";
+            audioHapticsActive.UseVisualStyleBackColor = true;
+            audioHapticsActive.CheckedChanged += audioHapticsActive_CheckedChanged;
+            // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
             ClientSize = new Size(566, 355);
+            Controls.Add(audioHapticsActive);
             Controls.Add(tabControl1);
             Controls.Add(label10);
             Controls.Add(lockInDetectedDevicesButton);
@@ -585,5 +614,7 @@
         private TabControl tabControl1;
         private TabPage tabPage1;
         private TabPage tabPage2;
+        private Button intensityTestButton;
+        private CheckBox audioHapticsActive;
     }
 }

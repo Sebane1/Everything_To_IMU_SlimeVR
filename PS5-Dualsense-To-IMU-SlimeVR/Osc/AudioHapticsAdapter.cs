@@ -38,14 +38,13 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
     public enum HapticSide { Left, Right, Both }
 
     public interface IHaptics {
-        void SetBinary(HapticSide side, bool on);
+        void SetHaptics(HapticSide side, float intensity);
     }
 
     // Example adapter you can swap with your own implementation
     public class AudioHapticsAdapter : IHaptics {
-        public void SetBinary(HapticSide side, bool on) {
-            int intensity = on ? 1 : 0; // map to your desired intensity
-            int durationMs = on ? 200 : 0; // when turning on, you can re-trigger periodically in your app
+        public void SetHaptics(HapticSide side, float intensity) {
+            int durationMs = 200;
 
             // TODO: Replace with your real HapticsManager calls.
             // Below is illustrative only; wire to your existing nodes as you like.
@@ -112,6 +111,7 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
         private WasapiLoopbackCapture? _capture;
         private readonly object _bufferLock = new object();
         private float[] _ring; // interleaved stereo float samples
+        private int _maximumDb;
         private MMDeviceEnumerator _enumerator;
         private DefaultDeviceWatcher _deviceWatcher;
         private int _ringWrite;
@@ -147,6 +147,7 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
             _stereoDbBias = stereoDbBias;
 
             _ring = new float[fftSize * 20 * 2]; // ~20 frames of stereo
+            _maximumDb = -23;
             CoInitializeEx(IntPtr.Zero, COINIT_APARTMENTTHREADED);
 
             _enumerator = new MMDeviceEnumerator();
@@ -154,28 +155,51 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
             _deviceWatcher = new DefaultDeviceWatcher();
 
             // Listen for default device changes
-            _deviceWatcher.DefaultDeviceChanged += (e) =>
-            {
+            _deviceWatcher.DefaultDeviceChanged += (e) => {
                 Console.WriteLine("Default device changed → restarting capture");
                 RestartCapture();
             };
             _enumerator.RegisterEndpointNotificationCallback(_deviceWatcher);
 
         }
+        float NormalizeIntensity(float value) {
+            float min = _onThresholdDb;
+            float max = _maximumDb;
+
+            // Clamp the value first to avoid going outside the expected range
+            value = Math.Clamp(value, min, max);
+
+            // Map to 0.0f - 1.0f
+            return (value - min) / (max - min);
+        }
+
+        float NormalizeIntensityInverted(float value) {
+            float min = _onThresholdDb;
+            float max = _maximumDb;
+
+            value = Math.Clamp(value, min, max);
+
+            // Normalized 0..1
+            float t = (value - min) / (max - min);
+
+            // Invert
+            return 1.0f - t;
+        }
+
         [DllImport("ole32.dll")]
         private static extern int CoInitializeEx(IntPtr pvReserved, uint dwCoInit);
 
         private const uint COINIT_APARTMENTTHREADED = 0x2; // STA
 
         private void RestartCapture() {
-          
-                _capture?.StopRecording();
 
-                var device = _enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
-                _capture = new WasapiLoopbackCapture(device);
-                _capture.DataAvailable += OnData;
-                _capture.StartRecording();
-          
+            _capture?.StopRecording();
+
+            var device = _enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+            _capture = new WasapiLoopbackCapture(device);
+            _capture.DataAvailable += OnData;
+            _capture.StartRecording();
+
         }
 
         public void Start() {
@@ -203,48 +227,49 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
         }
 
         private void OnData(object? sender, WaveInEventArgs e) {
-            // WASAPI loopback usually gives 32-bit float, stereo, but we guard anyway
-            var format = _capture!.WaveFormat;
-            int channels = format.Channels; // expect 2
-            int bytesPerSample = format.BitsPerSample / 8;
-            int frameCount = e.BytesRecorded / (bytesPerSample * channels);
+            if (Configuration.Instance.AudioHapticsActive) {
+                // WASAPI loopback usually gives 32-bit float, stereo, but we guard anyway
+                var format = _capture!.WaveFormat;
+                int channels = format.Channels; // expect 2
+                int bytesPerSample = format.BitsPerSample / 8;
+                int frameCount = e.BytesRecorded / (bytesPerSample * channels);
 
-            if (channels < 2) return; // we need stereo for direction; you can adapt for mono
+                if (channels < 2) return; // we need stereo for direction; you can adapt for mono
 
-            // Convert to float[] (interleaved stereo)
-            lock (_bufferLock) {
-                EnsureRingCapacity(_ringCount + frameCount * channels);
+                // Convert to float[] (interleaved stereo)
+                lock (_bufferLock) {
+                    EnsureRingCapacity(_ringCount + frameCount * channels);
 
-                if (format.Encoding == WaveFormatEncoding.IeeeFloat && bytesPerSample == 4) {
-                    // Fast path: copy directly
-                    int bytesToCopy = e.BytesRecorded;
-                    int maxBytesAvailable = (_ring.Length - _ringWrite) * sizeof(float);
+                    if (format.Encoding == WaveFormatEncoding.IeeeFloat && bytesPerSample == 4) {
+                        // Fast path: copy directly
+                        int bytesToCopy = e.BytesRecorded;
+                        int maxBytesAvailable = (_ring.Length - _ringWrite) * sizeof(float);
 
-                    if (bytesToCopy > maxBytesAvailable) {
-                        bytesToCopy = maxBytesAvailable;
+                        if (bytesToCopy > maxBytesAvailable) {
+                            bytesToCopy = maxBytesAvailable;
+                        }
+
+                        Buffer.BlockCopy(e.Buffer, 0, _ring, _ringWrite * sizeof(float), bytesToCopy);
+
+                        int samplesCopied = bytesToCopy / sizeof(float);
+
+                        _ringWrite = (_ringWrite + samplesCopied) % _ring.Length;
+                        _ringCount = Math.Min(_ringCount + samplesCopied, _ring.Length);
+                    } else if (format.Encoding == WaveFormatEncoding.Pcm && bytesPerSample == 2) {
+                        // 16-bit PCM → float
+                        int offset = 0;
+                        for (int i = 0; i < frameCount; i++) {
+                            short s0 = BitConverter.ToInt16(e.Buffer, offset); offset += 2;
+                            short s1 = BitConverter.ToInt16(e.Buffer, offset); offset += 2;
+                            float l = s0 / 32768f;
+                            float r = s1 / 32768f;
+                            WriteToRing(l);
+                            WriteToRing(r);
+                        }
+                    } else {
+                        // Unsupported format
                     }
-
-                    Buffer.BlockCopy(e.Buffer, 0, _ring, _ringWrite * sizeof(float), bytesToCopy);
-
-                    int samplesCopied = bytesToCopy / sizeof(float);
-
-                    _ringWrite = (_ringWrite + samplesCopied) % _ring.Length;
-                    _ringCount = Math.Min(_ringCount + samplesCopied, _ring.Length);
-                } else if (format.Encoding == WaveFormatEncoding.Pcm && bytesPerSample == 2) {
-                    // 16-bit PCM → float
-                    int offset = 0;
-                    for (int i = 0; i < frameCount; i++) {
-                        short s0 = BitConverter.ToInt16(e.Buffer, offset); offset += 2;
-                        short s1 = BitConverter.ToInt16(e.Buffer, offset); offset += 2;
-                        float l = s0 / 32768f;
-                        float r = s1 / 32768f;
-                        WriteToRing(l);
-                        WriteToRing(r);
-                    }
-                } else {
-                    // Unsupported format
                 }
-
             }
         }
 
@@ -312,19 +337,19 @@ namespace Everything_To_IMU_SlimeVR.AudioHaptics {
                 bool isTransient = (monoRms - prevMonoRms) > transientThreshold;
                 prevMonoRms = monoRms;
 
-                bool trigger = db >= _onThresholdDb || isTransient;
-
+                bool trigger = db >= _onThresholdDb || db >= _onThresholdDb && isTransient;
+                float intensity = NormalizeIntensity((float)db);
                 // Hysteresis and transient handling
                 if (!_isOn && trigger) {
                     _isOn = true;
                     _lastSide = side;
-                    _haptics.SetBinary(side, true);
+                    _haptics.SetHaptics(side, intensity);
                 } else if (_isOn && db <= _offThresholdDb) {
                     _isOn = false;
-                    _haptics.SetBinary(_lastSide, false);
+                    _haptics.SetHaptics(_lastSide, intensity);
                 } else if (_isOn && side != _lastSide) {
                     _lastSide = side;
-                    _haptics.SetBinary(side, true);
+                    _haptics.SetHaptics(side, intensity);
                 }
             }
         }

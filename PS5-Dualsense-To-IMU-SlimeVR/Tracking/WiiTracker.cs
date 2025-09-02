@@ -255,7 +255,12 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 		public override string ToString() {
 			return _rememberedStringId;
 		}
-		public string Debug { get => _debug; set => _debug = value; }
+
+        public void HapticIntensityTest() {
+           // throw new NotImplementedException();
+        }
+
+        public string Debug { get => _debug; set => _debug = value; }
 		public bool Ready { get => _ready; set => _ready = value; }
 		public bool Disconnected { get => _disconnected; set => _disconnected = value; }
 		public int Id { get => _id; set => _id = value; }

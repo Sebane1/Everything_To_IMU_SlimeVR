@@ -15,10 +15,11 @@ namespace Everything_To_IMU_SlimeVR {
         private byte _wiiPollingRate = 32;
         private Dictionary<string, TrackerConfig> _trackerConfigUdpHaptics = new Dictionary<string, TrackerConfig>();
         private bool _simulatesThighs;
+        private bool _audioHapticsActive = true;
 
         public List<TrackerConfig> TrackerConfigs { get => _trackerConfigs; set => _trackerConfigs = value; }
         public List<TrackerConfig> TrackerConfigs3ds { get => _trackerConfig3ds; set => _trackerConfig3ds = value; }
-        public Dictionary<string,TrackerConfig> TrackerConfigWiimote { get => _trackerConfigWiimote; set => _trackerConfigWiimote = value; }
+        public Dictionary<string, TrackerConfig> TrackerConfigWiimote { get => _trackerConfigWiimote; set => _trackerConfigWiimote = value; }
         public List<TrackerConfig> TrackerConfigNunchuck { get => _trackerConfigNunchuck; set => _trackerConfigNunchuck = value; }
         public Dictionary<string, TrackerConfig> TrackerConfigUdpHaptics { get => _trackerConfigUdpHaptics; set => _trackerConfigUdpHaptics = value; }
         public Dictionary<string, Vector3> CalibrationConfigurations { get => _calibrationConfigurations; set => _calibrationConfigurations = value; }
@@ -28,6 +29,7 @@ namespace Everything_To_IMU_SlimeVR {
         public static Configuration? Instance { get; private set; }
         public byte WiiPollingRate { get => _wiiPollingRate; set => _wiiPollingRate = value; }
         public bool SimulatesThighs { get => _simulatesThighs; set => _simulatesThighs = value; }
+        public bool AudioHapticsActive { get => _audioHapticsActive; set => _audioHapticsActive = value; }
 
         public void SaveConfig() {
             _lastConfigSave = DateTime.UtcNow;
@@ -43,7 +45,7 @@ namespace Everything_To_IMU_SlimeVR {
                 Configuration values = null;
                 try {
                     values = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(openPath));
-                } catch { 
+                } catch {
                 }
                 Instance = values;
                 return Instance = (values == null ? new Configuration() : values);
