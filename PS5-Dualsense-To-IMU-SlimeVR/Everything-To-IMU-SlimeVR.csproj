@@ -8,7 +8,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
-    <Version>0.0.1.6</Version>
+    <Version>0.0.1.7</Version>
     <PackageProjectUrl>https://github.com/Sebane1/Everything_To_IMU_SlimeVR</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Sebane1/Everything_To_IMU_SlimeVR</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

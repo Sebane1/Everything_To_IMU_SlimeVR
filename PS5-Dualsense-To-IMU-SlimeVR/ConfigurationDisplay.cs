@@ -33,6 +33,7 @@ namespace Everything_To_IMU_SlimeVR {
             _forwarded3DSDataManager = new Forwarded3DSDataManager();
             _configuration.SwitchingSessions = false;
             falseThighSimulationCheckBox.Checked = _configuration.SimulatesThighs;
+            audioHapticsActive.Checked = _configuration.AudioHapticsActive;
             _configuration.SaveConfig();
         }
 
@@ -319,6 +320,7 @@ namespace Everything_To_IMU_SlimeVR {
                     errorLogText.Text += value + "\r\n";
                 }
                 _lastErrorLog = value;
+                File.AppendAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "errors.log"), _lastErrorLog + "\r\n");
             }
         }
 
@@ -358,6 +360,10 @@ namespace Everything_To_IMU_SlimeVR {
         private void audioHapticsActive_CheckedChanged(object sender, EventArgs e) {
             Configuration.Instance.AudioHapticsActive = audioHapticsActive.Checked;
             Configuration.Instance.SaveConfig();
+        }
+
+        private void yawSourceLabel_Click(object sender, EventArgs e) {
+
         }
     }
 }

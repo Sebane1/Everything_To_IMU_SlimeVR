@@ -63,12 +63,18 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                  FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, FirmwareConstants.MagnetometerStatus.NOT_SUPPORTED, 1);
                     udpHandler.Active = true;
                     Recalibrate();
+                    _sensorOrientation.OnExceptionMessage += _sensorOrientation_OnExceptionMessage;
                     _ready = true;
                 } catch (Exception e) {
                     OnTrackerError?.Invoke(this, e.Message);
                 }
             });
         }
+
+        private void _sensorOrientation_OnExceptionMessage(object? sender, string e) {
+            OnTrackerError?.Invoke(sender, e);
+        }
+
         public bool GetGlobalState(int code) {
             int connections = GenericTrackerManager.ControllerCount;
             for (int i = 0; i < connections; i++) {

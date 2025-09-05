@@ -141,9 +141,9 @@
             // 
             // intensityTestButton
             // 
-            intensityTestButton.Location = new Point(161, 243);
+            intensityTestButton.Location = new Point(173, 243);
             intensityTestButton.Name = "intensityTestButton";
-            intensityTestButton.Size = new Size(166, 23);
+            intensityTestButton.Size = new Size(154, 23);
             intensityTestButton.TabIndex = 14;
             intensityTestButton.Text = "Intensity Test";
             intensityTestButton.UseVisualStyleBackColor = true;
@@ -153,7 +153,7 @@
             // yawSourceDisclaimer2
             // 
             yawSourceDisclaimer2.AutoSize = true;
-            yawSourceDisclaimer2.Location = new Point(0, 62);
+            yawSourceDisclaimer2.Location = new Point(5, 58);
             yawSourceDisclaimer2.Name = "yawSourceDisclaimer2";
             yawSourceDisclaimer2.Size = new Size(322, 15);
             yawSourceDisclaimer2.TabIndex = 13;
@@ -163,7 +163,7 @@
             // yawSourceDisclaimer1
             // 
             yawSourceDisclaimer1.AutoSize = true;
-            yawSourceDisclaimer1.Location = new Point(0, 43);
+            yawSourceDisclaimer1.Location = new Point(5, 39);
             yawSourceDisclaimer1.Name = "yawSourceDisclaimer1";
             yawSourceDisclaimer1.Size = new Size(321, 15);
             yawSourceDisclaimer1.TabIndex = 12;
@@ -173,7 +173,7 @@
             // hapticJointAssignmentLabel
             // 
             hapticJointAssignmentLabel.AutoSize = true;
-            hapticJointAssignmentLabel.Location = new Point(1, 198);
+            hapticJointAssignmentLabel.Location = new Point(6, 198);
             hapticJointAssignmentLabel.Name = "hapticJointAssignmentLabel";
             hapticJointAssignmentLabel.Size = new Size(267, 15);
             hapticJointAssignmentLabel.TabIndex = 11;
@@ -184,7 +184,7 @@
             // extensionSourceLabel
             // 
             extensionSourceLabel.AutoSize = true;
-            extensionSourceLabel.Location = new Point(0, 143);
+            extensionSourceLabel.Location = new Point(6, 143);
             extensionSourceLabel.Name = "extensionSourceLabel";
             extensionSourceLabel.Size = new Size(222, 15);
             extensionSourceLabel.TabIndex = 10;
@@ -194,20 +194,21 @@
             // yawSourceLabel
             // 
             yawSourceLabel.AutoSize = true;
-            yawSourceLabel.Location = new Point(0, 90);
+            yawSourceLabel.Location = new Point(6, 90);
             yawSourceLabel.Name = "yawSourceLabel";
             yawSourceLabel.Size = new Size(111, 15);
             yawSourceLabel.TabIndex = 9;
             yawSourceLabel.Text = "Primary Yaw Source";
             yawSourceLabel.Visible = false;
+            yawSourceLabel.Click += yawSourceLabel_Click;
             // 
             // extensionYawForSimulatedTracker
             // 
             extensionYawForSimulatedTracker.FormattingEnabled = true;
             extensionYawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
-            extensionYawForSimulatedTracker.Location = new Point(0, 161);
+            extensionYawForSimulatedTracker.Location = new Point(6, 161);
             extensionYawForSimulatedTracker.Name = "extensionYawForSimulatedTracker";
-            extensionYawForSimulatedTracker.Size = new Size(329, 23);
+            extensionYawForSimulatedTracker.Size = new Size(323, 23);
             extensionYawForSimulatedTracker.TabIndex = 8;
             extensionYawForSimulatedTracker.Visible = false;
             extensionYawForSimulatedTracker.SelectedIndexChanged += extensionYawForSimulatedTracker_SelectedIndexChanged;
@@ -216,18 +217,18 @@
             // 
             hapticJointAssignment.FormattingEnabled = true;
             hapticJointAssignment.Items.AddRange(new object[] { "Right Thigh Haptics", "Right Calf Haptics", "Left Thigh Haptics", "Left Calf Haptics", "Right Upper Arm Haptics", "Right Fore Arm Haptics", "Left Upper Arm Haptics", "Left Fore Arm Haptics", "Chest Haptics", "Right Foot Haptics", "Left Foot Haptics", "Right Hand Haptics", "Left Hand Haptics", "Right Shoulder Haptics", "Left Shoulder Haptics", "Head Haptics", "Hips Haptics", "Chest Front Haptics", "Hips Front Haptics", "Chest Back Haptics", "Hips Back Haptics", "Chest And Hips Haptics", "Chest And Hips Front Haptics", "Chest And Hips Back Haptics" });
-            hapticJointAssignment.Location = new Point(0, 216);
+            hapticJointAssignment.Location = new Point(6, 216);
             hapticJointAssignment.Name = "hapticJointAssignment";
-            hapticJointAssignment.Size = new Size(329, 23);
+            hapticJointAssignment.Size = new Size(323, 23);
             hapticJointAssignment.TabIndex = 7;
             hapticJointAssignment.Visible = false;
             hapticJointAssignment.SelectedIndexChanged += hapticJointAssignment_SelectedIndexChanged;
             // 
             // identifyButton
             // 
-            identifyButton.Location = new Point(82, 243);
+            identifyButton.Location = new Point(88, 243);
             identifyButton.Name = "identifyButton";
-            identifyButton.Size = new Size(73, 23);
+            identifyButton.Size = new Size(79, 23);
             identifyButton.TabIndex = 6;
             identifyButton.Text = "Identify";
             identifyButton.UseVisualStyleBackColor = true;
@@ -238,16 +239,16 @@
             // 
             yawForSimulatedTracker.FormattingEnabled = true;
             yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Left Ankle Tracker Yaw (Ankle Tracker Drift)", "Right Ankle Tracker Yaw (Ankle Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
-            yawForSimulatedTracker.Location = new Point(-1, 108);
+            yawForSimulatedTracker.Location = new Point(6, 108);
             yawForSimulatedTracker.Name = "yawForSimulatedTracker";
-            yawForSimulatedTracker.Size = new Size(330, 23);
+            yawForSimulatedTracker.Size = new Size(323, 23);
             yawForSimulatedTracker.TabIndex = 5;
             yawForSimulatedTracker.Visible = false;
             yawForSimulatedTracker.SelectedIndexChanged += yawForSimulatedTracker_SelectedIndexChanged;
             // 
             // rediscoverTrackerButton
             // 
-            rediscoverTrackerButton.Location = new Point(0, 243);
+            rediscoverTrackerButton.Location = new Point(6, 243);
             rediscoverTrackerButton.Name = "rediscoverTrackerButton";
             rediscoverTrackerButton.RightToLeft = RightToLeft.Yes;
             rediscoverTrackerButton.Size = new Size(76, 23);
@@ -282,7 +283,7 @@
             debugText.Location = new Point(6, 6);
             debugText.Multiline = true;
             debugText.Name = "debugText";
-            debugText.Size = new Size(331, 268);
+            debugText.Size = new Size(321, 258);
             debugText.TabIndex = 0;
             // 
             // errorLog
@@ -300,7 +301,7 @@
             errorLogText.Location = new Point(5, 3);
             errorLogText.Multiline = true;
             errorLogText.Name = "errorLogText";
-            errorLogText.Size = new Size(332, 471);
+            errorLogText.Size = new Size(323, 264);
             errorLogText.TabIndex = 0;
             // 
             // trackerCalibrationButton
@@ -425,9 +426,9 @@
             // testHaptics
             // 
             testHaptics.Anchor = AnchorStyles.Bottom;
-            testHaptics.Location = new Point(396, 301);
+            testHaptics.Location = new Point(408, 301);
             testHaptics.Name = "testHaptics";
-            testHaptics.Size = new Size(167, 24);
+            testHaptics.Size = new Size(155, 24);
             testHaptics.TabIndex = 18;
             testHaptics.Text = "Test Haptics";
             testHaptics.UseVisualStyleBackColor = true;

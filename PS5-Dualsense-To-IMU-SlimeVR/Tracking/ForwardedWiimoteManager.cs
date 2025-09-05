@@ -33,81 +33,89 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public static ConcurrentDictionary<string, WiimoteStateTracker> WiimoteTrackers { get => _wiimoteTrackers; set => _wiimoteTrackers = value; }
 
         async Task StartListener() {
-            _memoryWipeTimer.Start();
-            while (true) {
-                TcpListener listener = new TcpListener(IPAddress.Any, 9909);
-                listener.Start();
-                Console.WriteLine("TCP Listener started on port 9909...");
+            try {
+                _memoryWipeTimer.Start();
+                while (true) {
+                    TcpListener listener = new TcpListener(IPAddress.Any, 9909);
+                    listener.Start();
+                    Console.WriteLine("TCP Listener started on port 9909...");
 
-                while (_memoryWipeTimer.ElapsedMilliseconds < 1200000) {
-                    try {
-                        var client = await listener.AcceptTcpClientAsync();
-                        _ = Task.Run(() => HandleClient(client));
-                    } catch (Exception ex) {
-                        Console.WriteLine($"Listener error: {ex.Message}");
+                    while (_memoryWipeTimer.ElapsedMilliseconds < 1200000) {
+                        try {
+                            var client = await listener.AcceptTcpClientAsync();
+                            _ = Task.Run(() => HandleClient(client));
+                        } catch (Exception ex) {
+                            Console.WriteLine($"Listener error: {ex.Message}");
+                        }
                     }
+                    listener?.Stop();
                 }
-                listener?.Stop();
+            } catch {
+
             }
         }
 
         async Task HandleClient(TcpClient client) {
-            var endpoint = client.Client.RemoteEndPoint?.ToString() ?? "Unknown";
-            NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[4096];
-            int maxWiimotePacket = 17;
-            string baseIp = endpoint.Split(":")[0];
-            if (!_rumbleState.ContainsKey(baseIp)) {
-                _rumbleState[baseIp] = new byte[4] { 0, 0, 0, 0 };
-            }
-            while (client.Connected) {
-                try {
-                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                    if (bytesRead <= 0) break;
+            try {
+                var endpoint = client.Client.RemoteEndPoint?.ToString() ?? "Unknown";
+                NetworkStream stream = client.GetStream();
+                byte[] buffer = new byte[4096];
+                int maxWiimotePacket = 17;
+                string baseIp = endpoint.Split(":")[0];
+                if (!_rumbleState.ContainsKey(baseIp)) {
+                    _rumbleState[baseIp] = new byte[4] { 0, 0, 0, 0 };
+                }
+                while (client.Connected) {
+                    try {
+                        int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                        if (bytesRead <= 0) break;
 
-                    _wiiRequestGap = _timeBetweenRequests.ElapsedMilliseconds;
-                    _timeBetweenRequests.Restart();
+                        _wiiRequestGap = _timeBetweenRequests.ElapsedMilliseconds;
+                        _timeBetweenRequests.Restart();
 
-                    byte[] data = new byte[bytesRead];
-                    Array.Copy(buffer, data, bytesRead);
+                        byte[] data = new byte[bytesRead];
+                        Array.Copy(buffer, data, bytesRead);
 
-                    int packetLength = 0;
-                    int numPackets = 0;
+                        int packetLength = 0;
+                        int numPackets = 0;
 
-                    if (data.Length % maxWiimotePacket == 0) {
-                        numPackets = data.Length / maxWiimotePacket;
-                        packetLength = maxWiimotePacket;
-                    } else {
-                        Console.WriteLine($"❌ Malformed packet from {endpoint} (size={data.Length})");
+                        if (data.Length % maxWiimotePacket == 0) {
+                            numPackets = data.Length / maxWiimotePacket;
+                            packetLength = maxWiimotePacket;
+                        } else {
+                            Console.WriteLine($"❌ Malformed packet from {endpoint} (size={data.Length})");
+                            await stream.WriteAsync(_rumbleState[baseIp], 0, _rumbleState[baseIp].Length);
+                            await stream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1);
+                            LegacyClientDetected?.Invoke(this, EventArgs.Empty);
+                            continue;
+                        }
+
+                        for (int i = 0; i < numPackets; i++) {
+                            byte[] packetBytes = new byte[packetLength];
+                            Buffer.BlockCopy(data, i * packetLength, packetBytes, 0, packetLength);
+                            WiimotePacket packet = ParsePacket(packetBytes);
+                            if (packet.Id != byte.MaxValue) {
+                                string key = $"{baseIp}:{packet.Id}";
+                                ProcessIncomingPacket(key, packet);
+                            }
+                        }
+
+                        await stream.WriteAsync(_rumbleState[baseIp], 0, _rumbleState[baseIp].Length);
+                        await stream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1);
+                        NewPacketReceived?.Invoke(this, baseIp);
+                    } catch (Exception ex) {
+                        Console.WriteLine($"❌ Handler error from {endpoint}: {ex.Message}");
                         await stream.WriteAsync(_rumbleState[baseIp], 0, _rumbleState[baseIp].Length);
                         await stream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1);
                         LegacyClientDetected?.Invoke(this, EventArgs.Empty);
-                        continue;
+                        break;
                     }
-
-                    for (int i = 0; i < numPackets; i++) {
-                        byte[] packetBytes = new byte[packetLength];
-                        Buffer.BlockCopy(data, i * packetLength, packetBytes, 0, packetLength);
-                        WiimotePacket packet = ParsePacket(packetBytes);
-                        if (packet.Id != byte.MaxValue) {
-                            string key = $"{baseIp}:{packet.Id}";
-                            ProcessIncomingPacket(key, packet);
-                        }
-                    }
-
-                    await stream.WriteAsync(_rumbleState[baseIp], 0, _rumbleState[baseIp].Length);
-                    await stream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1);
-                    NewPacketReceived?.Invoke(this, baseIp);
-                } catch (Exception ex) {
-                    Console.WriteLine($"❌ Handler error from {endpoint}: {ex.Message}");
-                    await stream.WriteAsync(_rumbleState[baseIp], 0, _rumbleState[baseIp].Length);
-                    await stream.WriteAsync(new byte[1] { Configuration.Instance.WiiPollingRate }, 0, 1);
-                    LegacyClientDetected?.Invoke(this, EventArgs.Empty);
-                    break;
                 }
-            }
 
-            client.Close();
+                client.Close();
+            } catch {
+
+            }
         }
         private void ProcessIncomingPacket(string key, WiimotePacket packet) {
             // Get or create tracker for this wiimote

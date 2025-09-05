@@ -40,6 +40,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public event EventHandler NewData;
 
         public static event EventHandler<Tuple<int, JSL.JOY_SHOCK_STATE, JSL.JOY_SHOCK_STATE, JSL.IMU_STATE, JSL.IMU_STATE, float>> OnNewJSLData;
+        public event EventHandler<string> OnExceptionMessage;
 
         public SensorOrientation(int index, SensorType sensorType) {
             // Apply AXES_OFFSET * rot
@@ -58,34 +59,33 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
 
         private void SensorOrientation_OnNewJSLData(object? sender, Tuple<int, JSL.JOY_SHOCK_STATE, JSL.JOY_SHOCK_STATE, JSL.IMU_STATE, JSL.IMU_STATE, float> e) {
-            if (e.Item1 == _index) {
-                _accelerometer = new Vector3(e.Item4.accelX, e.Item4.accelY, e.Item4.accelZ) * 10 /* 9.80665f*/;
-                _gyro = (new Vector3(e.Item4.gyroX, e.Item4.gyroY, e.Item4.gyroZ)).ConvertDegreesToRadians();
-                if (_vqf == null) {
-                    if (averageSampleTicks.Count < 1000) {
-                        averageSampleTicks.Add(e.Item6);
+            try {
+                if (e.Item1 == _index) {
+                    _accelerometer = new Vector3(e.Item4.accelX, e.Item4.accelY, e.Item4.accelZ) * 10 /* 9.80665f*/;
+                    _gyro = (new Vector3(e.Item4.gyroX, e.Item4.gyroY, e.Item4.gyroZ)).ConvertDegreesToRadians();
+                    if (_vqf == null) {
+                        if (averageSampleTicks.Count < 1000) {
+                            averageSampleTicks.Add(e.Item6);
+                        } else {
+                            _vqf = new VQFWrapper(averageSampleTicks.Average());
+                            averageSampleTicks.Clear();
+                        }
                     } else {
-                        _vqf = new VQFWrapper(averageSampleTicks.Average());
-                        averageSampleTicks.Clear();
+                        Update();
                     }
-                } else {
-                    Update();
                 }
+            } catch (Exception ex) {
+                OnExceptionMessage?.Invoke(this, ex.Message + ":" + ex.StackTrace);
             }
         }
 
         static void OnControllerEvent(int deviceId, JSL.JOY_SHOCK_STATE state, JSL.JOY_SHOCK_STATE state2, JSL.IMU_STATE imuState, JSL.IMU_STATE imuState2, float delta) {
-            OnNewJSLData?.Invoke(new object(), new Tuple<int, JOY_SHOCK_STATE, JOY_SHOCK_STATE, IMU_STATE, IMU_STATE, float>(deviceId, state, state2, imuState, imuState2, delta));
+            try {
+                OnNewJSLData?.Invoke(new object(), new Tuple<int, JOY_SHOCK_STATE, JOY_SHOCK_STATE, IMU_STATE, IMU_STATE, float>(deviceId, state, state2, imuState, imuState2, delta));
+            } catch (Exception ex) {
+            }
         }
-        //private JSL.IMU_STATE GetReleventMotionState() {
-        //    switch (_sensorType) {
-        //        case SensorType.Bluetooth:
-        //            return JSL.JslGetIMUState(_index);
-        //        case SensorType.ThreeDs:
-        //            return Forwarded3DSDataManager.DeviceMap.ElementAt(_index).Value;
-        //    }
-        //    return new JSL.IMU_STATE();
-        //}
+
         public enum SensorType {
             Bluetooth = 0,
             ThreeDs = 1,
@@ -94,64 +94,19 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         }
         // Update method to simulate gyroscope and accelerometer data fusion
         public async void Update() {
-            if (!disposed) {
-                switch (_sensorType) {
-                    case SensorType.Bluetooth:
-                        _vqf.Update(_gyro.ToVQFDoubleArray(), _accelerometer.ToVQFDoubleArray());
-                        var vfqData = _vqf.GetQuat6D();
-                        currentOrientation = new Quaternion((float)vfqData[1], (float)vfqData[2], (float)vfqData[3], (float)vfqData[0]);
-                        NewData?.Invoke(this, EventArgs.Empty);
-                        break;
+            try {
+                if (!disposed) {
+                    switch (_sensorType) {
+                        case SensorType.Bluetooth:
+                            _vqf.Update(_gyro.ToVQFDoubleArray(), _accelerometer.ToVQFDoubleArray());
+                            var vfqData = _vqf.GetQuat6D();
+                            currentOrientation = new Quaternion((float)vfqData[1], (float)vfqData[2], (float)vfqData[3], (float)vfqData[0]);
+                            NewData?.Invoke(this, EventArgs.Empty);
+                            break;
+                    }
                 }
-            }
-        }
-
-        // Get orientation from accelerometer data (pitch and roll)
-        private Quaternion GetOrientationFromAccelerometer(Vector3 accelData) {
-            // Normalize the accelerometer data (gravity vector)
-            accelData = Vector3.Normalize(accelData);
-
-            // Assuming gravity vector points along the Z-axis
-            float pitch = (float)Math.Atan2(accelData.Y, accelData.Z);
-            float roll = (float)Math.Atan2(-accelData.X, Math.Sqrt(accelData.Y * accelData.Y + accelData.Z * accelData.Z));
-
-            // Create a quaternion based on the pitch and roll (ignore yaw for now)
-            Quaternion orientation = Quaternion.CreateFromYawPitchRoll(0, pitch, roll);
-
-            return orientation;
-        }
-
-        public bool IsValid(Quaternion quaternion) {
-            bool isNaN = float.IsNaN(quaternion.X + quaternion.Y + quaternion.Z + quaternion.W);
-            bool isZero = quaternion.X == 0 && quaternion.Y == 0 && quaternion.Z == 0 && quaternion.W == 0;
-            return !(isNaN || isZero);
-        }
-
-        // Get delta rotation from gyroscope data
-        private Quaternion GetDeltaRotationFromGyroscope(Vector3 gyroData, float deltaTime) {
-            // Calculate the angle from the gyroscope angular velocity
-            float angle = gyroData.Length() * deltaTime;
-
-            if (angle > 0) {
-                // Normalize the gyro data to get the rotation axis
-                Vector3 axis = Vector3.Normalize(gyroData);
-
-                // Calculate quaternion from the axis-angle representation
-                float halfAngle = angle / 2.0f;
-                float sinHalfAngle = (float)Math.Sin(halfAngle);
-                float cosHalfAngle = (float)Math.Cos(halfAngle);
-
-                gyroYawRate += gyroData.Z * deltaTime;
-                yawRadians = gyroDriftCompensation * (yawRadians + gyroData.Z * deltaTime) + (1 - gyroDriftCompensation) * gyroYawRate;
-                if (yawRadians > Math.PI) {
-                    yawRadians -= (float)(2 * Math.PI);
-                } else if (yawRadians < -Math.PI) {
-                    yawRadians += (float)(2 * Math.PI);
-                }
-                yawDegrees = yawRadians.ConvertRadiansToDegrees();
-                return new Quaternion(axis.X * sinHalfAngle, axis.Y * sinHalfAngle, axis.Z * sinHalfAngle, cosHalfAngle);
-            } else {
-                return Quaternion.Identity;
+            } catch (Exception ex) {
+                OnExceptionMessage?.Invoke(this, ex.Message + ":" + ex.StackTrace);
             }
         }
 
