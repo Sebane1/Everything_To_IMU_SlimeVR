@@ -42,8 +42,8 @@ namespace Everything_To_IMU_SlimeVR
                 } catch (Exception ex)
                 {
                     string crashLog = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fatalcrash.log");
-                    File.WriteAllText(crashLog, "crashed");
-                    Process.Start("explorer.exe", ex.ToString());
+                    File.WriteAllText(crashLog, ex.ToString());
+                    Process.Start("explorer.exe", crashLog);
                 }
             }
         }
