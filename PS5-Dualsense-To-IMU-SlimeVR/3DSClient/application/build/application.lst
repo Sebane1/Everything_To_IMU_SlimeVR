@@ -470,43 +470,43 @@
 00122bd0 00000040 T __fixunsdfdi
 00122c10 00000048 T strrchr
 00122c58 T _fini
-00123284 r .LC2
-00123408 00000080 r dotab_stdout
-00123488 00000018 r grayScale
-001234a0 00000006 r colorCube
-001234a8 00000030 r colorTable
-001234f4 00000008 r morton_y.2
-001234fc 00000008 r morton_x.3
-00123504 00000008 r s_sleepWakeEvents.4
-0012350c R default_font_bin
-00123d0c 0000004d r _net_error_code_map
-00123d0c R default_font_bin_end
-00123d5c 00000030 r error_table
-00123d8c 00000080 r archive_devoptab
-00123e0c 00000101 R _ctype_
-00124064 00000022 r basefix.0
-001240e8 00000014 r fpinan.0
-001240fc 00000014 r fpi.1
-00124110 00000028 r tinytens
-00124138 00000100 R __hexdig
-00124324 00000010 r zeroes.0
-00124334 00000010 r blanks.1
-00124438 00000010 r zeroes.0
-00124448 00000010 r blanks.1
-00124458 0000006c R __action_table
-001244c4 0000006c R __state_table
-00124530 00000100 R __chclass
-00124630 0000000c r p05.0
-00124640 00000028 R __mprec_bigtens
-00124668 000000c8 R __mprec_tens
-00124730 000035dc r categories
-00127df8 00000010 r zeroes.0
-00127e08 00000010 r blanks.1
-00127e18 00000080 R dotab_stdnull
-00127e98 R __tdata_align
-00127e9c r __EH_FRAME_BEGIN__
-00127e9c R __exidx_end
-00127e9c R __exidx_start
+0012328c r .LC2
+00123410 00000080 r dotab_stdout
+00123490 00000018 r grayScale
+001234a8 00000006 r colorCube
+001234b0 00000030 r colorTable
+001234fc 00000008 r morton_y.2
+00123504 00000008 r morton_x.3
+0012350c 00000008 r s_sleepWakeEvents.4
+00123514 R default_font_bin
+00123d14 0000004d r _net_error_code_map
+00123d14 R default_font_bin_end
+00123d64 00000030 r error_table
+00123d94 00000080 r archive_devoptab
+00123e14 00000101 R _ctype_
+0012406c 00000022 r basefix.0
+001240f0 00000014 r fpinan.0
+00124104 00000014 r fpi.1
+00124118 00000028 r tinytens
+00124140 00000100 R __hexdig
+0012432c 00000010 r zeroes.0
+0012433c 00000010 r blanks.1
+00124440 00000010 r zeroes.0
+00124450 00000010 r blanks.1
+00124460 0000006c R __action_table
+001244cc 0000006c R __state_table
+00124538 00000100 R __chclass
+00124638 0000000c r p05.0
+00124648 00000028 R __mprec_bigtens
+00124670 000000c8 R __mprec_tens
+00124738 000035dc r categories
+00127e00 00000010 r zeroes.0
+00127e10 00000010 r blanks.1
+00127e20 00000080 R dotab_stdnull
+00127ea0 R __tdata_align
+00127ea4 r __EH_FRAME_BEGIN__
+00127ea4 R __exidx_end
+00127ea4 R __exidx_start
 00128000 00000001 d firstConsoleInit.0
 00128004 00000004 D currentConsole
 00128008 00000048 D defaultConsole
