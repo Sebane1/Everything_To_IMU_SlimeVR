@@ -303,8 +303,12 @@ namespace Everything_To_IMU_SlimeVR.Tracking
                     return HapticNodeBinding.RightShoulder;
                 case "LEFT_UPPER_ARM":
                     return HapticNodeBinding.LeftUpperArm;
-                case "RIGHT_LOWER_ARM":
+                case "RIGHT_UPPER_ARM":
                     return HapticNodeBinding.RightUpperArm;
+                case "LEFT_LOWER_ARM":
+                    return HapticNodeBinding.LeftForeArm;
+                case "RIGHT_LOWER_ARM":
+                    return HapticNodeBinding.RightForeArm;
                 case "RIGHT_HAND":
                     return HapticNodeBinding.RightHand;
                 case "LEFT_HAND":
