@@ -11,11 +11,14 @@ using System.Windows.Forms;
 using static Everything_To_IMU_SlimeVR.TrackerConfig;
 using SlimeImuProtocol.SlimeVR;
 
-namespace Everything_To_IMU_SlimeVR.Tracking {
-    public class UDPHapticDevice : IBodyTracker {
+namespace Everything_To_IMU_SlimeVR.Tracking
+{
+    public class UDPHapticDevice : IBodyTracker
+    {
         private HapticNodeBinding _hapticNodeBinding;
         private PacketBuilder _packetBuilder;
         private string _ipAddress;
+        private string _alias;
         private UdpClient _udpServer;
         private IPEndPoint _clientEndPoint;
         private bool isAlreadyVibrating;
@@ -23,16 +26,16 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         DateTime _hapticEndTime;
         private float _lastIntensity;
 
-        public UDPHapticDevice(string ipAddress) {
+        public UDPHapticDevice(string ipAddress, string alias)
+        {
             _packetBuilder = new PacketBuilder("");
             // Set up UDP server
             _ipAddress = ipAddress;
+            _alias = alias;
             _clientEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), 6969);
-            Task.Run(() => {
-                _udpServer = new UdpClient();
-                _udpServer.Connect(ipAddress, 6969);
-                Ready = true;
-            });
+            _udpServer = new UdpClient();
+            _udpServer.Connect(ipAddress, 6969);
+            Ready = true;
         }
 
         public int Id { get; set; }
@@ -53,25 +56,35 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
 
         public bool SupportsIMU => false;
 
-        public void DisableHaptics() {
+        public string Alias { get => _alias; set => _alias = value; }
+        public string IpAddress { get => _ipAddress; set => _ipAddress = value; }
+
+        public void DisableHaptics()
+        {
             var data = _packetBuilder.BuildHapticPacket(0, 0);
             _udpServer.Send(data, data.Length);
             _hapticEndTime = new DateTime();
         }
 
-        public void EngageHaptics(int duration, float intensity) {
+        public void EngageHaptics(int duration, float intensity)
+        {
             _hapticEndTime = DateTime.Now.AddMilliseconds(duration);
-            if (!isAlreadyVibrating || intensity != _lastIntensity) {
-                Task.Run(() => {
+            if (!isAlreadyVibrating || intensity != _lastIntensity)
+            {
+                Task.Run(() =>
+                {
                     var data = _packetBuilder.BuildHapticPacket(intensity, duration);
                     _udpServer.Send(data, data.Length);
                 });
                 _lastIntensity = intensity;
             }
-            if (!isAlreadyVibrating) {
+            if (!isAlreadyVibrating)
+            {
                 isAlreadyVibrating = true;
-                Task.Run(() => {
-                    while (DateTime.Now < _hapticEndTime) {
+                Task.Run(() =>
+                {
+                    while (DateTime.Now < _hapticEndTime)
+                    {
                         Thread.Sleep(10);
                     }
                     isAlreadyVibrating = false;
@@ -81,27 +94,33 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             }
         }
 
-        public Vector3 GetCalibration() {
+        public Vector3 GetCalibration()
+        {
             return new Vector3();
         }
 
-        public void HapticIntensityTest() {
-            for (byte i = 0; i < 255; i++) {
+        public void HapticIntensityTest()
+        {
+            for (byte i = 0; i < 255; i++)
+            {
                 EngageHaptics(50, i / 255f);
                 Thread.Sleep(45);
             }
         }
 
-        public void Identify() {
+        public void Identify()
+        {
             EngageHaptics(300, 1);
         }
 
-        public void Rediscover() {
+        public void Rediscover()
+        {
             MessageBox.Show(Debug);
         }
 
-        public override string ToString() {
-            return _ipAddress;
+        public override string ToString()
+        {
+            return !string.IsNullOrEmpty(_alias) ? _alias : _ipAddress;
         }
     }
 }
