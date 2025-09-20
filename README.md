@@ -6,6 +6,6 @@ This repository currently exists for fellow developers to help test, troubleshoo
 
 Video Demonstrations:
 
-https://www.youtube.com/playlist?list=PLSUFJs_C2T4JIZElIYnImLD4RfzOyHjxV
-
 https://www.youtube.com/watch?v=AtjMtfv4T8c
+
+https://www.youtube.com/playlist?list=PLSUFJs_C2T4JIZElIYnImLD4RfzOyHjxV
