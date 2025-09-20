@@ -6,10 +6,4 @@ This repository currently exists for fellow developers to help test, troubleshoo
 
 Video Demonstrations:
 https://www.youtube.com/playlist?list=PLSUFJs_C2T4JIZElIYnImLD4RfzOyHjxV
-
-https://github.com/user-attachments/assets/a89e2d11-5f15-434f-99fa-72ef49b22073
-
-https://github.com/user-attachments/assets/68953619-6e7f-4231-8bc0-3bd8e1faa90c
-
-https://github.com/user-attachments/assets/2ec02ced-40b6-41cb-a496-1c4416a2f169
-
+https://www.youtube.com/watch?v=AtjMtfv4T8c
