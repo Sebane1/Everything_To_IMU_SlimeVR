@@ -8,7 +8,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
-    <Version>0.0.2.0</Version>
+    <Version>0.0.2.2</Version>
     <PackageProjectUrl>https://github.com/Sebane1/Everything_To_IMU_SlimeVR</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Sebane1/Everything_To_IMU_SlimeVR</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -17,6 +17,7 @@
   <ItemGroup>
     <PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
     <PackageReference Include="LucHeart.CoreOSC" Version="1.5.1" />
+    <PackageReference Include="Melanchall.DryWetMidi" Version="8.0.2" />
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OVRSharp" Version="1.2.0" />

@@ -1,8 +1,14 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Numerics;
-namespace Everything_To_IMU_SlimeVR {
-    public class Configuration {
+namespace Everything_To_IMU_SlimeVR
+{
+    public class Configuration
+    {
+        private string _oscIpAddress = "127.0.0.1";
+        private string _portInput = "9001";
+        private List<int> _portOutputs = new List<int>();
+
         private List<TrackerConfig> _trackerConfigs = new List<TrackerConfig>();
         private List<TrackerConfig> _trackerConfig3ds = new List<TrackerConfig>();
         private Dictionary<string, TrackerConfig> _trackerConfigWiimote = new Dictionary<string, TrackerConfig>();
@@ -30,27 +36,47 @@ namespace Everything_To_IMU_SlimeVR {
         public byte WiiPollingRate { get => _wiiPollingRate; set => _wiiPollingRate = value; }
         public bool SimulatesThighs { get => _simulatesThighs; set => _simulatesThighs = value; }
         public bool AudioHapticsActive { get => _audioHapticsActive; set => _audioHapticsActive = value; }
+        public string OscIpAddress { get => _oscIpAddress; set => _oscIpAddress = value; }
+        public string PortInput { get => _portInput; set => _portInput = value; }
+        public List<int> PortOutputs { get => _portOutputs; set => _portOutputs = value; }
 
-        public void SaveConfig() {
+        public void SaveConfig()
+        {
             _lastConfigSave = DateTime.UtcNow;
             string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
             File.WriteAllText(savePath, JsonConvert.SerializeObject(this));
         }
-        public TimeSpan TimeSinceLastConfig() {
+        public TimeSpan TimeSinceLastConfig()
+        {
             return DateTime.UtcNow - _lastConfigSave;
         }
-        public static Configuration LoadConfig() {
+        public static Configuration LoadConfig()
+        {
             string openPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
-            if (File.Exists(openPath)) {
+            if (File.Exists(openPath))
+            {
                 Configuration values = null;
-                try {
+                try
+                {
                     values = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(openPath));
-                } catch {
+                } catch
+                {
                 }
                 Instance = values;
-                return Instance = (values == null ? new Configuration() : values);
-            } else {
-                return Instance = new Configuration();
+                return Instance = (values == null ? new Configuration()
+                {
+                    PortOutputs = new List<int>() {
+                        9002,
+                    }
+                } : values);
+            } else
+            {
+                return Instance = new Configuration()
+                {
+                    PortOutputs = new List<int>() {
+                        9002,
+                    }
+                };
             }
         }
     }

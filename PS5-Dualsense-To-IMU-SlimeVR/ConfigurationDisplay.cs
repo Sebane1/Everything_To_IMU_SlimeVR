@@ -16,6 +16,7 @@ namespace Everything_To_IMU_SlimeVR
         private bool _suppressCheckBoxEvent;
         string _lastErrorLog = "";
         private bool _legacyWiiClientDetected;
+        private MidiHapticsPlayer _player;
         private readonly ForwardedWiimoteManager _forwardedWiimoteManager;
         private readonly Forwarded3DSDataManager _forwarded3DSDataManager;
 
@@ -38,7 +39,17 @@ namespace Everything_To_IMU_SlimeVR
             _configuration.SwitchingSessions = false;
             falseThighSimulationCheckBox.Checked = _configuration.SimulatesThighs;
             audioHapticsActive.Checked = _configuration.AudioHapticsActive;
-            _configuration.SaveConfig();
+
+            oscOutputPorts.Items.Clear();
+            foreach (var port in _configuration.PortOutputs)
+            {
+                if (!oscOutputPorts.Items.Contains(port))
+                {
+                    oscOutputPorts.Items.Add(port);
+                }
+            }
+            oscIpAddressTextBox.Text = _configuration.OscIpAddress;
+            oscInputPortTextBox.Text = _configuration.PortInput;
         }
 
         private void _genericControllerTranslator_OnTrackerError(object? sender, string e)
@@ -449,6 +460,110 @@ namespace Everything_To_IMU_SlimeVR
         private void yawSourceLabel_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void midiButton_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "MIDI files (*.mid;*.midi)|*.mid;*.midi|All files (*.*)|*.*";
+                openFileDialog.Title = "Select a MIDI file";
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string midiPath = openFileDialog.FileName;
+
+                    // Create the player with your existing tracker collection
+                    _player = new MidiHapticsPlayer(GenericTrackerManager.TrackersUdpHapticDevice.Values);
+
+                    // Load and play in real time
+                    _player.Load(midiPath);
+                    _player.Play();
+
+                    //MessageBox.Show("Playing MIDI! Close this message to stop playback.", "Haptic MIDI Player");
+
+                    //// Stop when user closes the message box
+                    //player.Stop();
+                }
+            }
+        }
+
+        private void hapticValueButton_Click(object sender, EventArgs e)
+        {
+            HapticCalibrator hapticCalibrator = new HapticCalibrator();
+            hapticCalibrator.BodyTracker = _currentTracker;
+            if (hapticCalibrator.ShowDialog() == DialogResult.OK)
+            {
+
+            }
+        }
+
+        private void textBox1_TextChanged_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void oscSettings_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBox1_TextChanged_2(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label5_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void addOutputPortButton_Click(object sender, EventArgs e)
+        {
+            oscOutputPorts.Items.Add(oscPortOutputTextBox.Text);
+            Configuration.Instance.PortOutputs.Add(int.Parse(oscPortOutputTextBox.Text));
+            Configuration.Instance.SaveConfig();
+            oscPortOutputTextBox.Text = "";
+        }
+
+        private void removePortOutputButton_Click(object sender, EventArgs e)
+        {
+            if (oscOutputPorts.SelectedIndex > -1)
+            {
+                int portToRemove = (int)oscOutputPorts.Items[oscOutputPorts.SelectedIndex];
+                oscOutputPorts.Items.RemoveAt(oscOutputPorts.SelectedIndex);
+                for (int i = 0; i < Configuration.Instance.PortOutputs.Count; i++)
+                {
+                    var port = Configuration.Instance.PortOutputs[i];
+                    if (port == portToRemove)
+                    {
+                        Configuration.Instance.PortOutputs.RemoveAt(i);
+                    }
+                }
+                Configuration.Instance.SaveConfig();
+            }
+        }
+
+        private void oscIpAddressTextBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void oscPortTextBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void oscIpAddressTextBox_Leave(object sender, EventArgs e)
+        {
+            Configuration.Instance.OscIpAddress = oscIpAddressTextBox.Text;
+            Configuration.Instance.SaveConfig();
+        }
+
+        private void oscInputPortTextBox_Leave(object sender, EventArgs e)
+        {
+            Configuration.Instance.PortInput = oscInputPortTextBox.Text;
+            Configuration.Instance.SaveConfig();
         }
     }
 }

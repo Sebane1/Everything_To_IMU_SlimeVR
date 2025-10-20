@@ -22,13 +22,15 @@
         ///  Required method for Designer support - do not modify
         ///  the contents of this method with the code editor.
         /// </summary>
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             components = new System.ComponentModel.Container();
             refreshTimer = new System.Windows.Forms.Timer(components);
             controllerDeviceList = new ListBox();
             falseThighSimulationCheckBox = new CheckBox();
             tabOptions = new TabControl();
-            settingsPage = new TabPage();
+            trackerSettingsPage = new TabPage();
+            hapticValueTestButton = new Button();
             intensityTestButton = new Button();
             yawSourceDisclaimer2 = new Label();
             yawSourceDisclaimer1 = new Label();
@@ -45,6 +47,17 @@
             debugText = new TextBox();
             errorLog = new TabPage();
             errorLogText = new TextBox();
+            oscSettings = new TabPage();
+            removePortOutputButton = new Button();
+            addOutputPortButton = new Button();
+            label6 = new Label();
+            oscPortOutputTextBox = new TextBox();
+            label5 = new Label();
+            oscOutputPorts = new ListBox();
+            oscPortIn = new Label();
+            oscIpLabel = new Label();
+            oscInputPortTextBox = new TextBox();
+            oscIpAddressTextBox = new TextBox();
             trackerCalibrationButton = new Button();
             donateButton = new Button();
             threeDsDeviceList = new ListBox();
@@ -68,10 +81,12 @@
             tabPage1 = new TabPage();
             tabPage2 = new TabPage();
             audioHapticsActive = new CheckBox();
+            midiButtonTest = new Button();
             tabOptions.SuspendLayout();
-            settingsPage.SuspendLayout();
+            trackerSettingsPage.SuspendLayout();
             debugPage.SuspendLayout();
             errorLog.SuspendLayout();
+            oscSettings.SuspendLayout();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
             tabPage2.SuspendLayout();
@@ -107,41 +122,54 @@
             // 
             // tabOptions
             // 
-            tabOptions.Controls.Add(settingsPage);
+            tabOptions.Controls.Add(trackerSettingsPage);
             tabOptions.Controls.Add(debugPage);
             tabOptions.Controls.Add(errorLog);
+            tabOptions.Controls.Add(oscSettings);
             tabOptions.Location = new Point(231, 2);
             tabOptions.Name = "tabOptions";
             tabOptions.SelectedIndex = 0;
             tabOptions.Size = new Size(341, 298);
             tabOptions.TabIndex = 2;
             // 
-            // settingsPage
+            // trackerSettingsPage
             // 
-            settingsPage.Controls.Add(intensityTestButton);
-            settingsPage.Controls.Add(yawSourceDisclaimer2);
-            settingsPage.Controls.Add(yawSourceDisclaimer1);
-            settingsPage.Controls.Add(hapticJointAssignmentLabel);
-            settingsPage.Controls.Add(extensionSourceLabel);
-            settingsPage.Controls.Add(yawSourceLabel);
-            settingsPage.Controls.Add(extensionYawForSimulatedTracker);
-            settingsPage.Controls.Add(hapticJointAssignment);
-            settingsPage.Controls.Add(identifyButton);
-            settingsPage.Controls.Add(yawForSimulatedTracker);
-            settingsPage.Controls.Add(rediscoverTrackerButton);
-            settingsPage.Controls.Add(trackerConfigLabel);
-            settingsPage.Location = new Point(4, 24);
-            settingsPage.Name = "settingsPage";
-            settingsPage.Padding = new Padding(3);
-            settingsPage.Size = new Size(333, 270);
-            settingsPage.TabIndex = 0;
-            settingsPage.Text = "Settings";
-            settingsPage.UseVisualStyleBackColor = true;
-            settingsPage.Click += tabPage1_Click;
+            trackerSettingsPage.Controls.Add(hapticValueTestButton);
+            trackerSettingsPage.Controls.Add(intensityTestButton);
+            trackerSettingsPage.Controls.Add(yawSourceDisclaimer2);
+            trackerSettingsPage.Controls.Add(yawSourceDisclaimer1);
+            trackerSettingsPage.Controls.Add(hapticJointAssignmentLabel);
+            trackerSettingsPage.Controls.Add(extensionSourceLabel);
+            trackerSettingsPage.Controls.Add(yawSourceLabel);
+            trackerSettingsPage.Controls.Add(extensionYawForSimulatedTracker);
+            trackerSettingsPage.Controls.Add(hapticJointAssignment);
+            trackerSettingsPage.Controls.Add(identifyButton);
+            trackerSettingsPage.Controls.Add(yawForSimulatedTracker);
+            trackerSettingsPage.Controls.Add(rediscoverTrackerButton);
+            trackerSettingsPage.Controls.Add(trackerConfigLabel);
+            trackerSettingsPage.Location = new Point(4, 24);
+            trackerSettingsPage.Name = "trackerSettingsPage";
+            trackerSettingsPage.Padding = new Padding(3);
+            trackerSettingsPage.Size = new Size(333, 270);
+            trackerSettingsPage.TabIndex = 0;
+            trackerSettingsPage.Text = "Tracker Settings";
+            trackerSettingsPage.UseVisualStyleBackColor = true;
+            trackerSettingsPage.Click += tabPage1_Click;
+            // 
+            // hapticValueTestButton
+            // 
+            hapticValueTestButton.Location = new Point(5, 244);
+            hapticValueTestButton.Name = "hapticValueTestButton";
+            hapticValueTestButton.RightToLeft = RightToLeft.Yes;
+            hapticValueTestButton.Size = new Size(119, 23);
+            hapticValueTestButton.TabIndex = 15;
+            hapticValueTestButton.Text = "Haptic Value Tester";
+            hapticValueTestButton.UseVisualStyleBackColor = true;
+            hapticValueTestButton.Click += hapticValueButton_Click;
             // 
             // intensityTestButton
             // 
-            intensityTestButton.Location = new Point(173, 243);
+            intensityTestButton.Location = new Point(173, 215);
             intensityTestButton.Name = "intensityTestButton";
             intensityTestButton.Size = new Size(154, 23);
             intensityTestButton.TabIndex = 14;
@@ -153,7 +181,7 @@
             // yawSourceDisclaimer2
             // 
             yawSourceDisclaimer2.AutoSize = true;
-            yawSourceDisclaimer2.Location = new Point(5, 58);
+            yawSourceDisclaimer2.Location = new Point(5, 41);
             yawSourceDisclaimer2.Name = "yawSourceDisclaimer2";
             yawSourceDisclaimer2.Size = new Size(322, 15);
             yawSourceDisclaimer2.TabIndex = 13;
@@ -163,7 +191,7 @@
             // yawSourceDisclaimer1
             // 
             yawSourceDisclaimer1.AutoSize = true;
-            yawSourceDisclaimer1.Location = new Point(5, 39);
+            yawSourceDisclaimer1.Location = new Point(5, 22);
             yawSourceDisclaimer1.Name = "yawSourceDisclaimer1";
             yawSourceDisclaimer1.Size = new Size(321, 15);
             yawSourceDisclaimer1.TabIndex = 12;
@@ -173,7 +201,7 @@
             // hapticJointAssignmentLabel
             // 
             hapticJointAssignmentLabel.AutoSize = true;
-            hapticJointAssignmentLabel.Location = new Point(6, 198);
+            hapticJointAssignmentLabel.Location = new Point(6, 169);
             hapticJointAssignmentLabel.Name = "hapticJointAssignmentLabel";
             hapticJointAssignmentLabel.Size = new Size(267, 15);
             hapticJointAssignmentLabel.TabIndex = 11;
@@ -184,7 +212,7 @@
             // extensionSourceLabel
             // 
             extensionSourceLabel.AutoSize = true;
-            extensionSourceLabel.Location = new Point(6, 143);
+            extensionSourceLabel.Location = new Point(6, 114);
             extensionSourceLabel.Name = "extensionSourceLabel";
             extensionSourceLabel.Size = new Size(222, 15);
             extensionSourceLabel.TabIndex = 10;
@@ -194,7 +222,7 @@
             // yawSourceLabel
             // 
             yawSourceLabel.AutoSize = true;
-            yawSourceLabel.Location = new Point(6, 90);
+            yawSourceLabel.Location = new Point(6, 61);
             yawSourceLabel.Name = "yawSourceLabel";
             yawSourceLabel.Size = new Size(111, 15);
             yawSourceLabel.TabIndex = 9;
@@ -206,7 +234,7 @@
             // 
             extensionYawForSimulatedTracker.FormattingEnabled = true;
             extensionYawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
-            extensionYawForSimulatedTracker.Location = new Point(6, 161);
+            extensionYawForSimulatedTracker.Location = new Point(6, 132);
             extensionYawForSimulatedTracker.Name = "extensionYawForSimulatedTracker";
             extensionYawForSimulatedTracker.Size = new Size(323, 23);
             extensionYawForSimulatedTracker.TabIndex = 8;
@@ -217,7 +245,7 @@
             // 
             hapticJointAssignment.FormattingEnabled = true;
             hapticJointAssignment.Items.AddRange(new object[] { "Right Thigh Haptics", "Right Calf Haptics", "Left Thigh Haptics", "Left Calf Haptics", "Right Upper Arm Haptics", "Right Fore Arm Haptics", "Left Upper Arm Haptics", "Left Fore Arm Haptics", "Chest Haptics", "Right Foot Haptics", "Left Foot Haptics", "Right Hand Haptics", "Left Hand Haptics", "Right Shoulder Haptics", "Left Shoulder Haptics", "Head Haptics", "Hips Haptics", "Chest Front Haptics", "Hips Front Haptics", "Chest Back Haptics", "Hips Back Haptics", "Chest And Hips Haptics", "Chest And Hips Front Haptics", "Chest And Hips Back Haptics" });
-            hapticJointAssignment.Location = new Point(6, 216);
+            hapticJointAssignment.Location = new Point(6, 187);
             hapticJointAssignment.Name = "hapticJointAssignment";
             hapticJointAssignment.Size = new Size(323, 23);
             hapticJointAssignment.TabIndex = 7;
@@ -226,7 +254,7 @@
             // 
             // identifyButton
             // 
-            identifyButton.Location = new Point(88, 243);
+            identifyButton.Location = new Point(88, 215);
             identifyButton.Name = "identifyButton";
             identifyButton.Size = new Size(79, 23);
             identifyButton.TabIndex = 6;
@@ -239,7 +267,7 @@
             // 
             yawForSimulatedTracker.FormattingEnabled = true;
             yawForSimulatedTracker.Items.AddRange(new object[] { "HMD Yaw (No Drift)", "Waist Yaw (Waist Tracker Drift)", "Chest Tracker Yaw (Chest Tracker Drift)", "Left Ankle Tracker Yaw (Ankle Tracker Drift)", "Right Ankle Tracker Yaw (Ankle Tracker Drift)", "Device Tracker Yaw (Device Drift)" });
-            yawForSimulatedTracker.Location = new Point(6, 108);
+            yawForSimulatedTracker.Location = new Point(6, 79);
             yawForSimulatedTracker.Name = "yawForSimulatedTracker";
             yawForSimulatedTracker.Size = new Size(323, 23);
             yawForSimulatedTracker.TabIndex = 5;
@@ -248,7 +276,7 @@
             // 
             // rediscoverTrackerButton
             // 
-            rediscoverTrackerButton.Location = new Point(6, 243);
+            rediscoverTrackerButton.Location = new Point(6, 215);
             rediscoverTrackerButton.Name = "rediscoverTrackerButton";
             rediscoverTrackerButton.RightToLeft = RightToLeft.Yes;
             rediscoverTrackerButton.Size = new Size(76, 23);
@@ -303,6 +331,120 @@
             errorLogText.Name = "errorLogText";
             errorLogText.Size = new Size(323, 264);
             errorLogText.TabIndex = 0;
+            // 
+            // oscSettings
+            // 
+            oscSettings.Controls.Add(removePortOutputButton);
+            oscSettings.Controls.Add(addOutputPortButton);
+            oscSettings.Controls.Add(label6);
+            oscSettings.Controls.Add(oscPortOutputTextBox);
+            oscSettings.Controls.Add(label5);
+            oscSettings.Controls.Add(oscOutputPorts);
+            oscSettings.Controls.Add(oscPortIn);
+            oscSettings.Controls.Add(oscIpLabel);
+            oscSettings.Controls.Add(oscInputPortTextBox);
+            oscSettings.Controls.Add(oscIpAddressTextBox);
+            oscSettings.Location = new Point(4, 24);
+            oscSettings.Name = "oscSettings";
+            oscSettings.Size = new Size(333, 270);
+            oscSettings.TabIndex = 3;
+            oscSettings.Text = "OSC Settings";
+            oscSettings.UseVisualStyleBackColor = true;
+            oscSettings.Click += oscSettings_Click;
+            // 
+            // removePortOutputButton
+            // 
+            removePortOutputButton.Anchor = AnchorStyles.Bottom;
+            removePortOutputButton.Location = new Point(171, 243);
+            removePortOutputButton.Name = "removePortOutputButton";
+            removePortOutputButton.Size = new Size(157, 24);
+            removePortOutputButton.TabIndex = 25;
+            removePortOutputButton.Text = "Remove Port Output";
+            removePortOutputButton.UseVisualStyleBackColor = true;
+            removePortOutputButton.Click += removePortOutputButton_Click;
+            // 
+            // addOutputPortButton
+            // 
+            addOutputPortButton.Anchor = AnchorStyles.Bottom;
+            addOutputPortButton.Location = new Point(7, 243);
+            addOutputPortButton.Name = "addOutputPortButton";
+            addOutputPortButton.Size = new Size(157, 24);
+            addOutputPortButton.TabIndex = 24;
+            addOutputPortButton.Text = "Add Port Output";
+            addOutputPortButton.UseVisualStyleBackColor = true;
+            addOutputPortButton.Click += addOutputPortButton_Click;
+            // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Location = new Point(6, 219);
+            label6.Name = "label6";
+            label6.Size = new Size(96, 15);
+            label6.TabIndex = 7;
+            label6.Text = "OSC Port Output";
+            // 
+            // oscPortOutputTextBox
+            // 
+            oscPortOutputTextBox.Location = new Point(108, 216);
+            oscPortOutputTextBox.Name = "oscPortOutputTextBox";
+            oscPortOutputTextBox.Size = new Size(220, 23);
+            oscPortOutputTextBox.TabIndex = 6;
+            oscPortOutputTextBox.TextChanged += textBox1_TextChanged_2;
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(5, 80);
+            label5.Name = "label5";
+            label5.Size = new Size(101, 15);
+            label5.TabIndex = 5;
+            label5.Text = "OSC Port Outputs";
+            label5.Click += label5_Click;
+            // 
+            // oscOutputPorts
+            // 
+            oscOutputPorts.FormattingEnabled = true;
+            oscOutputPorts.ItemHeight = 15;
+            oscOutputPorts.Location = new Point(5, 101);
+            oscOutputPorts.Name = "oscOutputPorts";
+            oscOutputPorts.Size = new Size(323, 109);
+            oscOutputPorts.TabIndex = 4;
+            // 
+            // oscPortIn
+            // 
+            oscPortIn.AutoSize = true;
+            oscPortIn.Location = new Point(5, 41);
+            oscPortIn.Name = "oscPortIn";
+            oscPortIn.Size = new Size(86, 15);
+            oscPortIn.TabIndex = 3;
+            oscPortIn.Text = "OSC Port Input";
+            // 
+            // oscIpLabel
+            // 
+            oscIpLabel.AutoSize = true;
+            oscIpLabel.Location = new Point(6, 12);
+            oscIpLabel.Name = "oscIpLabel";
+            oscIpLabel.Size = new Size(88, 15);
+            oscIpLabel.TabIndex = 2;
+            oscIpLabel.Text = "OSC IP Address";
+            // 
+            // oscInputPortTextBox
+            // 
+            oscInputPortTextBox.Location = new Point(108, 38);
+            oscInputPortTextBox.Name = "oscInputPortTextBox";
+            oscInputPortTextBox.Size = new Size(220, 23);
+            oscInputPortTextBox.TabIndex = 1;
+            oscInputPortTextBox.Text = "9001";
+            oscInputPortTextBox.Leave += oscInputPortTextBox_Leave;
+            // 
+            // oscIpAddressTextBox
+            // 
+            oscIpAddressTextBox.Location = new Point(108, 9);
+            oscIpAddressTextBox.Name = "oscIpAddressTextBox";
+            oscIpAddressTextBox.Size = new Size(220, 23);
+            oscIpAddressTextBox.TabIndex = 0;
+            oscIpAddressTextBox.Text = "127.0.0.1";
+            oscIpAddressTextBox.Leave += oscIpAddressTextBox_Leave;
             // 
             // trackerCalibrationButton
             // 
@@ -426,9 +568,9 @@
             // testHaptics
             // 
             testHaptics.Anchor = AnchorStyles.Bottom;
-            testHaptics.Location = new Point(408, 301);
+            testHaptics.Location = new Point(464, 301);
             testHaptics.Name = "testHaptics";
-            testHaptics.Size = new Size(155, 24);
+            testHaptics.Size = new Size(99, 24);
             testHaptics.TabIndex = 18;
             testHaptics.Text = "Test Haptics";
             testHaptics.UseVisualStyleBackColor = true;
@@ -525,17 +667,29 @@
             audioHapticsActive.CheckState = CheckState.Checked;
             audioHapticsActive.Location = new Point(238, 304);
             audioHapticsActive.Name = "audioHapticsActive";
-            audioHapticsActive.Size = new Size(137, 19);
+            audioHapticsActive.Size = new Size(101, 19);
             audioHapticsActive.TabIndex = 22;
-            audioHapticsActive.Text = "Audio Haptics Active";
+            audioHapticsActive.Text = "Audio Haptics";
             audioHapticsActive.UseVisualStyleBackColor = true;
             audioHapticsActive.CheckedChanged += audioHapticsActive_CheckedChanged;
+            // 
+            // midiButtonTest
+            // 
+            midiButtonTest.Anchor = AnchorStyles.Bottom;
+            midiButtonTest.Location = new Point(359, 301);
+            midiButtonTest.Name = "midiButtonTest";
+            midiButtonTest.Size = new Size(99, 24);
+            midiButtonTest.TabIndex = 23;
+            midiButtonTest.Text = "Test Midi";
+            midiButtonTest.UseVisualStyleBackColor = true;
+            midiButtonTest.Click += midiButton_Click;
             // 
             // ConfigurationDisplay
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
             ClientSize = new Size(566, 355);
+            Controls.Add(midiButtonTest);
             Controls.Add(audioHapticsActive);
             Controls.Add(tabControl1);
             Controls.Add(label10);
@@ -552,12 +706,14 @@
             Text = "Everything To IMU And Haptics";
             Load += ConfigurationDisplay_Load;
             tabOptions.ResumeLayout(false);
-            settingsPage.ResumeLayout(false);
-            settingsPage.PerformLayout();
+            trackerSettingsPage.ResumeLayout(false);
+            trackerSettingsPage.PerformLayout();
             debugPage.ResumeLayout(false);
             debugPage.PerformLayout();
             errorLog.ResumeLayout(false);
             errorLog.PerformLayout();
+            oscSettings.ResumeLayout(false);
+            oscSettings.PerformLayout();
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
             tabPage1.PerformLayout();
@@ -572,7 +728,7 @@
         private ListBox controllerDeviceList;
         private CheckBox falseThighSimulationCheckBox;
         private TabControl tabOptions;
-        private TabPage settingsPage;
+        private TabPage trackerSettingsPage;
         private TabPage debugPage;
         private TextBox debugText;
         private Label trackerConfigLabel;
@@ -617,5 +773,18 @@
         private TabPage tabPage2;
         private Button intensityTestButton;
         private CheckBox audioHapticsActive;
+        private Button midiButtonTest;
+        private Button hapticValueTestButton;
+        private TabPage oscSettings;
+        private Label oscIpLabel;
+        private TextBox oscInputPortTextBox;
+        private TextBox oscIpAddressTextBox;
+        private Label oscPortIn;
+        private Label label5;
+        private ListBox oscOutputPorts;
+        private TextBox oscPortOutputTextBox;
+        private Label label6;
+        private Button addOutputPortButton;
+        private Button removePortOutputButton;
     }
 }
