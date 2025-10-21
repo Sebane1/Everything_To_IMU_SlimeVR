@@ -52,17 +52,20 @@ namespace Everything_To_IMU_SlimeVR.Osc
                 _cancelTokenSource.Cancel();
                 _cancelTokenSource = new CancellationTokenSource();
             }
+            if (_oscClient != null)
+            {
+                _oscClient.Dispose();
+            }
             _portToUdpClientDictionary.Clear();
             var port = int.Parse(Configuration.Instance.PortInput);
-            if (Configuration.Instance.PortOutputs.Contains(port))
+            if (!Configuration.Instance.PortOutputs.Contains(port))
             {
-                port = 9999;
+                _oscClient = new UdpClient(port);
+                Task.Run(() =>
+                {
+                    _oscReceiveTask = OscReceiveTask(_cancelTokenSource.Token);
+                });
             }
-            _oscClient = new UdpClient(port);
-            Task.Run(() =>
-            {
-                _oscReceiveTask = OscReceiveTask(_cancelTokenSource.Token);
-            });
         }
 
         private static bool IsBundle(ReadOnlySpan<byte> buffer)
@@ -90,7 +93,7 @@ namespace Everything_To_IMU_SlimeVR.Osc
         }
         private async Task OscReceiveTask(CancellationToken cancelToken = default)
         {
-            while (cancelToken.IsCancellationRequested)
+            while (!cancelToken.IsCancellationRequested)
             {
                 try
                 {

@@ -222,6 +222,10 @@ namespace Everything_To_IMU_SlimeVR.Tracking
             OnTrackerError.Invoke(sender, e);
         }
 
+        public void RefreshOscPort()
+        {
+            _oscHandler.RefreshOSCPort();
+        }
         public void AddRemoteHapticDevice(string ip, string alias)
         {
             // Track whether or not we've seen this controller before this session.

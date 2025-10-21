@@ -472,18 +472,9 @@ namespace Everything_To_IMU_SlimeVR
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     string midiPath = openFileDialog.FileName;
-
-                    // Create the player with your existing tracker collection
                     _player = new MidiHapticsPlayer(GenericTrackerManager.TrackersUdpHapticDevice.Values);
-
-                    // Load and play in real time
                     _player.Load(midiPath);
                     _player.Play();
-
-                    //MessageBox.Show("Playing MIDI! Close this message to stop playback.", "Haptic MIDI Player");
-
-                    //// Stop when user closes the message box
-                    //player.Stop();
                 }
             }
         }
@@ -520,9 +511,21 @@ namespace Everything_To_IMU_SlimeVR
 
         private void addOutputPortButton_Click(object sender, EventArgs e)
         {
-            oscOutputPorts.Items.Add(oscPortOutputTextBox.Text);
-            Configuration.Instance.PortOutputs.Add(int.Parse(oscPortOutputTextBox.Text));
-            Configuration.Instance.SaveConfig();
+            if (!oscPortOutputTextBox.Text.Contains("9000"))
+            {
+                oscOutputPorts.Items.Add(oscPortOutputTextBox.Text.Trim());
+                if (int.TryParse(oscPortOutputTextBox.Text.Trim(), out var result))
+                {
+                    Configuration.Instance.PortOutputs.Add(result);
+                    Configuration.Instance.SaveConfig();
+                } else
+                {
+                    MessageBox.Show("Must be a valid number!");
+                }
+            } else
+            {
+                MessageBox.Show("Port 9000 is reserved for senders that send to VRChat. Everything to IMU only receives VRChat data!");
+            }
             oscPortOutputTextBox.Text = "";
         }
 
@@ -530,7 +533,7 @@ namespace Everything_To_IMU_SlimeVR
         {
             if (oscOutputPorts.SelectedIndex > -1)
             {
-                int portToRemove = (int)oscOutputPorts.Items[oscOutputPorts.SelectedIndex];
+                int portToRemove = int.Parse(oscOutputPorts.Items[oscOutputPorts.SelectedIndex].ToString());
                 oscOutputPorts.Items.RemoveAt(oscOutputPorts.SelectedIndex);
                 for (int i = 0; i < Configuration.Instance.PortOutputs.Count; i++)
                 {
@@ -544,26 +547,18 @@ namespace Everything_To_IMU_SlimeVR
             }
         }
 
-        private void oscIpAddressTextBox_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void oscPortTextBox_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void oscIpAddressTextBox_Leave(object sender, EventArgs e)
         {
             Configuration.Instance.OscIpAddress = oscIpAddressTextBox.Text;
             Configuration.Instance.SaveConfig();
-        }
+            _genericControllerTranslator.RefreshOscPort();
+         }
 
         private void oscInputPortTextBox_Leave(object sender, EventArgs e)
         {
             Configuration.Instance.PortInput = oscInputPortTextBox.Text;
             Configuration.Instance.SaveConfig();
+            _genericControllerTranslator.RefreshOscPort();
         }
     }
 }
