@@ -1,13 +1,7 @@
 ﻿using Everything_To_IMU_SlimeVR.Tracking;
-using System;
-using System.Collections.Generic;
+using Newtonsoft.Json;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Runtime.Serialization;
 
 namespace Everything_To_IMU_SlimeVR
 {
@@ -20,6 +14,7 @@ namespace Everything_To_IMU_SlimeVR
         IBodyTracker bodyTracker;
         private float intensity;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IBodyTracker BodyTracker { get => bodyTracker; set => bodyTracker = value; }
 
         private void HapticCalibrator_Load(object sender, EventArgs e)

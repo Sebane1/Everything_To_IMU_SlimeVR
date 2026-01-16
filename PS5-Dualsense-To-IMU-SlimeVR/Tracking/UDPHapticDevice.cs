@@ -62,7 +62,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking
         public void DisableHaptics()
         {
             var data = _packetBuilder.BuildHapticPacket(0, 0);
-            _udpServer.Send(data, data.Length);
+            _udpServer.SendAsync(data);
             _hapticEndTime = new DateTime();
         }
 
@@ -74,7 +74,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking
                 Task.Run(() =>
                 {
                     var data = _packetBuilder.BuildHapticPacket(intensity, duration);
-                    _udpServer.Send(data, data.Length);
+                    _udpServer.SendAsync(data);
                 });
                 _lastIntensity = intensity;
             }
@@ -89,7 +89,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking
                     }
                     isAlreadyVibrating = false;
                     var data = _packetBuilder.BuildHapticPacket(0, 0);
-                    _udpServer.Send(data, data.Length);
+                    _udpServer.SendAsync(data);
                 });
             }
         }

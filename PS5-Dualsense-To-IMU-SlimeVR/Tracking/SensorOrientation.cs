@@ -61,7 +61,7 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         private void SensorOrientation_OnNewJSLData(object? sender, Tuple<int, JSL.JOY_SHOCK_STATE, JSL.JOY_SHOCK_STATE, JSL.IMU_STATE, JSL.IMU_STATE, float> e) {
             try {
                 if (e.Item1 == _index) {
-                    _accelerometer = new Vector3(e.Item4.accelX, e.Item4.accelY, e.Item4.accelZ) * 10 /* 9.80665f*/;
+                    _accelerometer = new Vector3(e.Item4.accelX, e.Item4.accelY, e.Item4.accelZ) * 10;
                     _gyro = (new Vector3(e.Item4.gyroX, e.Item4.gyroY, e.Item4.gyroZ)).ConvertDegreesToRadians();
                     if (_vqf == null) {
                         if (averageSampleTicks.Count < 1000) {
