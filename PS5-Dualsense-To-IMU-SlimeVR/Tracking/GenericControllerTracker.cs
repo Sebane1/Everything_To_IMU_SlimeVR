@@ -1,10 +1,13 @@
 ﻿using SlimeImuProtocol.SlimeVR;
+using SlimeImuProtocol.Utility;
 using System.Diagnostics;
 using System.Numerics;
 using static Everything_To_IMU_SlimeVR.TrackerConfig;
 
-namespace Everything_To_IMU_SlimeVR.Tracking {
-    public class GenericControllerTracker : IDisposable, IBodyTracker {
+namespace Everything_To_IMU_SlimeVR.Tracking
+{
+    public class GenericControllerTracker : IDisposable, IBodyTracker
+    {
         private string _debug;
         private int _index;
         private int _id;
@@ -42,13 +45,22 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
         public event EventHandler<string> OnTrackerError;
         Stopwatch holdTimer = new Stopwatch();
         private DateTime _hapticEndTime;
+        private bool waitingForButton1Release;
+        private bool waitingForButton2Release;
+        private bool waitingForButton3Release;
+        private bool waitingForButton4Release;
+        private bool waitingForButton5Release;
 
-        public GenericControllerTracker(int index, Color colour) {
+        public GenericControllerTracker(int index, Color colour)
+        {
             Initialize(index, colour);
         }
-        public async void Initialize(int index, Color colour) {
-            Task.Run(async () => {
-                try {
+        public async void Initialize(int index, Color colour)
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
                     _index = index;
                     _id = index + 1;
                     var rememberedColour = colour;
@@ -65,41 +77,54 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                     Recalibrate();
                     _sensorOrientation.OnExceptionMessage += _sensorOrientation_OnExceptionMessage;
                     _ready = true;
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     OnTrackerError?.Invoke(this, e.Message);
                 }
             });
         }
 
-        private void _sensorOrientation_OnExceptionMessage(object? sender, string e) {
+        private void _sensorOrientation_OnExceptionMessage(object? sender, string e)
+        {
             OnTrackerError?.Invoke(sender, e);
         }
 
-        public bool GetGlobalState(int code) {
+        public bool GetGlobalState(int code)
+        {
             int connections = GenericTrackerManager.ControllerCount;
-            for (int i = 0; i < connections; i++) {
+            for (int i = 0; i < connections; i++)
+            {
                 var buttons = JSL.JslGetSimpleState(i).buttons;
-                if ((buttons & code) != 0) {
+                if ((buttons & code) != 0)
+                {
                     return true;
                 }
             }
             return false;
         }
-        public bool GetLocalState(int code) {
+        public bool GetLocalState(int code)
+        {
             int connections = GenericTrackerManager.ControllerCount;
             var buttons = JSL.JslGetSimpleState(_index).buttons;
-            if ((buttons & code) != 0) {
+            if ((buttons & code) != 0)
+            {
                 return true;
             }
             return false;
         }
 
-        public async Task<bool> Update() {
-            if (_ready) {
-                _ = Task.Run(async () => {
-                    try {
+        public async Task<bool> Update()
+        {
+            if (_ready)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
                         _rotation = Quaternion.Normalize(_sensorOrientation.CurrentOrientation);
-                        if (GenericTrackerManager.DebugOpen || _yawReferenceTypeValue != RotationReferenceType.TrustDeviceYaw) {
+                        if (GenericTrackerManager.DebugOpen || _yawReferenceTypeValue != RotationReferenceType.TrustDeviceYaw)
+                        {
                             var trackerRotation = OpenVRReader.GetTrackerRotation(YawReferenceTypeValue);
                             _trackerEuler = trackerRotation.GetYawFromQuaternion();
                             _lastEulerPositon = -_trackerEuler;
@@ -108,12 +133,16 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             _acceleration = _sensorOrientation.Accelerometer;
                         }
                         await udpHandler.SetSensorAcceleration(new Vector3(_sensorOrientation.Accelerometer.X, _sensorOrientation.Accelerometer.Y, _sensorOrientation.Accelerometer.Z) / 10, 0);
-                        if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw) {
+                        if (_yawReferenceTypeValue == RotationReferenceType.TrustDeviceYaw)
+                        {
                             await udpHandler.SetSensorRotation(_rotation, 0);
-                        } else {
+                        }
+                        else
+                        {
                             await udpHandler.SetSensorRotation(new Vector3(_euler.X, _euler.Y, _lastEulerPositon).ToQuaternion(), 0);
                         }
-                        if (GenericTrackerManager.DebugOpen) {
+                        if (GenericTrackerManager.DebugOpen)
+                        {
                             _debug =
                             $"Device Id: {macSpoof}\r\n" +
                             $"Euler Rotation:\r\n" +
@@ -125,59 +154,145 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
                             $"Yaw Reference Rotation:\r\n" +
                             $"Y:{_trackerEuler}\r\n";
                         }
-                        if (GetLocalState(0x20000)) {
-                            if (!_waitForRelease) {
+                        if (GetLocalState(0x20000))
+                        {
+                            if (!_waitForRelease)
+                            {
                                 buttonPressTimer.Start();
                                 _waitForRelease = true;
                             }
-                        } else {
+                        }
+                        else
+                        {
                             _waitForRelease = false;
                             buttonPressTimer.Reset();
                         }
-                        if (buttonPressTimer.ElapsedMilliseconds >= 3000) {
-                            //udpHandler.SendButton(HapticNodeBinding);
+                        if (buttonPressTimer.ElapsedMilliseconds >= 3000)
+                        {
                             buttonPressTimer.Reset();
                         }
-                    } catch (Exception e) {
+                        CheckControllerInputs();
+                    }
+                    catch (Exception e)
+                    {
                         OnTrackerError.Invoke(this, e.StackTrace + "\r\n" + e.Message);
                     }
                 });
             }
             return _ready;
         }
-        public async void Recalibrate() {
+        public async void Recalibrate()
+        {
             await Task.Delay(5000);
             _calibratedHeight = OpenVRReader.GetHMDHeight();
             _rotationCalibration = GetCalibration();
             await udpHandler.SendButton(FirmwareConstants.UserActionType.RESET_FULL);
         }
-        public void Rediscover() {
+        public void Rediscover()
+        {
             udpHandler.Initialize(
                  FirmwareConstants.BoardType.UNKNOWN, FirmwareConstants.ImuType.UNKNOWN, FirmwareConstants.McuType.UNKNOWN, FirmwareConstants.MagnetometerStatus.NOT_SUPPORTED, _macAddressBytes);
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             _ready = false;
             _disconnected = true;
         }
 
-        public Vector3 GetCalibration() {
+        public Vector3 GetCalibration()
+        {
             return -(_sensorOrientation.CurrentOrientation).QuaternionToEuler();
         }
 
-        public void Identify() {
+        public void CheckControllerInputs()
+        {
+            // Trigger 
+            if (GetLocalState(0x00100) || GetLocalState(0x00200))
+            {
+                udpHandler.SendTrigger(1, 0);
+            }
+            // Grip 
+            if (GetLocalState(0x20000))
+            {
+                udpHandler.SendGrip(1, 0);
+            }
+            // B1 
+            if (GetLocalState(0x04000) || GetLocalState(0x00008))
+            {
+                if (!waitingForButton1Release)
+                {
+                    udpHandler.SendControllerButton(FirmwareConstants.ControllerButton.BUTTON_1_HELD, 0);
+                    waitingForButton1Release = true;
+                }
+            }
+            else
+            {
+                if (waitingForButton1Release)
+                {
+                    udpHandler.SendControllerButton(FirmwareConstants.ControllerButton.BUTTON_1_UNHELD, 0);
+                    waitingForButton1Release = false;
+                }
+            }
+            // B2
+            if (GetLocalState(0x01000) || GetLocalState(0x00002))
+            {
+                if (!waitingForButton2Release)
+                {
+                    udpHandler.SendControllerButton(FirmwareConstants.ControllerButton.BUTTON_2_HELD, 0);
+                    waitingForButton2Release = true;
+                }
+            }
+            else
+            {
+                if (waitingForButton2Release)
+                {
+                    udpHandler.SendControllerButton(FirmwareConstants.ControllerButton.BUTTON_2_UNHELD, 0);
+                    waitingForButton2Release = false;
+                }
+            }
+            // Menu/Recenter
+            if (GetLocalState(0x00020) || GetLocalState(0x00010))
+            {
+                if (!waitingForButton3Release)
+                {
+                    udpHandler.SendControllerButton(FirmwareConstants.ControllerButton.MENU_RECENTER_HELD, 0);
+                    waitingForButton3Release = true;
+                }
+            }
+            else
+            {
+                if (waitingForButton3Release)
+                {
+                    udpHandler.SendControllerButton(FirmwareConstants.ControllerButton.MENU_RECENTER_UNHELD, 0);
+                    waitingForButton3Release = false;
+                }
+            }
+            // Thumbstick L/R
+            var state = JSL.JslGetSimpleState(_index);
+            float x = MathF.Abs(state.stickLX) > MathF.Abs(state.stickRX) ? state.stickLX * -1: state.stickRX;
+            float y = MathF.Abs(state.stickLY) > MathF.Abs(state.stickRY) ? state.stickLY: state.stickRY * -1;
+            udpHandler.SetThumbstick(new Vector2(y, x), 0);
+        }
+
+        public void Identify()
+        {
             identifying = true;
             EngageHaptics(300, 100);
             identifying = false;
         }
 
-        public void EngageHaptics(int duration, float intensity) {
+        public void EngageHaptics(int duration, float intensity)
+        {
             _hapticEndTime = DateTime.Now.AddMilliseconds(duration);
-            if (!isAlreadyVibrating) {
+            if (!isAlreadyVibrating)
+            {
                 isAlreadyVibrating = true;
-                Task.Run(() => {
+                Task.Run(() =>
+                {
                     JSL.JslSetRumble(_index, (int)(100 * intensity), (int)(intensity * 100f));
-                    while (DateTime.Now < _hapticEndTime) {
+                    while (DateTime.Now < _hapticEndTime)
+                    {
                         Thread.Sleep(10);
                     }
                     JSL.JslSetRumble(_index, 0, 0);
@@ -187,18 +302,22 @@ namespace Everything_To_IMU_SlimeVR.Tracking {
             }
         }
 
-        public void DisableHaptics() {
-            if (!identifying) {
+        public void DisableHaptics()
+        {
+            if (!identifying)
+            {
                 isAlreadyVibrating = false;
                 JSL.JslSetRumble(_index, 0, 0);
             }
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return "Controller Tracker " + _index;
         }
 
-        public void HapticIntensityTest() {
+        public void HapticIntensityTest()
+        {
             //throw new NotImplementedException();
         }
 

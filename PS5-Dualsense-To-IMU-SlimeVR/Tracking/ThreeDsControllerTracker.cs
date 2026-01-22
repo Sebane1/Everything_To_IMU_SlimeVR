@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using SlimeImuProtocol.SlimeVR;
+using SlimeImuProtocol.Utility;
 using System.Diagnostics;
 using System.Numerics;
 using static Everything_To_IMU_SlimeVR.TrackerConfig;
